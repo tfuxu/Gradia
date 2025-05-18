@@ -2,6 +2,8 @@ import os
 import shutil
 import gi
 import threading
+import subprocess
+
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -15,9 +17,7 @@ class GradientUI:
         self.temp_dir = temp_dir
         self.image_path = file
         self.processed_path = None
-        # Default image processor config
         self.processor = ImageProcessor()
-        # Initialize parameters from processor defaults
         self.start_color = self.processor.start_color
         self.end_color = self.processor.end_color
         self.angle = self.processor.gradient_angle
@@ -33,13 +33,28 @@ class GradientUI:
         self.win.set_title("Gradia")
         self.win.set_default_size(900, 600)
 
+        self._setup_shortcuts()
+
+        # Create ToolbarView which holds header bar and stack
+        self.toolbar_view = Adw.ToolbarView()
+        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
+        self.win.set_content(self.toolbar_view)
+
+        header_bar = self._create_header_bar()
+        self.toolbar_view.add_top_bar(header_bar)
+
+        self._create_main_paned()
+        self.toolbar_view.set_content(self.main_paned)
+
+
+
+    def _setup_shortcuts(self):
         shortcut_controller = Gtk.ShortcutController()
 
         open_shortcut = Gtk.Shortcut.new(
             Gtk.ShortcutTrigger.parse_string("<Ctrl>O"),
             Gtk.CallbackAction.new(lambda *args: self.on_open_clicked(None))
         )
-
         save_shortcut = Gtk.Shortcut.new(
             Gtk.ShortcutTrigger.parse_string("<Ctrl>S"),
             Gtk.CallbackAction.new(
@@ -51,9 +66,8 @@ class GradientUI:
         shortcut_controller.add_shortcut(save_shortcut)
         self.win.add_controller(shortcut_controller)
 
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        # Header bar with open and save buttons
+    def _create_header_bar(self):
         header_bar = Adw.HeaderBar()
 
         open_icon = Gtk.Image.new_from_icon_name("document-open-symbolic")
@@ -72,31 +86,50 @@ class GradientUI:
         about_btn.connect("clicked", self.on_about_clicked)
         header_bar.pack_end(about_btn)
 
-        save_btn = Gtk.Button.new_with_label("Save Image")
+        save_btn = Gtk.Button()
         save_btn.get_style_context().add_class("suggested-action")
         save_btn.connect("clicked", self.on_save_clicked)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        icon = Gtk.Image.new_from_icon_name("document-save-symbolic")
+        label = Gtk.Label(label="Save Image")
+        box.append(icon)
+        box.append(label)
+        save_btn.set_child(box)
+        save_btn.set_sensitive(False)
         self.save_btn = save_btn
-        self.save_btn.set_sensitive(False)
         header_bar.pack_end(save_btn)
 
-        main_box.append(header_bar)
+        return header_bar
 
-        # Main horizontal paned area (image / sidebar)
+
+    def _create_main_paned(self):
         self.main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         self.main_paned.set_position(650)
         self.main_paned.set_vexpand(True)
 
-        # Image stack: image preview, loading spinner, or empty status
-        self.image_stack = Gtk.Stack()
-        self.image_stack.get_style_context().add_class("view")
-        self.image_stack.set_vexpand(True)
-        self.image_stack.set_hexpand(True)
+        self.image_stack = self._create_image_stack()
+        self.main_paned.set_start_child(self.image_stack)
 
+        self.sidebar = self.create_sidebar_ui()
+        self.sidebar.set_size_request(250, -1)
+        self.sidebar.set_visible(False)
+        self.main_paned.set_end_child(self.sidebar)
+
+
+    def _create_image_stack(self):
+        stack = Gtk.Stack()
+
+        stack.set_vexpand(True)
+        stack.set_hexpand(True)
+
+        # Picture widget
         self.picture = Gtk.Picture()
         self.picture.set_content_fit(Gtk.ContentFit.CONTAIN)
         self.picture.set_can_shrink(True)
-        self.image_stack.add_named(self.picture, "image")
+        stack.add_named(self.picture, "image")
 
+        # Loading spinner
         spinner_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         spinner_box.set_valign(Gtk.Align.CENTER)
         spinner_box.set_halign(Gtk.Align.CENTER)
@@ -109,22 +142,22 @@ class GradientUI:
         self.spinner = Gtk.Spinner()
         self.spinner.set_vexpand(False)
         self.spinner.set_hexpand(False)
-
         spinner_box.append(self.spinner)
-        self.image_stack.add_named(spinner_box, "loading")
+        stack.add_named(spinner_box, "loading")
 
-        # Add drop targets for drag & drop of image files
+        # Drop target for drag & drop
         drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
         drop_target.set_preload(True)
         drop_target.connect("drop", self.on_file_dropped)
-        self.image_stack.add_controller(drop_target)
+        stack.add_controller(drop_target)
 
         # Status page for no image loaded
         status_page = Adw.StatusPage()
         status_page.set_icon_name("image-x-generic-symbolic")
         status_page.set_title("No Image Loaded")
+        status_page.set_description("Drag and drop one here")
 
-        open_status_btn = Gtk.Button(label="Open Image")
+        open_status_btn = Gtk.Button(label="Open Image...")
         open_status_btn.set_halign(Gtk.Align.CENTER)
         open_status_btn.get_style_context().add_class("suggested-action")
         open_status_btn.get_style_context().add_class("pill")
@@ -132,19 +165,11 @@ class GradientUI:
         open_status_btn.connect("clicked", self.on_open_clicked)
         status_page.set_child(open_status_btn)
 
-        self.image_stack.add_named(status_page, "empty")
-        self.image_stack.set_visible_child_name("empty")
-        self.main_paned.set_start_child(self.image_stack)
+        stack.add_named(status_page, "empty")
+        stack.set_visible_child_name("empty")
 
-        # Sidebar for settings (initially hidden)
-        self.sidebar = self.create_sidebar_ui()
-        self.sidebar.set_size_request(250, -1)
-        self.sidebar.set_visible(False)
-        self.main_paned.set_end_child(self.sidebar)
+        return stack
 
-        main_box.append(self.main_paned)
-
-        self.win.set_content(main_box)
 
     def show(self):
         self.win.present()
@@ -269,6 +294,12 @@ class GradientUI:
         self.location_row.set_title("Location")
         self.location_row.set_subtitle("No file loaded")
         file_info_group.add(self.location_row)
+
+        self.processed_size_row = Adw.ActionRow()
+        self.processed_size_row.set_title("Modified image size")
+        self.processed_size_row.set_subtitle("N/A")
+        file_info_group.add(self.processed_size_row)
+
 
         controls_box.append(file_info_group)
 
@@ -405,8 +436,20 @@ class GradientUI:
     def _update_image_preview(self):
         if os.path.exists(self.processed_path):
             self.picture.set_file(Gio.File.new_for_path(self.processed_path))
+            try:
+                identify_cmd = ["magick", "identify", "-format", "%wx%h", self.processed_path]
+                result = subprocess.run(identify_cmd, capture_output=True, text=True, check=True)
+                size_str = result.stdout.strip()
+                self.processed_size_row.set_subtitle(size_str)
+            except Exception as e:
+                self.processed_size_row.set_subtitle("Error")
+                print(f"Error getting processed image size: {e}")
+
             self.spinner.stop()
             self.image_stack.set_visible_child_name("image")
+
+            self.image_stack.get_style_context().add_class("view")
+            self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
         return False
 
     def on_save_clicked(self, button):
@@ -414,7 +457,7 @@ class GradientUI:
             return
 
         save_dialog = Gtk.FileDialog()
-        save_dialog.set_title("Save Modified Image")
+        save_dialog.set_title("Save Edited Image")
 
         if self.image_path:
             original_name = os.path.splitext(os.path.basename(self.image_path))[0]
@@ -469,12 +512,13 @@ class GradientUI:
             print(f"Error saving file: {e}")
 
     def on_about_clicked(self, button):
-        about = Adw.AboutWindow(transient_for=self.win, modal=True)
+        about = Adw.AboutDialog()
         about.set_application_name("Gradia")
-        about.set_version("0.1")
+        about.set_version("0.2")
         about.set_comments("Make your images ready for the world")
-        about.set_website("")
+        about.set_website("https://github.com/AlexanderVanhee/Gradia")
         about.set_developer_name("Alexander Vanhee")
-        about.present()
+        about.set_application_icon("gradia")
 
+        about.present()
 
