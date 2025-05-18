@@ -1,10 +1,11 @@
 [Desktop Entry]
-Name=gradia
-Exec=gradia
+Name=Gradia
+Exec=gradia %f
 Icon=io.github.AlexanderVanhee.Gradia
 Terminal=false
 Type=Application
-Categories=Utility;
-Keywords=GTK;
+Categories=Graphics;Utility;
+Keywords=GTK;Image;Gradient;
 StartupNotify=true
 DBusActivatable=true
+MimeType=image/png;image/jpeg;image/jpg;

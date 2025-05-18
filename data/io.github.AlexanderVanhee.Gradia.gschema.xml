@@ -1,5 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="gradia">
-	<schema id="io.github.AlexanderVanhee.Gradia" path="/io/github/AlexanderVanhee/Gradia/">
-	</schema>
-</schemalist>
+<component type="desktop-application">
+  <id>io.github.AlexanderVanhee.Gradia</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>Gradia</name>
+  <summary>Make screenshots ready for the world</summary>
+  <description>
+    <p>Gradia is an app to make screenshots ready for the world — quickly add backgrounds, change aspect ratios and add padding.</p>
+  </description>
+
+  <developer id="io.github.AlexanderVanhee">
+    <name>Alexander Vanhee</name>
+  </developer>
+
+  <url type="homepage">https://github.com/AlexanderVanhee/Gradia</url>
+  <url type="vcs-browser">https://github.com/AlexanderVanhee/Gradia</url>
+  <url type="bugtracker">https://github.com/AlexanderVanhee/Gradia/issues</url>
+  <url type="contact">mailto:alexander.vanhee@example.com</url>
+  <url type="contribute">https://github.com/AlexanderVanhee/Gradia/blob/main/CONTRIBUTING.md</url>
+
+  <translation type="gettext">gradia</translation>
+
+  <launchable type="desktop-id">io.github.AlexanderVanhee.Gradia.desktop</launchable>
+
+  <content_rating type="oars-1.1" />
+
+  <branding>
+    <color type="primary" scheme_preference="light">#6a0dad</color>
+    <color type="primary" scheme_preference="dark">#4b0082</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/AlexanderVanhee/Gradia/blob/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
+      <caption>The home page</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/AlexanderVanhee/Gradia/blob/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/showcase.png</image>
+      <caption>Easily edit screenshots</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+  </releases>
+
+</component>
+

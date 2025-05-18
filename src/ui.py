@@ -10,16 +10,17 @@ from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 from .image_processor import ImageProcessor
 
 class GradientUI:
-    def __init__(self, app, temp_dir):
+    def __init__(self, app, temp_dir, file=None):
         self.app = app
         self.temp_dir = temp_dir
-        self.image_path = None
+        self.image_path = file
         self.processed_path = None
         # Default image processor config
         self.processor = ImageProcessor()
         # Initialize parameters from processor defaults
         self.start_color = self.processor.start_color
         self.end_color = self.processor.end_color
+        self.angle = self.processor.gradient_angle
         self.padding = self.processor.padding
 
         self.win = None
@@ -85,7 +86,7 @@ class GradientUI:
         self.main_paned.set_position(650)
         self.main_paned.set_vexpand(True)
 
-        # Image stack: either image preview or "no image" status
+        # Image stack: image preview, loading spinner, or empty status
         self.image_stack = Gtk.Stack()
         self.image_stack.get_style_context().add_class("view")
         self.image_stack.set_vexpand(True)
@@ -112,16 +113,13 @@ class GradientUI:
         spinner_box.append(self.spinner)
         self.image_stack.add_named(spinner_box, "loading")
 
+        # Add drop targets for drag & drop of image files
         drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
         drop_target.set_preload(True)
         drop_target.connect("drop", self.on_file_dropped)
         self.image_stack.add_controller(drop_target)
 
-        drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
-        drop_target.set_preload(True)
-        drop_target.connect("drop", self.on_file_dropped)
-        self.image_stack.add_controller(drop_target)
-
+        # Status page for no image loaded
         status_page = Adw.StatusPage()
         status_page.set_icon_name("image-x-generic-symbolic")
         status_page.set_title("No Image Loaded")
@@ -137,7 +135,8 @@ class GradientUI:
         self.image_stack.add_named(status_page, "empty")
         self.image_stack.set_visible_child_name("empty")
         self.main_paned.set_start_child(self.image_stack)
-        # Sidebar for settings
+
+        # Sidebar for settings (initially hidden)
         self.sidebar = self.create_sidebar_ui()
         self.sidebar.set_size_request(250, -1)
         self.sidebar.set_visible(False)
@@ -149,6 +148,26 @@ class GradientUI:
 
     def show(self):
         self.win.present()
+
+        if self.image_path:
+            self._load_initial_file()
+
+    def _load_initial_file(self):
+        if not os.path.isfile(self.image_path):
+            print(f"Initial file path does not exist: {self.image_path}")
+            return
+
+        filename = os.path.basename(self.image_path)
+        directory = os.path.dirname(self.image_path)
+        self.filename_row.set_subtitle(filename)
+        self.location_row.set_subtitle(directory)
+        self.sidebar.set_visible(True)
+
+        self.image_stack.set_visible_child_name("loading")
+        self.spinner.start()
+
+        self.process_image()
+        self.save_btn.set_sensitive(True)
 
     def create_sidebar_ui(self):
         sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -193,6 +212,19 @@ class GradientUI:
         end_row.add_suffix(self.end_button)
         gradient_group.add(end_row)
 
+        angle_row = Adw.ActionRow()
+        angle_row.set_title("Angle")
+
+        angle_adjustment = Gtk.Adjustment(value=self.angle, lower=0, upper=360, step_increment=45, page_increment=45)
+        self.angle_spinner = Gtk.SpinButton()
+        self.angle_spinner.set_adjustment(angle_adjustment)
+        self.angle_spinner.set_numeric(True)
+        self.angle_spinner.set_valign(Gtk.Align.CENTER)
+        self.angle_spinner.connect("value-changed", self.on_angle_changed)
+
+        angle_row.add_suffix(self.angle_spinner)
+        gradient_group.add(angle_row)
+
         controls_box.append(gradient_group)
 
         # Image Options Group
@@ -200,7 +232,7 @@ class GradientUI:
         padding_group.set_title("Image Options")
 
         padding_row = Adw.ActionRow()
-        padding_row.set_title("Extra Padding")
+        padding_row.set_title("Padding")
 
         padding_adjustment = Gtk.Adjustment(value=self.padding, lower=0, upper=500, step_increment=10, page_increment=50)
         self.padding_spinner = Gtk.SpinButton()
@@ -266,6 +298,11 @@ class GradientUI:
             int(rgba.blue * 255)
         )
         self.processor.end_color = self.end_color
+        if self.image_path:
+            self.process_image()
+    def on_angle_changed(self, spin_button):
+        self.angle = int(spin_button.get_value())
+        self.processor.gradient_angle = self.angle
         if self.image_path:
             self.process_image()
 
@@ -434,7 +471,7 @@ class GradientUI:
     def on_about_clicked(self, button):
         about = Adw.AboutWindow(transient_for=self.win, modal=True)
         about.set_application_name("Gradia")
-        about.set_version("1.0")
+        about.set_version("0.1")
         about.set_comments("Make your images ready for the world")
         about.set_website("")
         about.set_developer_name("Alexander Vanhee")
