@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=gradia
+Exec=gradia
+Icon=io.github.AlexanderVanhee.Gradia
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true

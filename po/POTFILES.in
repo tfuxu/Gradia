@@ -1,0 +1,8 @@
+# List of source files containing translatable strings.
+# Please keep this file sorted alphabetically.
+data/io.github.AlexanderVanhee.Gradia.desktop.in
+data/io.github.AlexanderVanhee.Gradia.metainfo.xml.in
+data/io.github.AlexanderVanhee.Gradia.gschema.xml
+src/main.py
+src/window.py
+src/window.ui
