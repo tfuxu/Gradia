@@ -259,7 +259,7 @@ class GradientUI:
         padding_row = Adw.ActionRow()
         padding_row.set_title("Padding")
 
-        padding_adjustment = Gtk.Adjustment(value=self.padding, lower=0, upper=500, step_increment=10, page_increment=50)
+        padding_adjustment = Gtk.Adjustment(value=self.padding, lower=-50, upper=500, step_increment=10, page_increment=50)
         self.padding_spinner = Gtk.SpinButton()
         self.padding_spinner.set_adjustment(padding_adjustment)
         self.padding_spinner.set_numeric(True)
