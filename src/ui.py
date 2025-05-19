@@ -4,12 +4,14 @@ import gi
 import threading
 import subprocess
 
-
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
-from .image_processor import ImageProcessor
+from .image_processor import ImageProcessor, GradientBackground
+from .gradient import GradientSelector
+from .ui_parts import *
+
 
 class GradientUI:
     def __init__(self, app, temp_dir, file=None):
@@ -18,158 +20,91 @@ class GradientUI:
         self.image_path = file
         self.processed_path = None
         self.processor = ImageProcessor()
-        self.start_color = self.processor.start_color
-        self.end_color = self.processor.end_color
-        self.angle = self.processor.gradient_angle
-        self.padding = self.processor.padding
 
+        # Initialize core properties
+        self.padding = self.processor.padding
+        initial_start_color = "#4A90E2"
+        initial_end_color = "#50E3C2"
+        initial_angle = 0
+
+        # Initialize gradient selector with callback
+        self.gradient_selector = GradientSelector(
+            start_color=initial_start_color,
+            end_color=initial_end_color,
+            angle=initial_angle,
+            callback=self._on_gradient_changed
+        )
+
+        # UI elements (populated during build_ui)
         self.win = None
         self.save_btn = None
-
-    # --- UI Building ---
+        self.picture = None
+        self.spinner = None
+        self.image_stack = None
+        self.toolbar_view = None
+        self.sidebar = None
+        self.sidebar_info = None
+        self.main_paned = None
 
     def build_ui(self):
+        # Create window
         self.win = Adw.ApplicationWindow(application=self.app)
         self.win.set_title("Gradia")
         self.win.set_default_size(900, 600)
 
-        self._setup_shortcuts()
-
-        # Create ToolbarView which holds header bar and stack
+        # Create toolbar view
         self.toolbar_view = Adw.ToolbarView()
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
         self.win.set_content(self.toolbar_view)
 
-        header_bar = self._create_header_bar()
+        # Create save button reference holder
+        save_btn_ref = [None]
+
+        # Setup header bar
+        header_bar = create_header_bar(
+            save_btn_ref=save_btn_ref,
+            on_open_clicked=self.on_open_clicked,
+            on_about_clicked=self.on_about_clicked,
+            on_save_clicked=self.on_save_clicked
+        )
+        self.save_btn = save_btn_ref[0]
         self.toolbar_view.add_top_bar(header_bar)
 
-        self._create_main_paned()
-        self.toolbar_view.set_content(self.main_paned)
-
-
-
-    def _setup_shortcuts(self):
-        shortcut_controller = Gtk.ShortcutController()
-
-        open_shortcut = Gtk.Shortcut.new(
-            Gtk.ShortcutTrigger.parse_string("<Ctrl>O"),
-            Gtk.CallbackAction.new(lambda *args: self.on_open_clicked(None))
-        )
-        save_shortcut = Gtk.Shortcut.new(
-            Gtk.ShortcutTrigger.parse_string("<Ctrl>S"),
-            Gtk.CallbackAction.new(
-                lambda *args: self.on_save_clicked(None) if self.save_btn and self.save_btn.get_sensitive() else None
-            )
+        # Setup shortcuts
+        setup_shortcuts(
+            self.win,
+            self.on_open_clicked,
+            self.on_save_clicked,
+            self.save_btn
         )
 
-        shortcut_controller.add_shortcut(open_shortcut)
-        shortcut_controller.add_shortcut(save_shortcut)
-        self.win.add_controller(shortcut_controller)
+        # Setup image stack
+        stack_info = create_image_stack(
+            self.on_file_dropped,
+            self.on_open_clicked
+        )
+        self.image_stack = stack_info[0]
+        self.picture = stack_info[1]
+        self.spinner = stack_info[2]
 
+        # Create sidebar
+        self.sidebar_info = create_sidebar_ui(
+            gradient_selector_widget=self.gradient_selector.widget,
+            padding=self.padding,
+            on_padding_changed=self.on_padding_changed,
+            on_aspect_ratio_changed=self.on_aspect_ratio_changed
+        )
+        self.sidebar = self.sidebar_info['sidebar']
+        self.sidebar.set_size_request(250, -1)
+        self.sidebar.set_visible(False)
 
-    def _create_header_bar(self):
-        header_bar = Adw.HeaderBar()
-
-        open_icon = Gtk.Image.new_from_icon_name("document-open-symbolic")
-        open_btn = Gtk.Button()
-        open_btn.set_child(open_icon)
-        open_btn.get_style_context().add_class("flat")
-        open_btn.set_tooltip_text("Open Image")
-        open_btn.connect("clicked", self.on_open_clicked)
-        header_bar.pack_start(open_btn)
-
-        about_icon = Gtk.Image.new_from_icon_name("help-about-symbolic")
-        about_btn = Gtk.Button()
-        about_btn.get_style_context().add_class("flat")
-        about_btn.set_child(about_icon)
-        about_btn.set_tooltip_text("About Gradia")
-        about_btn.connect("clicked", self.on_about_clicked)
-        header_bar.pack_end(about_btn)
-
-        save_btn = Gtk.Button()
-        save_btn.get_style_context().add_class("suggested-action")
-        save_btn.connect("clicked", self.on_save_clicked)
-
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        icon = Gtk.Image.new_from_icon_name("document-save-symbolic")
-        label = Gtk.Label(label="Save Image")
-        box.append(icon)
-        box.append(label)
-        save_btn.set_child(box)
-        save_btn.set_sensitive(False)
-        self.save_btn = save_btn
-        header_bar.pack_end(save_btn)
-
-        return header_bar
-
-
-    def _create_main_paned(self):
+        # Create main paned container
         self.main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         self.main_paned.set_position(650)
         self.main_paned.set_vexpand(True)
-
-        self.image_stack = self._create_image_stack()
         self.main_paned.set_start_child(self.image_stack)
-
-        self.sidebar = self.create_sidebar_ui()
-        self.sidebar.set_size_request(250, -1)
-        self.sidebar.set_visible(False)
         self.main_paned.set_end_child(self.sidebar)
-
-
-    def _create_image_stack(self):
-        stack = Gtk.Stack()
-
-        stack.set_vexpand(True)
-        stack.set_hexpand(True)
-
-        # Picture widget
-        self.picture = Gtk.Picture()
-        self.picture.set_content_fit(Gtk.ContentFit.CONTAIN)
-        self.picture.set_can_shrink(True)
-        stack.add_named(self.picture, "image")
-
-        # Loading spinner
-        spinner_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        spinner_box.set_valign(Gtk.Align.CENTER)
-        spinner_box.set_halign(Gtk.Align.CENTER)
-        spinner_box.set_spacing(0)
-        spinner_box.set_margin_top(20)
-        spinner_box.set_margin_bottom(20)
-        spinner_box.set_margin_start(20)
-        spinner_box.set_margin_end(20)
-
-        self.spinner = Gtk.Spinner()
-        self.spinner.set_vexpand(False)
-        self.spinner.set_hexpand(False)
-        spinner_box.append(self.spinner)
-        stack.add_named(spinner_box, "loading")
-
-        # Drop target for drag & drop
-        drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
-        drop_target.set_preload(True)
-        drop_target.connect("drop", self.on_file_dropped)
-        stack.add_controller(drop_target)
-
-        # Status page for no image loaded
-        status_page = Adw.StatusPage()
-        status_page.set_icon_name("image-x-generic-symbolic")
-        status_page.set_title("No Image Loaded")
-        status_page.set_description("Drag and drop one here")
-
-        open_status_btn = Gtk.Button(label="Open Image...")
-        open_status_btn.set_halign(Gtk.Align.CENTER)
-        open_status_btn.get_style_context().add_class("suggested-action")
-        open_status_btn.get_style_context().add_class("pill")
-        open_status_btn.get_style_context().add_class("text-button")
-        open_status_btn.connect("clicked", self.on_open_clicked)
-        status_page.set_child(open_status_btn)
-
-        stack.add_named(status_page, "empty")
-        stack.set_visible_child_name("empty")
-
-        return stack
-
+        self.toolbar_view.set_content(self.main_paned)
 
     def show(self):
         self.win.present()
@@ -184,8 +119,8 @@ class GradientUI:
 
         filename = os.path.basename(self.image_path)
         directory = os.path.dirname(self.image_path)
-        self.filename_row.set_subtitle(filename)
-        self.location_row.set_subtitle(directory)
+        self.sidebar_info['filename_row'].set_subtitle(filename)
+        self.sidebar_info['location_row'].set_subtitle(directory)
         self.sidebar.set_visible(True)
 
         self.image_stack.set_visible_child_name("loading")
@@ -194,146 +129,9 @@ class GradientUI:
         self.process_image()
         self.save_btn.set_sensitive(True)
 
-    def create_sidebar_ui(self):
-        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-
-        settings_scroll = Gtk.ScrolledWindow()
-        settings_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        settings_scroll.set_vexpand(True)
-
-        controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        controls_box.set_margin_start(16)
-        controls_box.set_margin_end(16)
-        controls_box.set_margin_top(16)
-        controls_box.set_margin_bottom(16)
-
-        # Gradient Colors Group
-        gradient_group = Adw.PreferencesGroup()
-        gradient_group.set_title("Gradient Background")
-
-        # Start Color
-        start_row = Adw.ActionRow()
-        start_row.set_title("Start Color")
-
-        self.start_button = Gtk.ColorButton()
-        start_rgba = Gdk.RGBA()
-        start_rgba.parse(self.start_color)
-        self.start_button.set_rgba(start_rgba)
-        self.start_button.connect("color-set", self.on_start_color_set)
-        self.start_button.set_valign(Gtk.Align.CENTER)
-        start_row.add_suffix(self.start_button)
-        gradient_group.add(start_row)
-
-        # End Color
-        end_row = Adw.ActionRow()
-        end_row.set_title("End Color")
-
-        self.end_button = Gtk.ColorButton()
-        end_rgba = Gdk.RGBA()
-        end_rgba.parse(self.end_color)
-        self.end_button.set_rgba(end_rgba)
-        self.end_button.connect("color-set", self.on_end_color_set)
-        self.end_button.set_valign(Gtk.Align.CENTER)
-        end_row.add_suffix(self.end_button)
-        gradient_group.add(end_row)
-
-        angle_row = Adw.ActionRow()
-        angle_row.set_title("Angle")
-
-        angle_adjustment = Gtk.Adjustment(value=self.angle, lower=0, upper=360, step_increment=45, page_increment=45)
-        self.angle_spinner = Gtk.SpinButton()
-        self.angle_spinner.set_adjustment(angle_adjustment)
-        self.angle_spinner.set_numeric(True)
-        self.angle_spinner.set_valign(Gtk.Align.CENTER)
-        self.angle_spinner.connect("value-changed", self.on_angle_changed)
-
-        angle_row.add_suffix(self.angle_spinner)
-        gradient_group.add(angle_row)
-
-        controls_box.append(gradient_group)
-
-        # Image Options Group
-        padding_group = Adw.PreferencesGroup()
-        padding_group.set_title("Image Options")
-
-        padding_row = Adw.ActionRow()
-        padding_row.set_title("Padding")
-
-        padding_adjustment = Gtk.Adjustment(value=self.padding, lower=-50, upper=500, step_increment=10, page_increment=50)
-        self.padding_spinner = Gtk.SpinButton()
-        self.padding_spinner.set_adjustment(padding_adjustment)
-        self.padding_spinner.set_numeric(True)
-        self.padding_spinner.connect("value-changed", self.on_padding_changed)
-        self.padding_spinner.set_valign(Gtk.Align.CENTER)
-        padding_row.add_suffix(self.padding_spinner)
-        padding_group.add(padding_row)
-
-        aspect_ratio_row = Adw.ActionRow()
-        aspect_ratio_row.set_title("Aspect Ratio")
-
-        self.aspect_ratio_entry = Gtk.Entry()
-        self.aspect_ratio_entry.set_placeholder_text("16:9")
-        self.aspect_ratio_entry.set_valign(Gtk.Align.CENTER)
-        self.aspect_ratio_entry.connect("changed", self.on_aspect_ratio_changed)
-
-        aspect_ratio_row.add_suffix(self.aspect_ratio_entry)
-        padding_group.add(aspect_ratio_row)
-
-        controls_box.append(padding_group)
-
-        # File Info Group
-        file_info_group = Adw.PreferencesGroup()
-        file_info_group.set_title("Current File")
-
-        self.filename_row = Adw.ActionRow()
-        self.filename_row.set_title("Name")
-        self.filename_row.set_subtitle("No file loaded")
-        file_info_group.add(self.filename_row)
-
-        self.location_row = Adw.ActionRow()
-        self.location_row.set_title("Location")
-        self.location_row.set_subtitle("No file loaded")
-        file_info_group.add(self.location_row)
-
-        self.processed_size_row = Adw.ActionRow()
-        self.processed_size_row.set_title("Modified image size")
-        self.processed_size_row.set_subtitle("N/A")
-        file_info_group.add(self.processed_size_row)
-
-
-        controls_box.append(file_info_group)
-
-        settings_scroll.set_child(controls_box)
-        sidebar_box.append(settings_scroll)
-
-        return sidebar_box
-
-    # --- Event Handlers ---
-
-    def on_start_color_set(self, button):
-        rgba = button.get_rgba()
-        self.start_color = "#{:02x}{:02x}{:02x}".format(
-            int(rgba.red * 255),
-            int(rgba.green * 255),
-            int(rgba.blue * 255)
-        )
-        self.processor.start_color = self.start_color
-        if self.image_path:
-            self.process_image()
-
-    def on_end_color_set(self, button):
-        rgba = button.get_rgba()
-        self.end_color = "#{:02x}{:02x}{:02x}".format(
-            int(rgba.red * 255),
-            int(rgba.green * 255),
-            int(rgba.blue * 255)
-        )
-        self.processor.end_color = self.end_color
-        if self.image_path:
-            self.process_image()
-    def on_angle_changed(self, spin_button):
-        self.angle = int(spin_button.get_value())
-        self.processor.gradient_angle = self.angle
+    def _on_gradient_changed(self):
+        """Called when any gradient setting is changed"""
+        self.processor.background = self.gradient_selector.get_gradient_background()
         if self.image_path:
             self.process_image()
 
@@ -343,25 +141,33 @@ class GradientUI:
         if self.image_path:
             self.process_image()
 
+    @staticmethod
+    def parse_aspect_ratio(text: str) -> float | None:
+        text = text.strip()
+        if not text:
+            return None
+        if ":" in text:
+            num, denom = map(float, text.split(":"))
+            if denom == 0:
+                raise ValueError("Denominator cannot be zero")
+            return num / denom
+        return float(text)
+
+    @staticmethod
+    def check_aspect_ratio_bounds(ratio: float, min_ratio=0.2, max_ratio=5) -> bool:
+        return min_ratio <= ratio <= max_ratio
+
     def on_aspect_ratio_changed(self, entry):
         text = entry.get_text().strip()
-
-        if not text:
-            self.processor.aspect_ratio = None
-            if self.image_path:
-                self.process_image()
-            return
-
         try:
-            if ":" in text:
-                num, denom = map(float, text.split(":"))
-                ratio = num / denom
-            else:
-                ratio = float(text)
-
-            if ratio <= 0:
-                raise ValueError("Aspect ratio must be positive")
-
+            ratio = self.parse_aspect_ratio(text)
+            if ratio is None:
+                self.processor.aspect_ratio = None
+                if self.image_path:
+                    self.process_image()
+                return
+            if not self.check_aspect_ratio_bounds(ratio):
+                raise ValueError(f"Aspect ratio must be between 0.2 and 5 (got {ratio})")
             self.processor.aspect_ratio = ratio
             if self.image_path:
                 self.process_image()
@@ -391,8 +197,8 @@ class GradientUI:
             self.image_path = file.get_path()
             filename = os.path.basename(self.image_path)
             directory = os.path.dirname(self.image_path)
-            self.filename_row.set_subtitle(filename)
-            self.location_row.set_subtitle(directory)
+            self.sidebar_info['filename_row'].set_subtitle(filename)
+            self.sidebar_info['location_row'].set_subtitle(directory)
             self.sidebar.set_visible(True)
 
             # Show spinner while processing
@@ -404,7 +210,6 @@ class GradientUI:
         except Exception as e:
             print(f"Error opening file: {e}")
 
-
     def process_image(self):
         if not self.image_path:
             return
@@ -414,10 +219,6 @@ class GradientUI:
                 os.remove(self.processed_path)
             except Exception:
                 pass
-
-        self.processor.start_color = self.start_color
-        self.processor.end_color = self.end_color
-        self.processor.padding = self.padding
 
         self.processed_path = os.path.join(self.temp_dir, "processed.png")
 
@@ -432,7 +233,6 @@ class GradientUI:
         except Exception as e:
             print(f"Error processing image: {e}")
 
-
     def _update_image_preview(self):
         if os.path.exists(self.processed_path):
             self.picture.set_file(Gio.File.new_for_path(self.processed_path))
@@ -440,9 +240,9 @@ class GradientUI:
                 identify_cmd = ["magick", "identify", "-format", "%wx%h", self.processed_path]
                 result = subprocess.run(identify_cmd, capture_output=True, text=True, check=True)
                 size_str = result.stdout.strip()
-                self.processed_size_row.set_subtitle(size_str)
+                self.sidebar_info['processed_size_row'].set_subtitle(size_str)
             except Exception as e:
-                self.processed_size_row.set_subtitle("Error")
+                self.sidebar_info['processed_size_row'].set_subtitle("Error")
                 print(f"Error getting processed image size: {e}")
 
             self.spinner.stop()
@@ -484,8 +284,8 @@ class GradientUI:
             self.image_path = path
             filename = os.path.basename(path)
             directory = os.path.dirname(path)
-            self.filename_row.set_subtitle(filename)
-            self.location_row.set_subtitle(directory)
+            self.sidebar_info['filename_row'].set_subtitle(filename)
+            self.sidebar_info['location_row'].set_subtitle(directory)
             self.sidebar.set_visible(True)
 
             # Show spinner while processing
@@ -498,7 +298,6 @@ class GradientUI:
 
         return False
 
-
     def _on_save_finished(self, dialog, result):
         try:
             file = dialog.save_finish(result)
@@ -506,19 +305,10 @@ class GradientUI:
                 return
 
             save_path = file.get_path()
-
             shutil.copy(self.processed_path, save_path)
         except Exception as e:
             print(f"Error saving file: {e}")
 
     def on_about_clicked(self, button):
-        about = Adw.AboutDialog()
-        about.set_application_name("Gradia")
-        about.set_version("0.2")
-        about.set_comments("Make your images ready for the world")
-        about.set_website("https://github.com/AlexanderVanhee/Gradia")
-        about.set_developer_name("Alexander Vanhee")
-        about.set_application_icon("gradia")
-
+        about = create_about_dialog()
         about.present()
-

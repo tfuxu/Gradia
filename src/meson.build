@@ -31,6 +31,9 @@ gradia_sources = [
   'main.py',
   'ui.py',
   'image_processor.py',
+  'background.py',
+  'gradient.py',
+  'ui_parts.py'
 ]
 
 install_data(gradia_sources, install_dir: moduledir)

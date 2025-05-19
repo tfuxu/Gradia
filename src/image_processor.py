@@ -1,20 +1,56 @@
 import subprocess
 import os
+from .gradient import GradientBackground
+from .background import Background
+
+class SolidBackground(Background):
+    def __init__(self, color="#FFFFFF"):
+        self.color = color
+
+    def prepare_command(self, width, height):
+        return [
+            "-size", f"{width}x{height}",
+            f"xc:{self.color}"
+        ]
+
+    def get_name(self):
+        return f"solid-{self.color}"
+
+class ImageBackground(Background):
+    def __init__(self, background_image_path, resize="fill"):
+        self.background_image_path = background_image_path
+        self.resize = resize  # options: none, fill, fit, stretch
+
+    def prepare_command(self, width, height):
+        resize_command = []
+
+        if self.resize == "fill":
+            resize_command = ["-resize", f"{width}x{height}^", "-gravity", "center", "-extent", f"{width}x{height}"]
+        elif self.resize == "fit":
+            resize_command = ["-resize", f"{width}x{height}"]
+        elif self.resize == "stretch":
+            resize_command = ["-resize", f"{width}x{height}!"]
+
+        return [
+            self.background_image_path,
+            *resize_command
+        ]
+
+    def get_name(self):
+        filename = os.path.basename(self.background_image_path)
+        return f"image-{filename}-{self.resize}"
+
 
 class ImageProcessor:
     def __init__(
         self,
-        start_color="#4A90E2",
-        end_color="#50E3C2",
+        background=None,
         padding=20,
-        aspect_ratio=None,
-        gradient_angle=0
+        aspect_ratio=None
     ):
-        self.start_color = start_color
-        self.end_color = end_color
+        self.background = background or GradientBackground()
         self.padding = padding
         self.aspect_ratio = aspect_ratio
-        self.gradient_angle = gradient_angle
 
     def process(self, image_path, output_path):
         width, height = self._get_image_dimensions(image_path)
@@ -24,7 +60,7 @@ class ImageProcessor:
 
         padded_width, padded_height = self._calculate_dimensions(width, height)
 
-        self._apply_gradient_background(image_path, output_path, padded_width, padded_height)
+        self._apply_background(image_path, output_path, padded_width, padded_height)
 
         self._cleanup_temp_files(image_path, output_path)
 
@@ -32,12 +68,14 @@ class ImageProcessor:
         try:
             identify_cmd = ["magick", "identify", "-format", "%w %h", image_path]
             result = subprocess.run(identify_cmd, capture_output=True, text=True, check=True)
-            return map(int, result.stdout.strip().split())
+            width, height = map(int, result.stdout.strip().split())
+            return width, height
         except (subprocess.CalledProcessError, FileNotFoundError):
             try:
                 identify_cmd = ["identify", "-format", "%w %h", image_path]
                 result = subprocess.run(identify_cmd, capture_output=True, text=True, check=True)
-                return map(int, result.stdout.strip().split())
+                width, height = map(int, result.stdout.strip().split())
+                return width, height
             except Exception:
                 return 1000, 1000
 
@@ -87,48 +125,36 @@ class ImageProcessor:
 
         return width, height
 
-    def _apply_gradient_background(self, image_path, output_path, width, height):
-        gradient_spec = f"gradient:{self.start_color}-{self.end_color}"
-
-        if self.padding >= 0:
-            cmd = self._build_positive_padding_command(image_path, output_path, width, height, gradient_spec)
-        else:
-            cmd = self._build_negative_padding_command(image_path, output_path, width, height, gradient_spec)
-
+    def _apply_background(self, image_path, output_path, width, height):
         try:
+            cmd = ["magick"]
+
+            # Add background creation commands
+            cmd.extend(self.background.prepare_command(width, height))
+
+            # Add foreground image with appropriate padding
+            if self.padding >= 0:
+                cmd.extend([
+                    "(",
+                    image_path,
+                    "-bordercolor", "none",
+                    "-border", str(self.padding),
+                    ")"
+                ])
+            else:
+                cmd.append(image_path)
+
+            # Complete the composition
+            cmd.extend([
+                "-gravity", "center",
+                "-compose", "over",
+                "-composite",
+                output_path
+            ])
+
             subprocess.run(cmd, check=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            pass
-
-    def _build_positive_padding_command(self, image_path, output_path, width, height, gradient_spec):
-        return [
-            "magick",
-            "-size", f"{width}x{height}",
-            "-define", f"gradient:angle={self.gradient_angle}",
-            gradient_spec,
-            "(",
-            image_path,
-            "-bordercolor", "none",
-            "-border", str(self.padding),
-            ")",
-            "-gravity", "center",
-            "-compose", "over",
-            "-composite",
-            output_path
-        ]
-
-    def _build_negative_padding_command(self, image_path, output_path, width, height, gradient_spec):
-        return [
-            "magick",
-            "-size", f"{width}x{height}",
-            "-define", f"gradient:angle={self.gradient_angle}",
-            gradient_spec,
-            image_path,
-            "-gravity", "center",
-            "-compose", "over",
-            "-composite",
-            output_path
-        ]
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            print(f"ImageMagick processing failed: {e}")
 
     def _cleanup_temp_files(self, image_path, output_path):
         if self.padding < 0 and image_path.endswith(".temp.png"):
@@ -136,4 +162,3 @@ class ImageProcessor:
                 os.remove(image_path)
             except:
                 pass
-
