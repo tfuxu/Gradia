@@ -3,12 +3,13 @@ import shutil
 import gi
 import threading
 import subprocess
+import cairo
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Gio, Adw, Gdk, GLib
-from .image_processor import ImageProcessor, GradientBackground
+from gi.repository import Gtk, Gio, Gsk, Adw, Gdk, GLib, Graphene
+from .image_processor import ImageProcessor, GradientBackground, Text
 from .gradient import GradientSelector
 from .ui_parts import *
 
@@ -19,6 +20,7 @@ class GradientUI:
         self.temp_dir = temp_dir
         self.image_path = file
         self.processed_path = None
+        self.current_text_object = Text(text='')
         self.processor = ImageProcessor()
 
         # Initialize core properties
@@ -38,6 +40,7 @@ class GradientUI:
         # UI elements (populated during build_ui)
         self.win = None
         self.save_btn = None
+        self.copy_btn = None
         self.picture = None
         self.spinner = None
         self.image_stack = None
@@ -57,17 +60,20 @@ class GradientUI:
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
         self.win.set_content(self.toolbar_view)
 
-        # Create save button reference holder
-        save_btn_ref = [None]
+        # Create save and copy button references holder
+        btn_refs = [None, None]  # save_btn_ref, copy_btn_ref
 
         # Setup header bar
         header_bar = create_header_bar(
-            save_btn_ref=save_btn_ref,
+            save_btn_ref=btn_refs,
             on_open_clicked=self.on_open_clicked,
             on_about_clicked=self.on_about_clicked,
-            on_save_clicked=self.on_save_clicked
+            on_save_clicked=self.on_save_clicked,
+            on_copy_from_clicked=self.on_copy_from_clicked,
+            on_copy_to_clicked=self.on_copy_to_clicked,
         )
-        self.save_btn = save_btn_ref[0]
+        self.save_btn = btn_refs[0]
+        self.copy_btn = btn_refs[1]
         self.toolbar_view.add_top_bar(header_bar)
 
         # Setup shortcuts
@@ -75,6 +81,8 @@ class GradientUI:
             self.win,
             self.on_open_clicked,
             self.on_save_clicked,
+            self.on_copy_from_clicked,
+            self.on_copy_to_clicked,
             self.save_btn
         )
 
@@ -92,8 +100,18 @@ class GradientUI:
             gradient_selector_widget=self.gradient_selector.widget,
             padding=self.padding,
             on_padding_changed=self.on_padding_changed,
-            on_aspect_ratio_changed=self.on_aspect_ratio_changed
+            on_aspect_ratio_changed=self.on_aspect_ratio_changed,
+            on_text_changed=self._on_text_changed,
+            available_fonts=self.current_text_object.get_available_fonts(),
+            on_font_changed=self._on_font_changed,
+            text_color=self.current_text_object.color,
+            on_text_color_changed=self._on_text_color_changed,
+            text_size=self.current_text_object.size,
+            on_text_size_changed=self._on_text_size_changed,
+            text_gravity=self.current_text_object.gravity,
+            on_text_gravity_changed=self._on_text_gravity_changed,
         )
+
         self.sidebar = self.sidebar_info['sidebar']
         self.sidebar.set_size_request(250, -1)
         self.sidebar.set_visible(False)
@@ -127,7 +145,7 @@ class GradientUI:
         self.spinner.start()
 
         self.process_image()
-        self.save_btn.set_sensitive(True)
+        self._set_save_and_copy_sensitive(True)
 
     def _on_gradient_changed(self):
         """Called when any gradient setting is changed"""
@@ -140,6 +158,46 @@ class GradientUI:
         self.processor.padding = self.padding
         if self.image_path:
             self.process_image()
+
+
+
+    def _on_text_changed(self, entry):
+        self.current_text_object.text = entry.get_text()
+        self.processor.text = self.current_text_object
+        if self.image_path:
+            self.process_image()
+
+    def _on_font_changed(self, combo):
+        active_iter = combo.get_active_iter()
+        if active_iter is not None:
+            model = combo.get_model()
+            font = model[active_iter][0]
+            self.current_text_object.font = font
+            self.processor.text = self.current_text_object
+            if self.image_path:
+                self.process_image()
+
+    def _on_text_color_changed(self, button):
+        color = button.get_rgba()
+        self.current_text_object.color = color.to_string()
+        self.processor.text = self.current_text_object
+        if self.image_path:
+            self.process_image()
+
+    def _on_text_size_changed(self, spin):
+        size = int(spin.get_value())
+        self.current_text_object.size = size
+        self.processor.text = self.current_text_object
+        if self.image_path:
+            self.process_image()
+
+    def _on_text_gravity_changed(self, combo):
+        gravity = combo.get_active_text()
+        if gravity:
+            self.current_text_object.gravity = gravity
+            self.processor.text = self.current_text_object
+            if self.image_path:
+                self.process_image()
 
     @staticmethod
     def parse_aspect_ratio(text: str) -> float | None:
@@ -206,7 +264,7 @@ class GradientUI:
             self.spinner.start()
 
             self.process_image()
-            self.save_btn.set_sensitive(True)
+            self._set_save_and_copy_sensitive(True)
         except Exception as e:
             print(f"Error opening file: {e}")
 
@@ -293,7 +351,7 @@ class GradientUI:
             self.spinner.start()
 
             self.process_image()
-            self.save_btn.set_sensitive(True)
+            self._set_save_and_copy_sensitive(True)
             return True
 
         return False
@@ -309,6 +367,97 @@ class GradientUI:
         except Exception as e:
             print(f"Error saving file: {e}")
 
+    def on_copy_from_clicked(self, button):
+        self._previous_stack_child = self.image_stack.get_visible_child_name()
+        self._set_loading_state(True)
+        clipboard = Gdk.Display.get_default().get_clipboard()
+        clipboard.read_texture_async(
+            None,
+            self._handle_clipboard_texture
+        )
+
+    def _set_loading_state(self, is_loading):
+        if is_loading:
+            self.image_stack.set_visible_child_name("loading")
+            self.spinner.start()
+        else:
+            child = getattr(self, "_previous_stack_child", "content")
+            self.image_stack.set_visible_child_name(child)
+            self.spinner.stop()
+
+    def _handle_clipboard_texture(self, clipboard, result):
+        try:
+            texture = clipboard.read_texture_finish(result)
+            if texture is None:
+                print("No image found in clipboard")
+                self._set_loading_state(False)
+                return
+
+            width = texture.get_width()
+            height = texture.get_height()
+            print(f"dimensions: {width}:{height}")
+            paintable = texture
+            temp_clipboard_path = os.path.join(self.temp_dir, "clipboard_image.png")
+            success = paintable.save_to_png(temp_clipboard_path)
+
+            if not success:
+                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+                cr = cairo.Context(surface)
+
+                stride = surface.get_stride()
+                data = bytearray(stride * height)
+                texture.download(data, stride)
+
+                mem_surface = cairo.ImageSurface.create_for_data(
+                    data, cairo.FORMAT_ARGB32, width, height, stride
+                )
+
+                cr.set_source_surface(mem_surface, 0, 0)
+                cr.paint()
+                surface.write_to_png(temp_clipboard_path)
+
+            self.image_path = temp_clipboard_path
+            self.sidebar_info['filename_row'].set_subtitle("Clipboard Image")
+            self.sidebar_info['location_row'].set_subtitle("From clipboard")
+            self.sidebar.set_visible(True)
+            self.process_image()
+            self._set_save_and_copy_sensitive(True)
+
+        except Exception as e:
+            print(f"Error processing clipboard image: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            self._set_loading_state(False)
+
+    def on_copy_to_clicked(self, button):
+        if not self.processed_path or not os.path.exists(self.processed_path):
+            print("No processed image to copy")
+            return
+        try:
+            clipboard = Gdk.Display.get_default().get_clipboard()
+            with open(self.processed_path, "rb") as f:
+                png_data = f.read()
+            content_provider = Gdk.ContentProvider.new_for_bytes("image/png", GLib.Bytes.new(png_data))
+            clipboard.set_content(content_provider)
+
+            notification = Gio.Notification.new("Image Copied")
+            notification.set_body("The edited image has been copied to the clipboard.")
+            self.app.send_notification("image-copied", notification)
+
+        except Exception as e:
+            print(f"Error copying processed image to clipboard: {e}")
+            import traceback
+            traceback.print_exc()
+
+
     def on_about_clicked(self, button):
         about = create_about_dialog()
         about.present()
+
+    def _set_save_and_copy_sensitive(self, sensitive: bool):
+        if self.save_btn:
+            self.save_btn.set_sensitive(sensitive)
+        if self.copy_btn:
+            self.copy_btn.set_sensitive(sensitive)
+
