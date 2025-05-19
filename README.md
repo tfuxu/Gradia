@@ -1,13 +1,16 @@
-# Gradia
+<h1 align="center">Gradia</h1>
 
-Make your screenshots ready for the world.
+<p align="center">
+  <img src="data/icons/hicolor/scalable/apps/io.github.AlexanderVanhee.Gradia.svg" alt="Gradia Logo" height="128">
+</p>
+
+<p align="center"><em>Make your screenshots ready for the world.</em></p>
+
+---
 
 Gradia allows you to quickly modify screenshots of application windows to put them better in context.
 
 ## Screenshots
 
-### Showcase
 ![Showcase screenshot](screenshots/showcase.png)
-
-### Homepage
 ![Home screenshot](screenshots/home.png)
