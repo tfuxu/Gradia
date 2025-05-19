@@ -35,7 +35,7 @@ class GradientSelector:
         self.start_color = start_color
         self.end_color = end_color
         self.angle = angle
-        self.callback = callback  # Callback to be called when values change
+        self.callback = callback
         self.widget = self._build_ui()
 
     def _build_ui(self):
@@ -110,11 +110,9 @@ class GradientSelector:
             self.callback()
 
     def get_gradient_background(self):
-        """Returns a GradientBackground object with current settings"""
         return GradientBackground(
             start_color=self.start_color,
             end_color=self.end_color,
             angle=self.angle
         )
-
 

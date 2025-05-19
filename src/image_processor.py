@@ -7,18 +7,6 @@ import time
 import threading
 import re
 
-class SolidBackground(Background):
-    def __init__(self, color="#FFFFFF"):
-        self.color = color
-
-    def prepare_command(self, width, height):
-        return [
-            "-size", f"{width}x{height}",
-            f"xc:{self.color}"
-        ]
-
-    def get_name(self):
-        return f"solid-{self.color}"
 
 class ImageBackground(Background):
     def __init__(self, background_image_path, resize="fill"):
@@ -45,45 +33,45 @@ class ImageBackground(Background):
         return f"image-{filename}-{self.resize}"
 
 class Text:
-    def __init__(self, text, font="Adwaita-Sans", color="white", size=42, gravity="south"):
+    def __init__(self, text, font="Adwaita-Sans-Bold", color="white", size=42, gravity="south"):
         self.text = text
         self.font = font
         self.color = color
         self.size = size
         self.gravity = gravity
 
-    def prepare_command(self, width, height):
+    def prepare_command(self, width, height, padding=10):
+        offset_x = 0
+        offset_y = 0
+
+        g = self.gravity.lower()
+
+        if "west" in g:
+            offset_x = padding
+        elif "east" in g:
+            offset_x = padding
+
+        if "north" in g:
+            offset_y = padding
+        elif "south" in g:
+            offset_y = padding
+
         return [
             "-font", self.font,
             "-pointsize", str(self.size),
             "-fill", self.color,
             "-gravity", self.gravity,
-            "-annotate", "+0+0", self.text
+            "-annotate", f"+{offset_x}+{offset_y}", self.text
         ]
+
     def get_available_fonts(self):
         try:
             command = ["magick", "convert", "-list", "font"]
             result = subprocess.run(command, capture_output=True, text=True, check=True)
-            fonts = set()
-            font_families = {}
-            for line in result.stdout.splitlines():
-                match = re.search(r"^  Font: (.+)$", line)
-                if match:
-                    font_name = match.group(1).strip()
-                    parts = font_name.split('-')
-                    family = parts[0]
-                    style = ""
-                    if len(parts) > 1:
-                        style = '-'.join(parts[1:])
 
-                    if not style or style.lower() == 'regular':
-                        font_families[family] = font_name
-                    elif family not in font_families:
-                        font_families[family] = font_name
-
-            return sorted(list(font_families.values()))
+            return result
         except (subprocess.CalledProcessError, FileNotFoundError):
-            return []
+            return
 
 class ProcessingTask:
     def __init__(self, image_path, output_path, callback=None):
@@ -189,7 +177,7 @@ class ImageProcessor:
         aspect_ratio=None,
         text=None
     ):
-        self.background = background or GradientBackground()
+        self.background = background
         self.padding = padding
         self.aspect_ratio = aspect_ratio
         self.text = text

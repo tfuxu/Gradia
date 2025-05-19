@@ -33,6 +33,7 @@ gradia_sources = [
   'image_processor.py',
   'background.py',
   'gradient.py',
+  'solid.py',
   'ui_parts.py'
 ]
 

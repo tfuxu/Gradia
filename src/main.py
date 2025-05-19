@@ -8,7 +8,6 @@ gi.require_version('Adw', '1')
 gi.require_version('Gio', '2.0')
 
 from gi.repository import Adw, Gtk, Gio
-
 from .ui import GradientUI
 
 class GradiaApp(Adw.Application):
@@ -28,13 +27,12 @@ class GradiaApp(Adw.Application):
     def do_open(self, files, n_files, hint):
         if files:
             first_file = files[0].get_path()
-            print("Opened file:", first_file)
             self.file_to_open = first_file
         self.activate()
 
     def do_shutdown(self):
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-        super(GradiaApp, self).do_shutdown()
+        shutil.rmtree(self.temp_dir, ignore_errors=False)
+        Gio.Application.do_shutdown(self)
 
 def main(version=None):
     app = GradiaApp()
