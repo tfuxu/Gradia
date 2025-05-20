@@ -4,21 +4,25 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
   <name>Gradia</name>
   <summary>Make screenshots ready for the world</summary>
   <description>
     <p>Gradia is an app to make screenshots ready for the world — quickly add backgrounds, change aspect ratios and add padding.</p>
   </description>
 
-  <developer id="io.github.AlexanderVanhee">
+  <developer id="io.github.alexandervanhee">
     <name>Alexander Vanhee</name>
   </developer>
 
   <url type="homepage">https://github.com/AlexanderVanhee/Gradia</url>
   <url type="vcs-browser">https://github.com/AlexanderVanhee/Gradia</url>
   <url type="bugtracker">https://github.com/AlexanderVanhee/Gradia/issues</url>
-  <url type="contact">mailto:alexander.vanhee@example.com</url>
-  <url type="contribute">https://github.com/AlexanderVanhee/Gradia/blob/main/CONTRIBUTING.md</url>
 
   <translation type="gettext">gradia</translation>
 
@@ -31,19 +35,26 @@
     <color type="primary" scheme_preference="dark">#4b0082</color>
   </branding>
 
+  <releases>
+    <release version="1.0.0" date="2025-05-20">
+      <description>
+        <p>Initial release of Gradia. Includes:</p>
+        <ul>
+          <li>Background editing for screenshots</li>
+          <li>Aspect ratio adjustments</li>
+          <li>Padding controls</li>
+          <li>Seamless clipboard integration for faster workflow</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/AlexanderVanhee/Gradia/blob/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
-      <caption>The home page</caption>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
     </screenshot>
     <screenshot>
-      <image>https://github.com/AlexanderVanhee/Gradia/blob/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/showcase.png</image>
-      <caption>Easily edit screenshots</caption>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/showcase.png</image>
     </screenshot>
   </screenshots>
-
-  <releases>
-  </releases>
-
 </component>
 

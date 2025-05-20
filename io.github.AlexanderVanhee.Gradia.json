@@ -22,24 +22,28 @@
     "*.la",
     "*.a"
   ],
+  "build-options": {
+    "env": {
+      "PATH": "/app/bin:/usr/bin"
+    }
+  },
   "modules": [
     {
       "name": "imagemagick",
       "buildsystem": "autotools",
+      "config-opts": [
+        "--prefix=/app",
+	"--without-perl",
+        "--without-magick-plus-plus",
+        "--disable-docs",
+	"--without-x"
+      ],
       "sources": [
         {
           "type": "archive",
-          "url": "https://imagemagick.org/archive/releases/ImageMagick-7.1.1-15.tar.xz",
-          "sha256": "c8589ea233f678b0474daaba19a55ce783b52b25495fb5ba93ac1d377f65bb2f"
+          "url": "https://imagemagick.org/archive/releases/ImageMagick-7.1.1-47.tar.xz",
+          "sha256": "2396cd3c4237cfbc09a89d31d1cee157ee11fbc8ec1e540530e10175cb707160"
         }
-      ],
-      "config-opts": [
-        "--disable-static",
-        "--enable-shared",
-        "--with-modules",
-        "--without-perl",
-        "--without-magick-plus-plus",
-        "--disable-docs"
       ]
     },
     {
@@ -56,8 +60,5 @@
         "--libdir=lib"
       ]
     }
-  ],
-  "build-options": {
-    "env": {}
-  }
+  ]
 }
