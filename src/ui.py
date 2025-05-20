@@ -8,10 +8,9 @@ import cairo
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Gio, Gsk, Adw, Gdk, GLib, Graphene
-from .image_processor import ImageProcessor, GradientBackground, Text
-from .gradient import GradientSelector
-from .solid import SolidSelector
+from gi.repository import Gtk, Gio, Gsk, Adw, Gdk, GLib, Graphene, GdkPixbuf
+from .image_processor import ImageProcessor, Text
+from .gradient import GradientSelector, GradientBackground
 from .ui_parts import *
 
 def save_texture_to_file(texture, temp_dir):
@@ -40,9 +39,6 @@ class GradientUI:
     DEFAULT_WINDOW_HEIGHT = 600
     DEFAULT_PANED_POSITION = 650
     SIDEBAR_WIDTH = 200
-    INITIAL_START_COLOR = "#4A90E2"
-    INITIAL_END_COLOR = "#50E3C2"
-    INITIAL_ANGLE = 0
 
 
     # Stack page names
@@ -62,19 +58,13 @@ class GradientUI:
         self.temp_dir = temp_dir
         self.image_path = file
         self.processed_path = None
+        self.processed_pixbuf = None
         self.current_text_object = Text(text='')
 
         # Initialize gradient selector with callback
         self.gradient_selector = GradientSelector(
-            start_color=self.INITIAL_START_COLOR,
-            end_color=self.INITIAL_END_COLOR,
-            angle=self.INITIAL_ANGLE,
+            gradient= GradientBackground(),
             callback=self._on_gradient_changed
-        )
-
-        self.solid_selector = SolidSelector(
-            color=self.INITIAL_START_COLOR,
-            callback=self._on_solid_changed
         )
 
         self.processor = ImageProcessor(padding=20, background=GradientBackground())
@@ -167,6 +157,10 @@ class GradientUI:
                 setattr(self.processor, "padding", int(w.get_value())),
                 self._trigger_processing()
             ),
+            on_corner_radius_changed= lambda w: (
+                setattr(self.processor, "corner_radius", int(w.get_value())),
+                self._trigger_processing()
+            ),
             on_aspect_ratio_changed=self.on_aspect_ratio_changed,
             on_text_changed=self._update_and_process(self.current_text_object, "text", lambda w: w.get_text(), assign_to="text"),
             text_color=self.current_text_object.color,
@@ -217,15 +211,14 @@ class GradientUI:
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
 
     def _update_sidebar_from_file(self, file_path):
-        """Update sidebar with file information"""
         filename = os.path.basename(file_path)
         directory = os.path.dirname(file_path)
         self.sidebar_info['filename_row'].set_subtitle(filename)
         self.sidebar_info['location_row'].set_subtitle(directory)
         self.sidebar.set_visible(True)
 
-    def _on_gradient_changed(self):
-        self.processor.background = self.gradient_selector.get_gradient_background()
+    def _on_gradient_changed(self, updated_gradient):
+        self.processor.background = updated_gradient
         self._trigger_processing()
 
     def _on_solid_changed(self):
@@ -249,7 +242,6 @@ class GradientUI:
             print(f"Invalid aspect ratio: {text} ({e})")
 
     def _trigger_processing(self):
-        """Trigger image processing if an image is loaded"""
         if self.image_path:
             self.process_image()
 
@@ -282,40 +274,39 @@ class GradientUI:
         if not self.image_path:
             return
 
-        self._clean_previous_processed_file()
-        self.processed_path = os.path.join(self.temp_dir, self.TEMP_PROCESSED_FILENAME)
-
         # Run processing in background
         threading.Thread(target=self._process_in_background, daemon=True).start()
 
-    def _clean_previous_processed_file(self):
-        if self.processed_path and os.path.exists(self.processed_path):
-            try:
-                os.remove(self.processed_path)
-            except Exception:
-                pass
-
     def _process_in_background(self):
         try:
-            self.processor.process(self.image_path, self.processed_path)
+            pixbuf = self.processor.process(self.image_path)
+            self.processed_pixbuf = pixbuf
+            self.processed_path = os.path.join(self.temp_dir, self.TEMP_PROCESSED_FILENAME)
+            pixbuf.savev(self.processed_path, "png", [], [])
+
             # Schedule UI update on the main thread
             GLib.idle_add(self._update_image_preview, priority=GLib.PRIORITY_DEFAULT)
         except Exception as e:
             print(f"Error processing image: {e}")
 
     def _update_image_preview(self):
-        if os.path.exists(self.processed_path):
-            self.picture.set_file(Gio.File.new_for_path(self.processed_path))
+        if self.processed_pixbuf:
+            # Create a Paintable from the pixbuf
+            paintable = Gdk.Texture.new_for_pixbuf(self.processed_pixbuf)
+            self.picture.set_paintable(paintable)
             self._update_processed_image_size()
             self._hide_loading_state()
         return False
 
     def _update_processed_image_size(self):
         try:
-            identify_cmd = ["magick", "identify", "-format", "%wx%h", self.processed_path]
-            result = subprocess.run(identify_cmd, capture_output=True, text=True, check=True)
-            size_str = result.stdout.strip()
-            self.sidebar_info['processed_size_row'].set_subtitle(size_str)
+            if self.processed_pixbuf:
+                width = self.processed_pixbuf.get_width()
+                height = self.processed_pixbuf.get_height()
+                size_str = f"{width}x{height}"
+                self.sidebar_info['processed_size_row'].set_subtitle(size_str)
+            else:
+                self.sidebar_info['processed_size_row'].set_subtitle("Unknown")
         except Exception as e:
             self.sidebar_info['processed_size_row'].set_subtitle("Error")
             print(f"Error getting processed image size: {e}")
@@ -358,7 +349,11 @@ class GradientUI:
                 return
 
             save_path = file.get_path()
-            shutil.copy(self.processed_path, save_path)
+            if self.processed_path and os.path.exists(self.processed_path):
+                shutil.copy(self.processed_path, save_path)
+            elif self.processed_pixbuf:
+                # Save directly from pixbuf if file doesn't exist
+                self.processed_pixbuf.savev(save_path, "png", [], [])
         except Exception as e:
             print(f"Error saving file: {e}")
 
@@ -383,7 +378,12 @@ class GradientUI:
             self.process_image()
 
         except Exception as e:
-            print(f"Error processing clipboard image: {e}")
+            if "No compatible transfer format found" in str(e):
+                self._show_notification("Clipboard does not contain an image.")
+            else:
+                self._show_notification("Failed to copy image to clipboard.")
+                print(f"Error processing clipboard image: {e}")
+
         finally:
             self._set_loading_state(False)
 
@@ -402,21 +402,27 @@ class GradientUI:
             self.spinner.stop()
 
     def on_copy_to_clicked(self, button):
-        if not self.processed_path or not os.path.exists(self.processed_path):
+        if self.processed_pixbuf:
+            try:
+                if not self.processed_path or not os.path.exists(self.processed_path):
+                    # Save to temp file if needed
+                    self.processed_path = os.path.join(self.temp_dir, "clipboard_temp.png")
+                    self.processed_pixbuf.savev(self.processed_path, "png", [], [])
+
+                with open(self.processed_path, "rb") as f:
+                    png_data = f.read()
+
+                bytes_data = GLib.Bytes.new(png_data)
+                clipboard = Gdk.Display.get_default().get_clipboard()
+                self._content_provider = Gdk.ContentProvider.new_for_bytes("image/png", bytes_data)
+                clipboard.set_content(self._content_provider)
+                self._show_notification("Modified image copied to clipboard.")
+
+            except Exception as e:
+                self._show_notification("Failed to copy image to clipboard.")
+                print(f"Error copying processed image to clipboard: {e}")
+        else:
             print("No processed image to copy")
-            return
-        try:
-            clipboard = Gdk.Display.get_default().get_clipboard()
-            with open(self.processed_path, "rb") as f:
-                png_data = f.read()
-            content_provider = Gdk.ContentProvider.new_for_bytes("image/png", GLib.Bytes.new(png_data))
-            clipboard.set_content(content_provider)
-
-            self._show_notification("Modified image copied to clipboard.")
-
-        except Exception as e:
-            self._show_notification("Failed to copy image to clipboard.")
-            print(f"Error copying processed image to clipboard: {e}")
 
     def _show_notification(self, message):
         if self.toast_overlay:
@@ -426,6 +432,7 @@ class GradientUI:
     def _on_shortcuts_activated(self, action, param):
         shortcuts = create_shortcuts_dialog()
         shortcuts.present()
+
     def _on_about_activated(self, action, param):
         about = create_about_dialog()
         about.present(self.win)

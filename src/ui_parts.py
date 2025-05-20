@@ -15,7 +15,7 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     open_btn.connect("clicked", on_open_clicked)
     header_bar.pack_start(open_btn)
 
-    # Copy from clipboard button (on the left side)
+    # Copy from clipboard button
     copy_icon = Gtk.Image.new_from_icon_name("edit-copy-symbolic")
     copy_btn = Gtk.Button(child=copy_icon)
     copy_btn.get_style_context().add_class("flat")
@@ -126,7 +126,7 @@ def create_image_stack(on_file_dropped, on_open_clicked):
 
     return stack, picture, spinner
 
-def create_image_options_group( on_padding_changed, on_aspect_ratio_changed):
+def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_corner_radius_changed):
     padding_group = Adw.PreferencesGroup(title="Image Options")
 
     padding_row = Adw.ActionRow(title="Padding")
@@ -135,6 +135,14 @@ def create_image_options_group( on_padding_changed, on_aspect_ratio_changed):
     padding_spinner.connect("value-changed", on_padding_changed)
     padding_row.add_suffix(padding_spinner)
     padding_group.add(padding_row)
+
+    corner_radius_row = Adw.ActionRow(title="Corner Radius")
+    corner_radius_adjustment = Gtk.Adjustment(value=15, lower=0, upper=50, step_increment=1, page_increment=5)
+    corner_radius_spinner = Gtk.SpinButton(adjustment=corner_radius_adjustment, numeric=True, valign=Gtk.Align.CENTER)
+    corner_radius_spinner.connect("value-changed", on_corner_radius_changed)
+    corner_radius_row.add_suffix(corner_radius_spinner)
+    padding_group.add(corner_radius_row)
+
 
     aspect_ratio_row = Adw.ActionRow(title="Aspect Ratio")
     aspect_ratio_entry = Gtk.Entry(placeholder_text="16:9", valign=Gtk.Align.CENTER)
@@ -181,7 +189,7 @@ def create_text_overlay_group( on_text_changed,
     text_group.add(size_row)
 
     # Gravity selector
-    gravity_row = Adw.ActionRow(title="Gravity")
+    gravity_row = Adw.ActionRow(title="Location")
     gravity_combo = Gtk.ComboBoxText.new()
     gravity_combo.set_valign(Gtk.Align.CENTER)
     gravity_options = ["northwest", "north", "northeast", "west", "center", "east", "southwest", "south", "southeast"]
@@ -211,7 +219,7 @@ def create_file_info_group():
 
 
 def create_sidebar_ui(
-    gradient_selector_widget, on_padding_changed, on_aspect_ratio_changed,
+    gradient_selector_widget, on_padding_changed,on_corner_radius_changed, on_aspect_ratio_changed,
     on_text_changed, text_color,
     on_text_color_changed, text_size, on_text_size_changed,
     text_gravity, on_text_gravity_changed
@@ -225,7 +233,7 @@ def create_sidebar_ui(
 
     # Add grouped UI elements
     padding_group, padding_spinner, aspect_ratio_entry = create_image_options_group(
-        on_padding_changed, on_aspect_ratio_changed)
+        on_padding_changed, on_aspect_ratio_changed,on_corner_radius_changed)
     controls_box.append(padding_group)
 
     text_group, text_entry, color_button, size_spin, gravity_combo = create_text_overlay_group(
@@ -252,7 +260,6 @@ def create_sidebar_ui(
         'size_spin': size_spin,
         'gravity_combo': gravity_combo,
     }
-
 
 def create_about_dialog():
     about = Adw.AboutDialog(

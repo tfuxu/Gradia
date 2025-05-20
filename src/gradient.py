@@ -1,15 +1,14 @@
-import os
-import shutil
-import gi
-import threading
-import subprocess
 
+import numpy as np
+from PIL import Image
+import math
+import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from gi.repository import Gtk, Gdk, Adw
 
-from gi.repository import Gtk, Gio, Adw, Gdk, GLib
-from .background import Background
+from .background import Background  # Assuming this is your base class
 
 
 class GradientBackground(Background):
@@ -18,101 +17,114 @@ class GradientBackground(Background):
         self.end_color = end_color
         self.angle = angle
 
-    def prepare_command(self, width, height):
-        gradient_spec = f"gradient:{self.start_color}-{self.end_color}"
-        return [
-            "-size", f"{width}x{height}",
-            "-define", f"gradient:angle={self.angle}",
-            gradient_spec
-        ]
+    def prepare_image(self, width, height):
+        """
+        Returns a PIL Image with a linear gradient background using numpy,
+        angled at self.angle degrees.
+        """
+        # Convert hex to RGB
+        start_rgb = np.array(self._hex_to_rgb(self.start_color), dtype=np.float32)
+        end_rgb = np.array(self._hex_to_rgb(self.end_color), dtype=np.float32)
+
+        # Create coordinate grid
+        x = np.linspace(0, width - 1, width)
+        y = np.linspace(0, height - 1, height)
+        xx, yy = np.meshgrid(x, y)
+
+        # Convert angle to radians and compute gradient vector
+        angle_rad = math.radians(self.angle % 360)
+        vx = math.cos(angle_rad)
+        vy = math.sin(angle_rad)
+
+        # Project each pixel onto the gradient axis
+        # Normalize pixel coords to center-based coordinates
+        cx, cy = (width - 1) / 2, (height - 1) / 2
+        proj = (xx - cx) * vx + (yy - cy) * vy
+
+        # Normalize projection to [0,1]
+        min_proj = proj.min()
+        max_proj = proj.max()
+        norm_proj = (proj - min_proj) / (max_proj - min_proj)
+
+        # Interpolate colors
+        gradient = (start_rgb[None, None, :] * (1 - norm_proj[..., None]) +
+                    end_rgb[None, None, :] * norm_proj[..., None])
+
+        # Prepare final image array with alpha channel
+        img_array = np.zeros((height, width, 4), dtype=np.uint8)
+        img_array[..., :3] = np.round(gradient).astype(np.uint8)
+        img_array[..., 3] = 255  # Fully opaque
+
+        return Image.fromarray(img_array, mode="RGBA")
+
+    def _hex_to_rgb(self, hex_color):
+        """Convert hex color string to RGB tuple."""
+        hex_color = hex_color.lstrip('#')
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
     def get_name(self):
         return f"gradient-{self.start_color}-{self.end_color}-{self.angle}"
 
 
 class GradientSelector:
-    def __init__(self, start_color="#4A90E2", end_color="#50E3C2", angle=0, callback=None):
-        self.start_color = start_color
-        self.end_color = end_color
-        self.angle = angle
+    def __init__(self, gradient: GradientBackground, callback=None):
+        self.gradient = gradient
         self.callback = callback
         self.widget = self._build_ui()
 
     def _build_ui(self):
-        gradient_group = Adw.PreferencesGroup()
-        gradient_group.set_title("Gradient Background")
+        group = Adw.PreferencesGroup(title="Gradient Background")
+        group.add(self._create_color_row("Start Color", self.gradient.start_color, self._on_start_color_changed))
+        group.add(self._create_color_row("End Color", self.gradient.end_color, self._on_end_color_changed))
+        group.add(self._create_angle_row())
+        return group
 
-        # Start Color
-        start_row = Adw.ActionRow()
-        start_row.set_title("Start Color")
+    def _create_color_row(self, title, color, callback):
+        row = Adw.ActionRow(title=title)
+        color_button = Gtk.ColorButton()
+        rgba = Gdk.RGBA()
+        rgba.parse(color)
+        color_button.set_rgba(rgba)
+        color_button.set_valign(Gtk.Align.CENTER)
+        color_button.connect("color-set", callback)
+        row.add_suffix(color_button)
 
-        self.start_button = Gtk.ColorButton()
-        start_rgba = Gdk.RGBA()
-        start_rgba.parse(self.start_color)
-        self.start_button.set_rgba(start_rgba)
-        self.start_button.connect("color-set", self._on_start_color_set)
-        self.start_button.set_valign(Gtk.Align.CENTER)
-        start_row.add_suffix(self.start_button)
-        gradient_group.add(start_row)
+        if title == "Start Color":
+            self.start_button = color_button
+        else:
+            self.end_button = color_button
 
-        # End Color
-        end_row = Adw.ActionRow()
-        end_row.set_title("End Color")
+        return row
 
-        self.end_button = Gtk.ColorButton()
-        end_rgba = Gdk.RGBA()
-        end_rgba.parse(self.end_color)
-        self.end_button.set_rgba(end_rgba)
-        self.end_button.connect("color-set", self._on_end_color_set)
-        self.end_button.set_valign(Gtk.Align.CENTER)
-        end_row.add_suffix(self.end_button)
-        gradient_group.add(end_row)
-
-        # Angle
-        angle_row = Adw.ActionRow()
-        angle_row.set_title("Angle")
-
-        angle_adjustment = Gtk.Adjustment(value=self.angle, lower=0, upper=360, step_increment=45, page_increment=45)
-        self.angle_spinner = Gtk.SpinButton()
-        self.angle_spinner.set_adjustment(angle_adjustment)
+    def _create_angle_row(self):
+        row = Adw.ActionRow(title="Angle")
+        adjustment = Gtk.Adjustment(value=self.gradient.angle, lower=0, upper=360, step_increment=45)
+        self.angle_spinner = Gtk.SpinButton(adjustment=adjustment)
         self.angle_spinner.set_numeric(True)
         self.angle_spinner.set_valign(Gtk.Align.CENTER)
         self.angle_spinner.connect("value-changed", self._on_angle_changed)
+        row.add_suffix(self.angle_spinner)
+        return row
 
-        angle_row.add_suffix(self.angle_spinner)
-        gradient_group.add(angle_row)
+    def _on_start_color_changed(self, button):
+        self.gradient.start_color = self._rgba_to_hex(button.get_rgba())
+        self._notify_change()
 
-        return gradient_group
-
-    def _on_start_color_set(self, button):
-        rgba = button.get_rgba()
-        self.start_color = "#{:02x}{:02x}{:02x}".format(
-            int(rgba.red * 255),
-            int(rgba.green * 255),
-            int(rgba.blue * 255)
-        )
-        if self.callback:
-            self.callback()
-
-    def _on_end_color_set(self, button):
-        rgba = button.get_rgba()
-        self.end_color = "#{:02x}{:02x}{:02x}".format(
-            int(rgba.red * 255),
-            int(rgba.green * 255),
-            int(rgba.blue * 255)
-        )
-        if self.callback:
-            self.callback()
+    def _on_end_color_changed(self, button):
+        self.gradient.end_color = self._rgba_to_hex(button.get_rgba())
+        self._notify_change()
 
     def _on_angle_changed(self, spin_button):
-        self.angle = int(spin_button.get_value())
+        self.gradient.angle = int(spin_button.get_value())
+        self._notify_change()
+
+    def _notify_change(self):
         if self.callback:
-            self.callback()
+            self.callback(self.gradient)
 
-    def get_gradient_background(self):
-        return GradientBackground(
-            start_color=self.start_color,
-            end_color=self.end_color,
-            angle=self.angle
+    def _rgba_to_hex(self, rgba):
+        return "#{:02x}{:02x}{:02x}".format(
+            int(rgba.red * 255),
+            int(rgba.green * 255),
+            int(rgba.blue * 255),
         )
-
