@@ -53,10 +53,10 @@ class GradientUI:
     TEMP_PROCESSED_FILENAME = "processed.png"
     TEMP_CLIPBOARD_FILENAME = "clipboard_image.png"
 
-    def __init__(self, app, temp_dir, file=None):
+    def __init__(self, app, temp_dir,):
         self.app = app
         self.temp_dir = temp_dir
-        self.image_path = file
+        self.image_path = None
         self.processed_path = None
         self.processed_pixbuf = None
         self.current_text_object = Text(text='')

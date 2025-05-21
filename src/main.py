@@ -7,7 +7,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 gi.require_version('Gio', '2.0')
 
-from gi.repository import Adw, Gtk, Gio
+from gi.repository import Adw, Gtk, Gio, GLib
 from .ui import GradientUI
 
 class GradiaApp(Adw.Application):
@@ -20,19 +20,20 @@ class GradiaApp(Adw.Application):
         self.file_to_open = None
 
     def do_activate(self):
-        self.ui = GradientUI(self, self.temp_dir, file=self.file_to_open)
+        self.ui = GradientUI(self, self.temp_dir)
         self.ui.build_ui()
         self.ui.show()
 
     def do_open(self, files, n_files, hint):
-        if files:
-            first_file = files[0].get_path()
-            self.file_to_open = first_file
         self.activate()
 
     def do_shutdown(self):
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-        Gio.Application.do_shutdown(self)
+        def clean_temp():
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+            return False
+
+        GLib.timeout_add(100, clean_temp)
+        Adw.Application.do_shutdown(self)
 
 def main(version=None):
     app = GradiaApp()
