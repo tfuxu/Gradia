@@ -31,7 +31,7 @@ class GradiaApp(Adw.Application):
         self.activate()
 
     def do_shutdown(self):
-        shutil.rmtree(self.temp_dir, ignore_errors=False)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
         Gio.Application.do_shutdown(self)
 
 def main(version=None):
