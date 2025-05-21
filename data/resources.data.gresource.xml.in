@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/io/github/AlexanderVanhee/Gradia">
+  <gresource prefix="/be/alexandervanhee/gradia">
     <file preprocess="xml-stripblanks">icons/scalable/actions/clipboard-symbolic.svg</file>
   </gresource>
 </gresources>

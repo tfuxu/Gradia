@@ -1,4 +1,4 @@
-application_id = 'io.github.AlexanderVanhee.Gradia'
+application_id = 'be.alexandervanhee.gradia'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(

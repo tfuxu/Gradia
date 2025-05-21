@@ -1,5 +1,5 @@
 {
-  "id": "io.github.AlexanderVanhee.Gradia",
+  "id": "be.alexandervanhee.gradia",
   "runtime": "org.gnome.Platform",
   "runtime-version": "48",
   "sdk": "org.gnome.Sdk",

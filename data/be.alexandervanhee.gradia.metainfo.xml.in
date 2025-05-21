@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.AlexanderVanhee.Gradia</id>
+  <id>be.alexandervanhee.gradia</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
@@ -26,7 +26,7 @@
 
   <translation type="gettext">gradia</translation>
 
-  <launchable type="desktop-id">io.github.AlexanderVanhee.Gradia.desktop</launchable>
+  <launchable type="desktop-id">be.alexandervanhee.gradia.desktop</launchable>
 
   <content_rating type="oars-1.1" />
 

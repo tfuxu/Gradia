@@ -1,5 +1,5 @@
 {
-  "id": "io.github.AlexanderVanhee.Gradia",
+  "id": "be.alexandervanhee.gradia",
   "runtime": "org.gnome.Platform",
   "runtime-version": "48",
   "sdk": "org.gnome.Sdk",
@@ -64,7 +64,7 @@
         {
           "type": "git",
           "url": "https://github.com/AlexanderVanhee/Gradia.git",
-          "commit": "6bf2afcf49456fb27442d8f2d148a6b7e2493821"
+          "commit": "3dcc0b21cdf7873fa67bb3f03ad1713fe7bc3e68"
         }
       ],
       "config-opts": [

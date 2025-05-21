@@ -203,7 +203,7 @@ def create_about_dialog():
         comments="Make your images ready for the world",
         website="https://github.com/AlexanderVanhee/Gradia",
         developer_name="Alexander Vanhee",
-        application_icon="io.github.AlexanderVanhee.Gradia"
+        application_icon="be.alexandervanhee.gradia"
     )
     about.set_developers(["Alexander Vanhee"])
     about.set_license_type(Gtk.License.GPL_3_0)

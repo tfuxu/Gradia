@@ -13,7 +13,7 @@ from .window import GradientWindow
 class GradiaApp(Adw.Application):
     def __init__(self):
         super().__init__(
-            application_id="io.github.AlexanderVanhee.Gradia",
+            application_id="be.alexandervanhee.gradia",
             flags=Gio.ApplicationFlags.HANDLES_OPEN
         )
         self.temp_dir = tempfile.mkdtemp()

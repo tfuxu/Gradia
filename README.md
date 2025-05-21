@@ -1,7 +1,7 @@
 <h1 align="center">Gradia</h1>
 
 <p align="center">
-  <img src="data/icons/hicolor/scalable/apps/io.github.AlexanderVanhee.Gradia.svg" alt="Gradia Logo" height="128">
+  <img src="data/icons/hicolor/scalable/apps/be.alexandervanhee.gradia.svg" alt="Gradia Logo" height="128">
 </p>
 
 <p align="center"><em>Make your screenshots ready for the world.</em></p>
