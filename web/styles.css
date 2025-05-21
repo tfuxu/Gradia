@@ -1,0 +1,96 @@
+@font-face {
+    font-family: 'Adwaita Sans';
+    src: url('assets/AdwaitaSans-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #222226;
+}
+
+body {
+    min-height: 100vh;
+    font-family: 'Adwaita Sans', sans-serif;
+    color: #102d2c;
+}
+
+.top-section {
+    background-color: #50e3c2;
+    padding: 2rem;
+    text-align: center;
+}
+
+.top-section img {
+    display: block;
+    margin: 1rem auto;
+}
+
+.top-section h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.top-section h2 {
+    font-size: 1em;
+    font-weight: normal;
+    margin-top: 0.5rem;
+}
+
+.top-section a img {
+    margin-top: 2rem;
+}
+
+.main {
+    background-color: #222226;
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.comparison img {
+    max-width: 40%;
+    height: auto;
+}
+
+.comparison .rounded {
+    border-radius: 1em;
+}
+
+.arrow {
+    font-size: 500%;
+    margin: 0 1rem;
+}
+
+@media (max-width: 900px) {
+    .comparison {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .comparison img {
+        max-width: 100%;
+    }
+
+    .arrow {
+        transform: rotate(90deg);
+    }
+}

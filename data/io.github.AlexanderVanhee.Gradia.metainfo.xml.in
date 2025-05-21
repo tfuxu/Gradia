@@ -50,12 +50,14 @@
   </releases>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/showcase.png</image>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/showcase.png</image>
     </screenshot>
-    <screenshot type="default">
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/dark.png</image>
     </screenshot>
-
+        <screenshot>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/home.png</image>
+    </screenshot>
   </screenshots>
 </component>
 

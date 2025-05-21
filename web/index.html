@@ -5,87 +5,26 @@
     <meta charset="UTF-8" />
     <title>Gradia</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        @font-face {
-            font-family: 'Adwaita Sans';
-            src: url('assets/AdwaitaSans-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        body {
-            margin: 0;
-            background-color: #50e3c2;
-            color: #102d2c;
-            font-family: 'Adwaita Sans', sans-serif;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        img {
-            display: block;
-            margin: 1rem auto;
-        }
-
-        a img {
-            margin-top: 2rem;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: bolder;
-        }
-
-        .rounded {
-            border-radius: 1em;
-        }
-
-        .comparison {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .comparison img {
-            max-width: 40%;
-            height: auto;
-        }
-
-        .arrow {
-            font-size: calc(500%);
-            margin: 0 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .comparison {
-                flex-direction: column;
-            }
-
-            .comparison img {
-                max-width: 80%;
-            }
-
-            .arrow {
-                transform: rotate(90deg);
-            }
-        }
-    </style>
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-    <img src="assets/logo.svg" alt="Gradia Logo" width="200" height="200" />
-    <h1>Gradia</h1>
-    <h2>Make your screenshots ready for the world.</h2>
-    <a href="" rel="noopener noreferrer">
-        <img width="240" alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en" />
-    </a>
-    <div class="comparison">
-        <img src="assets/before.png" alt="Before">
-        <span class="arrow">→</span>
-        <img class="rounded" src="assets/after.png" alt="After">
+    <div class="top-section">
+        <img src="assets/logo.svg" alt="Gradia Logo" width="200" height="200" />
+        <h1>Gradia</h1>
+        <h2>Make your screenshots ready for the world.</h2>
+        <a href="" rel="noopener noreferrer">
+            <img width="240" alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en" />
+        </a>
+    </div>
+
+    <div class="main">
+        <div class="comparison">
+            <img src="assets/before.png" alt="Before">
+            <span class="arrow">➜</span>
+            <img class="rounded" src="assets/after.png" alt="After">
+        </div>
     </div>
 </body>
 
