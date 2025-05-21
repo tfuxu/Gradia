@@ -254,7 +254,8 @@ class GradientWindow:
 
     def _process_in_background(self):
         try:
-            pixbuf = self.processor.process(self.image_path)
+            self.processor.set_image_path(self.image_path)
+            pixbuf = self.processor.process()
             self.processed_pixbuf = pixbuf
             self.processed_path = os.path.join(self.temp_dir, self.TEMP_PROCESSED_FILENAME)
             pixbuf.savev(self.processed_path, "png", [], [])

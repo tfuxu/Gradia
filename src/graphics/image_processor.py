@@ -1,6 +1,6 @@
 import os
 import io
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageChops
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -11,22 +11,34 @@ from .background import Background
 from .text import Text
 
 class ImageProcessor:
-    def __init__(self, background=None, padding=20, aspect_ratio=None, text=None, corner_radius=20):
+    def __init__(self, image_path=None, background=None, padding=20, aspect_ratio=None, text=None, corner_radius=20):
         self.background = background
         self.padding = padding
         self.aspect_ratio = aspect_ratio
         self.text = text
         self.corner_radius = corner_radius
+        self.max_dimension = 1440
+        self._max_file_size = 300 * 1024
+        self.source_img = None
+        if image_path:
+            self.set_image_path(image_path)
 
-    def process(self, image_path):
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Input image not found: {image_path}")
+    def set_image_path(self, image_path):
+        if image_path != getattr(self, "_loaded_image_path", None):
+            if not os.path.exists(image_path):
+                raise FileNotFoundError(f"Input image not found: {image_path}")
+            self.source_img = self._load_and_downscale_image(image_path)
+            self._loaded_image_path = image_path
 
-        source_img = Image.open(image_path).convert("RGBA")
+    def process(self):
+        if self.source_img is None:
+            raise ValueError("No image loaded to process")
+
+        source_img = self.source_img.copy()
         width, height = source_img.size
 
         if self.padding < 0:
-            source_img = self._crop_image(source_img, width, height)
+            source_img = self._crop_image(source_img)
             width, height = source_img.size
 
         if self.corner_radius > 0:
@@ -42,7 +54,45 @@ class ImageProcessor:
 
         return self._pil_to_pixbuf(final_img)
 
-    def _crop_image(self, image, width, height):
+    def _load_and_downscale_image(self, image_path):
+        source_img = Image.open(image_path).convert("RGBA")
+
+        if self._needs_downscaling(source_img):
+            source_img = self._downscale_image(source_img)
+
+        source_img, compressed_size = self._compress_image_with_size(source_img)
+
+        while compressed_size > self._max_file_size and min(source_img.size) > 100:
+            width, height = source_img.size
+            source_img = source_img.resize((max(100, width // 2), max(100, height // 2)), Image.Resampling.LANCZOS)
+            source_img, compressed_size = self._compress_image_with_size(source_img)
+
+        return source_img
+
+    def _compress_image_with_size(self, image):
+        buffer = io.BytesIO()
+        image.save(buffer, format='PNG', optimize=True, compress_level=14)
+        size = buffer.tell()
+        buffer.seek(0)
+        compressed = Image.open(buffer).convert("RGBA")
+        return compressed, size
+
+    def _needs_downscaling(self, image):
+        width, height = image.size
+        return width > self.max_dimension or height > self.max_dimension
+
+    def _downscale_image(self, image):
+        width, height = image.size
+        if width >= height:
+            new_width = self.max_dimension
+            new_height = int(height * (self.max_dimension / width))
+        else:
+            new_height = self.max_dimension
+            new_width = int(width * (self.max_dimension / height))
+        return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    def _crop_image(self, image):
+        width, height = image.size
         crop_w = max(1, width + 2 * self.padding)
         crop_h = max(1, height + 2 * self.padding)
         offset_x = (width - crop_w) // 2
