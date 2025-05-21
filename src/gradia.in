@@ -42,5 +42,8 @@ if __name__ == '__main__':
     resource = Gio.Resource.load(os.path.join(pkgdatadir, 'gradia.gresource'))
     resource._register()
 
+    resourceData = Gio.Resource.load(os.path.join(pkgdatadir, 'resources.gresource'))
+    resourceData._register()
+
     from gradia import main
     sys.exit(main.main(VERSION))

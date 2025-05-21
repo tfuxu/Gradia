@@ -43,4 +43,14 @@ configure_file(
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )
 
+gnome = import('gnome')
+resources = gnome.compile_resources(
+  'resources',
+  'resources.data.gresource.xml.in',
+  gresource_bundle: true,
+  source_dir: meson.current_build_dir(),
+  install: true,
+  install_dir: get_option('datadir') / meson.project_name(),
+)
+
 subdir('icons')
