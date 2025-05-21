@@ -206,43 +206,41 @@ def create_about_dialog():
         application_icon="io.github.AlexanderVanhee.Gradia"
     )
     about.set_developers(["Alexander Vanhee"])
-
-    # Set license to GPL v3
     about.set_license_type(Gtk.License.GPL_3_0)
 
     return about
 
 def create_shortcuts_dialog(parent=None):
     dialog = Gtk.ShortcutsWindow(transient_for=parent, modal=True)
+    section = Gtk.ShortcutsSection(section_name="general",
+                                  title="General",
+                                  visible=True)
 
-    section = Gtk.ShortcutsSection(title="General", visible=True)
     group = Gtk.ShortcutsGroup(title="File Actions", visible=True)
 
-    group.add_shortcut(Gtk.ShortcutsShortcut(
+    group.add(Gtk.ShortcutsShortcut(
         title="Open file",
         accelerator="<Ctrl>O",
         visible=True
     ))
-
-    group.add_shortcut(Gtk.ShortcutsShortcut(
+    group.add(Gtk.ShortcutsShortcut(
         title="Save to file",
         accelerator="<Ctrl>S",
         visible=True
     ))
-
-    group.add_shortcut(Gtk.ShortcutsShortcut(
+    group.add(Gtk.ShortcutsShortcut(
         title="Copy modified image to clipboard",
         accelerator="<Ctrl>C",
         visible=True
     ))
-
-    group.add_shortcut(Gtk.ShortcutsShortcut(
+    group.add(Gtk.ShortcutsShortcut(
         title="Paste from clipboard",
         accelerator="<Ctrl>V",
         visible=True
     ))
 
-    section.append(group)
-    dialog.set_child(section)
+    section.add(group)
+    dialog.add(section)
+    dialog.connect("close-request", lambda dialog: dialog.destroy())
 
     return dialog

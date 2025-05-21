@@ -2,7 +2,4 @@
 <gresources>
   <gresource prefix="/io/github/AlexanderVanhee/Gradia">
   </gresource>
-  <gresource prefix="/io/github/AlexanderVanhee/Gradia/">
-    <file preprocess="xml-stripblanks">clipboard-symbolic.svg</file>
-  </gresource>
 </gresources>
