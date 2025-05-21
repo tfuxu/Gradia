@@ -11,7 +11,7 @@
   </supports>
 
   <name>Gradia</name>
-  <summary>Make screenshots ready for the world</summary>
+  <summary>Make your screenshots ready for the world</summary>
   <description>
     <p>Gradia is an app to make screenshots ready for the world — quickly add backgrounds, change aspect ratios and add padding.</p>
   </description>
@@ -31,8 +31,8 @@
   <content_rating type="oars-1.1" />
 
   <branding>
-    <color type="primary" scheme_preference="light">#6a0dad</color>
-    <color type="primary" scheme_preference="dark">#4b0082</color>
+    <color type="primary" scheme_preference="light">#50e3c2</color>
+    <color type="primary" scheme_preference="dark">#4b9cdd</color>
   </branding>
 
   <releases>
@@ -50,11 +50,12 @@
   </releases>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
-    </screenshot>
-    <screenshot>
       <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/showcase.png</image>
     </screenshot>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/a2f38235190e40319fa10bca4c06362bededcd4f/screenshots/home.png</image>
+    </screenshot>
+
   </screenshots>
 </component>
 
