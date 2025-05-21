@@ -8,7 +8,7 @@ gi.require_version('Adw', '1')
 gi.require_version('Gio', '2.0')
 
 from gi.repository import Adw, Gtk, Gio, GLib
-from .ui import GradientUI
+from .window import GradientWindow
 
 class GradiaApp(Adw.Application):
     def __init__(self):
@@ -20,7 +20,7 @@ class GradiaApp(Adw.Application):
         self.file_to_open = None
 
     def do_activate(self):
-        self.ui = GradientUI(self, self.temp_dir)
+        self.ui = GradientWindow(self, self.temp_dir)
         self.ui.build_ui()
         self.ui.show()
 
@@ -28,14 +28,13 @@ class GradiaApp(Adw.Application):
         self.activate()
 
     def do_shutdown(self):
-        def clean_temp():
-            shutil.rmtree(self.temp_dir, ignore_errors=True)
-            return False
-
-        GLib.timeout_add(100, clean_temp)
         Adw.Application.do_shutdown(self)
 
 def main(version=None):
-    app = GradiaApp()
-    app.run(sys.argv)
-
+    try:
+        print("App started")
+        app = GradiaApp()
+        return app.run(sys.argv)
+    except Exception:
+        print('Application closed with an exception')
+        return 1

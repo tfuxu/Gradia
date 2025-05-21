@@ -16,7 +16,7 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     header_bar.pack_start(open_btn)
 
     # Copy from clipboard button
-    copy_icon = Gtk.Image.new_from_icon_name("edit-copy-symbolic")
+    copy_icon = Gtk.Image.new_from_icon_name("clipboard-symbolic")
     copy_btn = Gtk.Button(child=copy_icon)
     copy_btn.get_style_context().add_class("flat")
     copy_btn.set_tooltip_text("Copy from clipboard")
@@ -152,58 +152,6 @@ def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_
 
     return padding_group, padding_spinner, aspect_ratio_entry
 
-
-def create_text_overlay_group( on_text_changed,
-                               text_color="white", on_text_color_changed=None,
-                               text_size=42, on_text_size_changed=None,
-                               text_gravity="south", on_text_gravity_changed=None):
-    text_group = Adw.PreferencesGroup(title="Text annotation")
-
-    # Text entry
-    text_entry_row = Adw.ActionRow(title="Text")
-    text_entry = Gtk.Entry(placeholder_text="Enter text")
-    text_entry.set_valign(Gtk.Align.CENTER)
-    text_entry.connect("changed", on_text_changed)
-    text_entry_row.add_suffix(text_entry)
-    text_group.add(text_entry_row)
-    # Color selector
-    color_row = Adw.ActionRow(title="Color")
-    color_button = Gtk.ColorButton()
-    rgba = Gdk.RGBA()
-    rgba.parse(text_color)
-    color_button.set_valign(Gtk.Align.CENTER)
-    color_button.set_rgba(rgba)
-    if on_text_color_changed:
-        color_button.connect("color-set", on_text_color_changed)
-    color_row.add_suffix(color_button)
-    text_group.add(color_row)
-
-    # Size selector
-    size_row = Adw.ActionRow(title="Size")
-    size_spin = Gtk.SpinButton.new_with_range(10, 100, 1)
-    size_spin.set_valign(Gtk.Align.CENTER)
-    size_spin.set_value(text_size)
-    if on_text_size_changed:
-        size_spin.connect("value-changed", on_text_size_changed)
-    size_row.add_suffix(size_spin)
-    text_group.add(size_row)
-
-    # Gravity selector
-    gravity_row = Adw.ActionRow(title="Location")
-    gravity_combo = Gtk.ComboBoxText.new()
-    gravity_combo.set_valign(Gtk.Align.CENTER)
-    gravity_options = ["northwest", "north", "northeast", "west", "center", "east", "southwest", "south", "southeast"]
-    for gravity in gravity_options:
-        gravity_combo.append_text(gravity)
-    gravity_combo.set_active(gravity_options.index(text_gravity) if text_gravity in gravity_options else 7)
-    if on_text_gravity_changed:
-        gravity_combo.connect("changed", on_text_gravity_changed)
-    gravity_row.add_suffix(gravity_combo)
-    text_group.add(gravity_row)
-
-    return text_group, text_entry, color_button, size_spin, gravity_combo
-
-
 def create_file_info_group():
     file_info_group = Adw.PreferencesGroup(title="Current File")
 
@@ -218,29 +166,20 @@ def create_file_info_group():
     return file_info_group, filename_row, location_row, processed_size_row
 
 
-def create_sidebar_ui(
-    gradient_selector_widget, on_padding_changed,on_corner_radius_changed, on_aspect_ratio_changed,
-    on_text_changed, text_color,
-    on_text_color_changed, text_size, on_text_size_changed,
-    text_gravity, on_text_gravity_changed
-):
+def create_sidebar_ui(gradient_selector_widget, on_padding_changed,on_corner_radius_changed,text_selector_widget, on_aspect_ratio_changed):
+
     sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     settings_scroll = Gtk.ScrolledWindow( vexpand=True)
     controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20,
                            margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
 
     controls_box.append(gradient_selector_widget)
-
     # Add grouped UI elements
     padding_group, padding_spinner, aspect_ratio_entry = create_image_options_group(
         on_padding_changed, on_aspect_ratio_changed,on_corner_radius_changed)
     controls_box.append(padding_group)
 
-    text_group, text_entry, color_button, size_spin, gravity_combo = create_text_overlay_group(
-        on_text_changed,  text_color,
-        on_text_color_changed, text_size, on_text_size_changed,
-        text_gravity, on_text_gravity_changed)
-    controls_box.append(text_group)
+    controls_box.append(text_selector_widget)
 
     file_info_group, filename_row, location_row, processed_size_row = create_file_info_group()
     controls_box.append(file_info_group)
@@ -255,10 +194,6 @@ def create_sidebar_ui(
         'processed_size_row': processed_size_row,
         'padding_spinner': padding_spinner,
         'aspect_ratio_entry': aspect_ratio_entry,
-        'text_entry': text_entry,
-        'color_button': color_button,
-        'size_spin': size_spin,
-        'gravity_combo': gravity_combo,
     }
 
 def create_about_dialog():
@@ -278,7 +213,7 @@ def create_about_dialog():
     return about
 
 def create_shortcuts_dialog(parent=None):
-    dialog = Gtk.ShortcutsWindow()
+    dialog = Gtk.ShortcutsWindow(transient_for=parent, modal=True)
 
     section = Gtk.ShortcutsSection(title="General", visible=True)
     group = Gtk.ShortcutsGroup(title="File Actions", visible=True)
