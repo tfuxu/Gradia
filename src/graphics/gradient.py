@@ -1,7 +1,9 @@
-import math
-import numpy as np
-from PIL import Image
+import subprocess
+import tempfile
+import os
 import gi
+from PIL import Image
+import hashlib
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -9,50 +11,71 @@ from gi.repository import Gtk, Gdk, Adw
 
 from .background import Background
 
-class GradientBackground(Background):
+class GradientBackground:
+    _gradient_cache = {}
+    _max_cache_size = 100
+
     def __init__(self, start_color="#4A90E2", end_color="#50E3C2", angle=0):
         self.start_color = start_color
         self.end_color = end_color
         self.angle = angle
 
-    def prepare_image(self, width, height):
-        start_rgb = self._to_rgb_array(self.start_color)
-        end_rgb = self._to_rgb_array(self.end_color)
-        xx, yy = self._meshgrid(width, height)
-        proj = self._project(xx, yy, width, height)
-        norm = self._normalize(proj)
-        gradient = self._interpolate(start_rgb, end_rgb, norm)
-        return self._to_image(gradient, width, height)
-
     def get_name(self):
         return f"gradient-{self.start_color}-{self.end_color}-{self.angle}"
 
-    def _to_rgb_array(self, hex_color):
-        hex_color = hex_color.lstrip("#")
-        return np.array([int(hex_color[i:i + 2], 16) for i in (0, 2, 4)], dtype=np.float32)
+    def prepare_image(self, width, height):
+        cache_key = (self.start_color, self.end_color, self.angle, width, height)
+        if cache_key in self._gradient_cache:
+            return self._gradient_cache[cache_key].copy()
 
-    def _meshgrid(self, width, height):
-        x = np.linspace(0, width - 1, width)
-        y = np.linspace(0, height - 1, height)
-        return np.meshgrid(x, y)
+        if len(self._gradient_cache) >= self._max_cache_size:
+            keys_to_remove = list(self._gradient_cache.keys())[:self._max_cache_size // 2]
+            for key in keys_to_remove:
+                del self._gradient_cache[key]
 
-    def _project(self, xx, yy, width, height):
-        angle_rad = math.radians(self.angle % 360)
-        vx, vy = math.cos(angle_rad), math.sin(angle_rad)
-        cx, cy = (width - 1) / 2, (height - 1) / 2
-        return (xx - cx) * vx + (yy - cy) * vy
+        # Create temporary file for output
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_output:
+            output_path = tmp_output.name
 
-    def _normalize(self, projection):
-        return (projection - projection.min()) / (projection.max() - projection.min())
+        try:
+            gradient_spec = f"gradient:{self.start_color}-{self.end_color}"
+            size_arg = f"{width}x{height}"
 
-    def _interpolate(self, start, end, norm):
-        return start * (1 - norm[..., None]) + end * norm[..., None]
+            # Use gradient direction without rotating image
+            cmd = [
+                "magick",
+                "-size", size_arg,
+                f"-define", f"gradient:angle={self.angle}",
+                gradient_spec,
+                output_path
+            ]
 
-    def _to_image(self, gradient, width, height):
-        img = np.zeros((height, width, 4), dtype=np.uint8)
-        img[..., :3] = np.round(gradient).astype(np.uint8)
-        img[..., 3] = 255
-        return Image.fromarray(img, mode="RGBA")
+            # Execute command
+            subprocess.run(cmd, check=True)
+
+            # Load the result into a PIL image
+            image = Image.open(output_path).convert("RGBA")
+
+            # Cache and return
+            self._gradient_cache[cache_key] = image.copy()
+            return image
+
+        finally:
+            if os.path.exists(output_path):
+                os.remove(output_path)
+    @classmethod
+    def clear_cache(cls):
+        """Clear the gradient cache manually if needed"""
+        cls._gradient_cache.clear()
+
+    @classmethod
+    def get_cache_info(cls):
+        """Get information about the current cache state"""
+        return {
+            'cache_size': len(cls._gradient_cache),
+            'max_cache_size': cls._max_cache_size,
+            'cached_gradients': list(cls._gradient_cache.keys())
+        }
 
 
 class GradientSelector:
@@ -122,4 +145,5 @@ class GradientSelector:
         g = int(rgba.green * 255)
         b = int(rgba.blue * 255)
         return f"#{r:02x}{g:02x}{b:02x}"
+
 

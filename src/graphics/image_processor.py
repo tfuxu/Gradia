@@ -11,17 +11,20 @@ from .background import Background
 from .text import Text
 
 class ImageProcessor:
-    def __init__(self, image_path=None, background=None, padding=20, aspect_ratio=None, text=None, corner_radius=20):
+    def __init__(self, image_path=None, background=None, padding=5, aspect_ratio=None, text=None, corner_radius=2):
         self.background = background
         self.padding = padding
         self.aspect_ratio = aspect_ratio
         self.text = text
         self.corner_radius = corner_radius
         self.max_dimension = 1440
-        self._max_file_size = 300 * 1024
+        self._max_file_size = 1000 * 1024
         self.source_img = None
         if image_path:
             self.set_image_path(image_path)
+
+    def _get_percentage(self, value):
+        return value / 100.0
 
     def set_image_path(self, image_path):
         if image_path != getattr(self, "_loaded_image_path", None):
@@ -45,6 +48,7 @@ class ImageProcessor:
             source_img = self._apply_rounded_corners(source_img)
 
         padded_width, padded_height = self._calculate_final_dimensions(width, height)
+
         final_img = self._create_background(padded_width, padded_height)
         paste_position = self._get_paste_position(width, height, padded_width, padded_height)
         final_img.paste(source_img, paste_position, source_img)
@@ -60,18 +64,18 @@ class ImageProcessor:
         if self._needs_downscaling(source_img):
             source_img = self._downscale_image(source_img)
 
-        source_img, compressed_size = self._compress_image_with_size(source_img)
+        quality = 100
+        source_img, compressed_size = self._compress_image_with_size(source_img, quality)
 
-        while compressed_size > self._max_file_size and min(source_img.size) > 100:
-            width, height = source_img.size
-            source_img = source_img.resize((max(100, width // 2), max(100, height // 2)), Image.Resampling.LANCZOS)
-            source_img, compressed_size = self._compress_image_with_size(source_img)
+        while compressed_size > self._max_file_size and quality > 10:
+            quality -= 10
+            source_img, compressed_size = self._compress_image_with_size(source_img, quality)
 
         return source_img
 
-    def _compress_image_with_size(self, image):
+    def _compress_image_with_size(self, image, quality):
         buffer = io.BytesIO()
-        image.save(buffer, format='PNG', optimize=True, compress_level=14)
+        image.save(buffer, format='PNG', optimize=True, quality=quality)
         size = buffer.tell()
         buffer.seek(0)
         compressed = Image.open(buffer).convert("RGBA")
@@ -93,16 +97,22 @@ class ImageProcessor:
 
     def _crop_image(self, image):
         width, height = image.size
-        crop_w = max(1, width + 2 * self.padding)
-        crop_h = max(1, height + 2 * self.padding)
+        smaller_dimension = min(width, height)
+        padding_percentage = self._get_percentage(abs(self.padding))
+        padding_pixels = int(padding_percentage * smaller_dimension)
+        crop_w = max(1, width - 2 * padding_pixels)
+        crop_h = max(1, height - 2 * padding_pixels)
         offset_x = (width - crop_w) // 2
         offset_y = (height - crop_h) // 2
         return image.crop((offset_x, offset_y, offset_x + crop_w, offset_y + crop_h))
 
     def _calculate_final_dimensions(self, width, height):
         if self.padding >= 0:
-            width += self.padding * 2
-            height += self.padding * 2
+            smaller_dimension = min(width, height)
+            padding_percentage = self._get_percentage(self.padding)
+            padding_pixels = int(padding_percentage * smaller_dimension)
+            width += padding_pixels * 2
+            height += padding_pixels * 2
 
         if self.aspect_ratio:
             width, height = self._adjust_for_aspect_ratio(width, height)
@@ -131,9 +141,13 @@ class ImageProcessor:
 
     def _apply_rounded_corners(self, image):
         width, height = image.size
+        smaller_dimension = min(width, height)
+        radius_percentage = self._get_percentage(self.corner_radius)
+        radius_pixels = int(radius_percentage * smaller_dimension)
+
         mask = Image.new("L", (width, height), 0)
         draw = ImageDraw.Draw(mask)
-        draw.rounded_rectangle((0, 0, width, height), radius=self.corner_radius, fill=255)
+        draw.rounded_rectangle((0, 0, width, height), radius=radius_pixels, fill=255)
 
         r, g, b, alpha = image.split()
         new_alpha = ImageChops.multiply(alpha, mask)
@@ -169,4 +183,3 @@ class ImageProcessor:
         loader.close()
 
         return loader.get_pixbuf()
-

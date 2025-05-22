@@ -130,14 +130,14 @@ def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_
     padding_group = Adw.PreferencesGroup(title="Image Options")
 
     padding_row = Adw.ActionRow(title="Padding")
-    padding_adjustment = Gtk.Adjustment(value=20, lower=-50, upper=500, step_increment=10, page_increment=50)
+    padding_adjustment = Gtk.Adjustment(value=5, lower=-25, upper=75, step_increment=5, page_increment=5)
     padding_spinner = Gtk.SpinButton(adjustment=padding_adjustment, numeric=True, valign=Gtk.Align.CENTER)
     padding_spinner.connect("value-changed", on_padding_changed)
     padding_row.add_suffix(padding_spinner)
     padding_group.add(padding_row)
 
     corner_radius_row = Adw.ActionRow(title="Corner Radius")
-    corner_radius_adjustment = Gtk.Adjustment(value=15, lower=0, upper=50, step_increment=1, page_increment=5)
+    corner_radius_adjustment = Gtk.Adjustment(value=2, lower=0, upper=50, step_increment=1, page_increment=1)
     corner_radius_spinner = Gtk.SpinButton(adjustment=corner_radius_adjustment, numeric=True, valign=Gtk.Align.CENTER)
     corner_radius_spinner.connect("value-changed", on_corner_radius_changed)
     corner_radius_row.add_suffix(corner_radius_spinner)
@@ -196,10 +196,10 @@ def create_sidebar_ui(gradient_selector_widget, on_padding_changed,on_corner_rad
         'aspect_ratio_entry': aspect_ratio_entry,
     }
 
-def create_about_dialog():
+def create_about_dialog(version):
     about = Adw.AboutDialog(
         application_name="Gradia",
-        version="0.2",
+        version=version,
         comments="Make your images ready for the world",
         website="https://github.com/AlexanderVanhee/Gradia",
         developer_name="Alexander Vanhee",

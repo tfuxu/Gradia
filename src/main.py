@@ -11,16 +11,17 @@ from gi.repository import Adw, Gtk, Gio, GLib
 from .window import GradientWindow
 
 class GradiaApp(Adw.Application):
-    def __init__(self):
+    def __init__(self, version=None):
         super().__init__(
             application_id="be.alexandervanhee.gradia",
             flags=Gio.ApplicationFlags.HANDLES_OPEN
         )
         self.temp_dir = tempfile.mkdtemp()
+        self.version = version
         self.file_to_open = None
 
     def do_activate(self):
-        self.ui = GradientWindow(self, self.temp_dir)
+        self.ui = GradientWindow(self, self.temp_dir, version=self.version)
         self.ui.build_ui()
         self.ui.show()
 
@@ -28,13 +29,14 @@ class GradiaApp(Adw.Application):
         self.activate()
 
     def do_shutdown(self):
+        shutil.rmtree(self.temp_dir)
         Adw.Application.do_shutdown(self)
 
 def main(version=None):
     try:
-        print("App started")
-        app = GradiaApp()
+        app = GradiaApp(version=version)
         return app.run(sys.argv)
-    except Exception:
-        print('Application closed with an exception')
+    except Exception as e:
+        print('Application closed with an exception:', e)
         return 1
+

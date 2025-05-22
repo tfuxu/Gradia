@@ -34,9 +34,10 @@ class GradientWindow:
     TEMP_PROCESSED_FILENAME = "processed.png"
     TEMP_CLIPBOARD_FILENAME = "clipboard_image.png"
 
-    def __init__(self, app, temp_dir,):
+    def __init__(self, app, temp_dir,version):
         self.app = app
         self.temp_dir = temp_dir
+        self.version = version
         self.image_path = None
         self.processed_path = None
         self.processed_pixbuf = None
@@ -49,7 +50,7 @@ class GradientWindow:
             callback=self._on_text_changed
         )
 
-        self.processor = ImageProcessor(padding=20, background=GradientBackground())
+        self.processor = ImageProcessor(padding=0.05, background=GradientBackground())
 
         # UI elements (populated during build_ui)
         self.win = None
@@ -150,13 +151,30 @@ class GradientWindow:
         self.sidebar.set_visible(False)
 
     def _setup_main_layout(self):
-        self.main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        self.main_paned.set_position(self.DEFAULT_PANED_POSITION)
-        self.main_paned.set_vexpand(True)
-        self.main_paned.set_start_child(self.image_stack)
-        self.main_paned.set_end_child(self.sidebar)
-        self.toolbar_view.set_content(self.main_paned)
-        self.toast_overlay.set_child(self.toolbar_view)
+       self.main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+       self.main_box.set_vexpand(True)
+
+       self.main_box.append(self.image_stack)
+       self.main_box.append(self.sidebar)
+
+       self.image_stack.set_hexpand(True)
+       self.sidebar.set_hexpand(False)
+       self.sidebar.set_size_request(300, -1)
+
+       self.toolbar_view.set_content(self.main_box)
+       self.toast_overlay.set_child(self.toolbar_view)
+
+       self.win.connect("notify::default-width", self._on_window_resize)
+       self.win.connect("notify::default-height", self._on_window_resize)
+
+    def _on_window_resize(self, *args):
+       width = self.win.get_width()
+       if width < 800:
+           self.main_box.set_orientation(Gtk.Orientation.VERTICAL)
+           self.sidebar.set_size_request(-1, 200)
+       else:
+           self.main_box.set_orientation(Gtk.Orientation.HORIZONTAL)
+           self.sidebar.set_size_request(300, -1)
 
     def show(self):
         self.win.present()
@@ -171,6 +189,8 @@ class GradientWindow:
         self._start_processing()
 
     def _start_processing(self):
+        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
+        self.image_stack.get_style_context().add_class("view")
         self._show_loading_state()
         self.process_image()
         self._set_save_and_copy_sensitive(True)
@@ -182,8 +202,7 @@ class GradientWindow:
     def _hide_loading_state(self):
         self.spinner.stop()
         self.image_stack.set_visible_child_name(self.PAGE_IMAGE)
-        self.image_stack.get_style_context().add_class("view")
-        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
+
 
     def _update_sidebar_from_file(self, file_path):
         filename = os.path.basename(file_path)
@@ -402,7 +421,7 @@ class GradientWindow:
         return True
 
     def _on_about_activated(self, action, param):
-        about = create_about_dialog()
+        about = create_about_dialog(version=self.version)
         about.present(self.win)
 
     def _set_save_and_copy_sensitive(self, sensitive: bool):
