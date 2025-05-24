@@ -42,24 +42,6 @@
       ]
     },
     {
-      "name": "imagemagick",
-      "buildsystem": "autotools",
-      "config-opts": [
-        "--prefix=/app",
-	"--without-perl",
-        "--without-magick-plus-plus",
-        "--disable-docs",
-	"--without-x"
-      ],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://imagemagick.org/archive/releases/ImageMagick-7.1.1-47.tar.xz",
-          "sha256": "2396cd3c4237cfbc09a89d31d1cee157ee11fbc8ec1e540530e10175cb707160"
-        }
-      ]
-    },
-    {
       "name": "gradia",
       "builddir": true,
       "buildsystem": "meson",

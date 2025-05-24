@@ -1,5 +1,6 @@
 pkgdatadir = get_option('prefix') / get_option('datadir') / meson.project_name()
 moduledir = pkgdatadir / 'gradia'
+
 gnome = import('gnome')
 
 gnome.compile_resources('gradia',
@@ -7,6 +8,15 @@ gnome.compile_resources('gradia',
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
+)
+
+gradient_lib = shared_library(
+  'gradient_gen',
+  'graphics/gradient_gen.c',
+  install: true,
+  install_dir: moduledir,
+  install_rpath: '$ORIGIN',
+  link_args: ['-lm'],
 )
 
 python = import('python')
