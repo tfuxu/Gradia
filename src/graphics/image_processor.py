@@ -17,7 +17,7 @@
 
 import os
 import io
-from PIL import Image, ImageDraw, ImageChops
+from PIL import Image, ImageDraw, ImageChops, ImageFilter
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -28,9 +28,10 @@ from .background import Background
 from .text import Text
 
 class ImageProcessor:
-    def __init__(self, image_path=None, background=None, padding=5, aspect_ratio=None, text=None, corner_radius=2):
+    def __init__(self, image_path=None, background=None, padding=5, aspect_ratio=None, text=None, corner_radius=2, shadow_strength=0):
         self.background = background
         self.padding = padding
+        self.shadow_strength = shadow_strength
         self.aspect_ratio = aspect_ratio
         self.text = text
         self.corner_radius = corner_radius
@@ -68,6 +69,13 @@ class ImageProcessor:
 
         final_img = self._create_background(padded_width, padded_height)
         paste_position = self._get_paste_position(width, height, padded_width, padded_height)
+
+        # Add shadow before pasting the image
+        shadow_img, shadow_offset = self._create_shadow(source_img, offset=(10, 10), shadow_strength=self.shadow_strength)
+        shadow_pos = (paste_position[0] - shadow_offset[0], paste_position[1] - shadow_offset[1])
+        final_img.paste(shadow_img, shadow_pos, shadow_img)
+
+        # Paste original image on top of shadow
         final_img.paste(source_img, paste_position, source_img)
 
         if self.text:
@@ -161,11 +169,11 @@ class ImageProcessor:
         smaller_dimension = min(width, height)
         radius_percentage = self._get_percentage(self.corner_radius)
         radius_pixels = int(radius_percentage * smaller_dimension)
-
-        mask = Image.new("L", (width, height), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.rounded_rectangle((0, 0, width, height), radius=radius_pixels, fill=255)
-
+        oversample = 4
+        large_mask = Image.new("L", (width * oversample, height * oversample), 0)
+        draw = ImageDraw.Draw(large_mask)
+        draw.rounded_rectangle((0, 0, width * oversample, height * oversample), radius=radius_pixels * oversample, fill=255)
+        mask = large_mask.resize((width, height), Image.LANCZOS)
         r, g, b, alpha = image.split()
         new_alpha = ImageChops.multiply(alpha, mask)
         return Image.merge("RGBA", (r, g, b, new_alpha))
@@ -174,6 +182,29 @@ class ImageProcessor:
         if self.background:
             return self.background.prepare_image(width, height)
         return Image.new("RGBA", (width, height), (0, 0, 0, 0))
+
+    def _create_shadow(self, image, offset=(10, 10), shadow_strength=1.0):
+        shadow_strength = max(0.0, min(shadow_strength, 1.0))
+        blur_radius = int(10 * shadow_strength)
+        shadow_alpha = int(150 * shadow_strength)
+        shadow_color = (0, 0, 0, shadow_alpha)
+
+        alpha = image.split()[3]
+        shadow = Image.new("RGBA", image.size, shadow_color)
+        shadow.putalpha(alpha)
+
+        extra_margin = blur_radius * 5
+        expanded_width = image.width + abs(offset[0]) + extra_margin
+        expanded_height = image.height + abs(offset[1]) + extra_margin
+        shadow_canvas = Image.new("RGBA", (expanded_width, expanded_height), (0, 0, 0, 0))
+
+        shadow_x = extra_margin // 2 + max(offset[0], 0)
+        shadow_y = extra_margin // 2 + max(offset[1], 0)
+        shadow_canvas.paste(shadow, (shadow_x, shadow_y), shadow)
+
+        shadow_canvas = shadow_canvas.filter(ImageFilter.GaussianBlur(blur_radius))
+        return shadow_canvas, (shadow_x, shadow_y)
+
 
     def _get_paste_position(self, img_w, img_h, bg_w, bg_h):
         if self.padding >= 0:

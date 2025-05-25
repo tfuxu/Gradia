@@ -36,7 +36,7 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     copy_icon = Gtk.Image.new_from_icon_name("clipboard-symbolic")
     copy_btn = Gtk.Button(child=copy_icon)
     copy_btn.get_style_context().add_class("flat")
-    copy_btn.set_tooltip_text("Copy from clipboard")
+    copy_btn.set_tooltip_text("Paste from Clipboard")
     copy_btn.connect("clicked", on_copy_from_clicked)
     header_bar.pack_start(copy_btn)
 
@@ -143,7 +143,7 @@ def create_image_stack(on_file_dropped, on_open_clicked):
 
     return stack, picture, spinner
 
-def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_corner_radius_changed):
+def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_corner_radius_changed, on_shadow_strength_changed):
     padding_group = Adw.PreferencesGroup(title="Image Options")
 
     padding_row = Adw.ActionRow(title="Padding")
@@ -167,6 +167,20 @@ def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_
     aspect_ratio_row.add_suffix(aspect_ratio_entry)
     padding_group.add(aspect_ratio_row)
 
+    shadow_strength_row = Adw.ActionRow(title="Shadow")
+    shadow_strength_scale = Gtk.Scale.new_with_range(
+        orientation=Gtk.Orientation.HORIZONTAL,
+        min=0,
+        max=10,
+        step=1
+    )
+    shadow_strength_scale.set_valign(Gtk.Align.CENTER)
+    shadow_strength_scale.set_hexpand(True)
+    shadow_strength_scale.connect("value-changed", on_shadow_strength_changed)
+    shadow_strength_row.add_suffix(shadow_strength_scale)
+    shadow_strength_row.set_activatable_widget(shadow_strength_scale)
+    padding_group.add(shadow_strength_row)
+
     return padding_group, padding_spinner, aspect_ratio_entry
 
 def create_file_info_group():
@@ -183,7 +197,7 @@ def create_file_info_group():
     return file_info_group, filename_row, location_row, processed_size_row
 
 
-def create_sidebar_ui(gradient_selector_widget, on_padding_changed,on_corner_radius_changed,text_selector_widget, on_aspect_ratio_changed):
+def create_sidebar_ui(gradient_selector_widget, on_padding_changed,on_corner_radius_changed,text_selector_widget, on_aspect_ratio_changed, on_shadow_strength_changed):
 
     sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     settings_scroll = Gtk.ScrolledWindow( vexpand=True)
@@ -193,7 +207,7 @@ def create_sidebar_ui(gradient_selector_widget, on_padding_changed,on_corner_rad
     controls_box.append(gradient_selector_widget)
     # Add grouped UI elements
     padding_group, padding_spinner, aspect_ratio_entry = create_image_options_group(
-        on_padding_changed, on_aspect_ratio_changed,on_corner_radius_changed)
+        on_padding_changed, on_aspect_ratio_changed,on_corner_radius_changed,on_shadow_strength_changed)
     controls_box.append(padding_group)
 
     controls_box.append(text_selector_widget)

@@ -21,11 +21,6 @@
     "*.la",
     "*.a"
   ],
-  "build-options": {
-    "env": {
-      "PATH": "/app/bin:/usr/bin"
-    }
-  },
   "modules": [
     {
       "name": "python3-Pillow",
@@ -50,9 +45,6 @@
           "type": "dir",
           "path": "../Gradia"
         }
-      ],
-      "config-opts": [
-        "--libdir=lib"
       ]
     }
   ]

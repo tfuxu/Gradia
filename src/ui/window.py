@@ -162,6 +162,7 @@ class GradientWindow:
             ),
             text_selector_widget=self.text_selector.widget,
             on_aspect_ratio_changed=self.on_aspect_ratio_changed,
+            on_shadow_strength_changed=self.on_shadow_strength_changed,
         )
         self.sidebar = self.sidebar_info['sidebar']
         self.sidebar.set_size_request(self.SIDEBAR_WIDTH, -1)
@@ -251,6 +252,10 @@ class GradientWindow:
 
         except Exception as e:
             print(f"Invalid aspect ratio: {text} ({e})")
+
+    def on_shadow_strength_changed(self,strength):
+        self.processor.shadow_strength = strength.get_value()
+        self._trigger_processing()
 
     def _trigger_processing(self):
         if self.image_path:
