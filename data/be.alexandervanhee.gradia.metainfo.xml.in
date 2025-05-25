@@ -45,6 +45,16 @@
   </branding>
 
   <releases>
+    <release version="1.1.0" date="2025-05-20">
+      <description>
+        <p>Minor post initial release includes:</p>
+        <ul>
+          <li>Adding optional shadows</li>
+          <li>Updates to the app listing</li>
+          <li>A fix for the window not properly updating when pasting from clipboard</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.0" date="2025-05-20">
       <description>
         <p>Initial release of Gradia. Includes:</p>
@@ -59,13 +69,13 @@
   </releases>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/showcase.png</image>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/0300bee46f2d0a6b22a80978b47208b8abc0de50/screenshots/showcase.webp</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/dark.png</image>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/0300bee46f2d0a6b22a80978b47208b8abc0de50/screenshots/dark.webp</image>
     </screenshot>
-        <screenshot>
-      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/1ba88c58f7ccc5f10f01fbdb652e6d6f1460a4cd/screenshots/home.png</image>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/0300bee46f2d0a6b22a80978b47208b8abc0de50/screenshots/home.webp</image>
     </screenshot>
   </screenshots>
 </component>
