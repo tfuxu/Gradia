@@ -119,7 +119,6 @@ class GradientWindow:
         self.win = Adw.ApplicationWindow(application=self.app)
         self.win.set_title("Gradia")
         self.win.set_default_size(self.DEFAULT_WINDOW_WIDTH, self.DEFAULT_WINDOW_HEIGHT)
-
         self.toast_overlay = Adw.ToastOverlay()
         self.win.set_content(self.toast_overlay)
 
@@ -393,9 +392,10 @@ class GradientWindow:
 
             self.image_path = save_texture_to_file(texture, self.temp_dir)
             self._update_sidebar_for_clipboard()
-            self.process_image()
+            self._start_processing()
 
         except Exception as e:
+            print("Error" + e)
             if "No compatible transfer format found" in str(e):
                 self._show_notification("Clipboard does not contain an image.")
             else:

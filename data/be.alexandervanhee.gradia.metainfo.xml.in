@@ -13,8 +13,17 @@
   <name>Gradia</name>
   <summary>Make your screenshots ready for all</summary>
   <description>
-    <p>Gradia is an app to make screenshots ready for the world — quickly add backgrounds, change aspect ratios and add padding.</p>
+    <p>
+      On social media, it's often hard to control how your images appear to others.
+      Transparent or oddly sized images, like screenshots often don't display well.
+      Fixing these issues can feel like more trouble than it's worth.
+    </p>
+    <p>
+      This tool aims to alleviate that problem by allowing you to quickly edit images to address these issues,
+      while also offering options to enhance their overall appearance.
+    </p>
   </description>
+
 
   <developer id="io.github.alexandervanhee">
     <name>Alexander Vanhee</name>
