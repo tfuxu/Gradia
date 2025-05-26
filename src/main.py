@@ -14,14 +14,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import sys
+import os
 import tempfile
 import shutil
-
-
 from gi.repository import Adw, Gio
 from gradia.ui.window import GradientWindow
+
 
 class GradiaApp(Adw.Application):
     def __init__(self, version=None):
@@ -42,8 +41,14 @@ class GradiaApp(Adw.Application):
         self.activate()
 
     def do_shutdown(self):
-        shutil.rmtree(self.temp_dir)
-        Adw.Application.do_shutdown(self)
+        try:
+            if hasattr(self, 'temp_dir') and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir)
+        except Exception as e:
+            print(f"Warning: Failed to clean up temporary directory: {e}")
+        finally:
+            Gio.Application.do_shutdown(self)
+
 
 def main(version=None):
     try:
@@ -52,4 +57,3 @@ def main(version=None):
     except Exception as e:
         print('Application closed with an exception:', e)
         return 1
-
