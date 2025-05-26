@@ -40,6 +40,8 @@ gradia_sources = [
   '__init__.py',
   'main.py',
   'ui/window.py',
+  'ui/image_loaders.py',
+  'ui/image_exporters.py',
   'graphics/image_processor.py',
   'graphics/background.py',
   'graphics/gradient.py',

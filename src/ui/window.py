@@ -32,6 +32,8 @@ from .text import Text, TextSelector
 from .ui_parts import *
 from .clipboard import *
 from .misc import *
+from .image_loaders import ImportManager
+from .image_exporters import ExportManager
 
 class GradientWindow:
     DEFAULT_WINDOW_WIDTH = 900
@@ -44,29 +46,25 @@ class GradientWindow:
     PAGE_IMAGE = "image"
     PAGE_LOADING = "loading"
 
-    # Image file extensions
-    SUPPORTED_INPUT_FORMATS = [
-        (".png", "image/png"),
-        (".jpg", "image/jpg"),
-        (".jpeg", "image/jpeg"),
-        (".webp", "image/webp"),
-        (".avif", "image/avif"),
-    ]
-
     # Temp file names
     TEMP_PROCESSED_FILENAME = "processed.png"
-    TEMP_CLIPBOARD_FILENAME = "clipboard_image.png"
 
-    def __init__(self, app, temp_dir,version):
+    def __init__(self, app, temp_dir, version):
         self.app = app
         self.temp_dir = temp_dir
         self.version = version
         self.image_path = None
         self.processed_path = None
         self.processed_pixbuf = None
+
+
+        # Initialize import and export managers
+        self.export_manager = ExportManager(self, temp_dir)
+        self.import_manager = ImportManager(self, temp_dir)
+
         # Initialize gradient selector with callback
         self.gradient_selector = GradientSelector(
-            gradient= GradientBackground(),
+            gradient=GradientBackground(),
             callback=self._on_gradient_changed
         )
         self.text_selector = TextSelector(
@@ -77,8 +75,6 @@ class GradientWindow:
 
         # UI elements (populated during build_ui)
         self.win = None
-        self.save_btn = None
-        self.copy_btn = None
         self.picture = None
         self.spinner = None
         self.image_stack = None
@@ -90,17 +86,20 @@ class GradientWindow:
 
         self.create_action("about", self._on_about_activated)
         self.create_action('quit', lambda *_: self.app.quit(), ['<primary>q'])
-        #self.create_action("shortcuts", self._on_shortcuts_activated,  ['<primary>question'])
 
-        self.create_action("open", lambda *_: self.on_open_clicked(None), ["<Primary>o"])
-        self.create_action("save", lambda *_: self.on_save_clicked(None) if self.save_btn and self.save_btn.get_sensitive() else None, ["<Primary>s"])
-        self.create_action("copy", lambda *_: self.on_copy_button_clicked(), ["<Primary>c"])
-        self.create_action("paste", lambda *_: self.on_copy_from_clicked(None), ["<Primary>v"])
+        self.create_action("open", lambda *_: self.import_manager.open_file_dialog(), ["<Primary>o"])
+        self.create_action("load-drop", self.import_manager._on_drop_action)
+        self.create_action("paste", lambda *_: self.import_manager.load_from_clipboard(), ["<Primary>v"])
+
+        self.create_action("save", lambda *_: self.export_manager.save_to_file(), ["<Primary>s"], enabled=False)
+        self.create_action("copy", lambda *_: self.export_manager.copy_to_clipboard(), ["<Primary>c"], enabled=False)
+
         self.create_action("quit", lambda *_: self.win.close(), ["<Primary>q"])
 
-    def create_action(self, name, callback, shortcuts=None):
+    def create_action(self, name, callback, shortcuts=None, enabled=True):
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
+        action.set_enabled(enabled)
         self.app.add_action(action)
         if shortcuts:
             self.app.set_accels_for_action(f"app.{name}", shortcuts)
@@ -135,22 +134,11 @@ class GradientWindow:
 
     def _setup_header_bar(self):
         btn_refs = [None, None]
-        header_bar = create_header_bar(
-            save_btn_ref=btn_refs,
-            on_open_clicked=self.on_open_clicked,
-            on_save_clicked=self.on_save_clicked,
-            on_copy_from_clicked=self.on_copy_from_clicked,
-            on_copy_to_clicked=lambda button: self.on_copy_button_clicked()
-        )
-        self.save_btn = btn_refs[0]
-        self.copy_btn = btn_refs[1]
+        header_bar = create_header_bar()
         self.toolbar_view.add_top_bar(header_bar)
 
     def _setup_image_stack(self):
-        stack_info = create_image_stack(
-            self.on_file_dropped,
-            self.on_open_clicked
-        )
+        stack_info = create_image_stack()
         self.image_stack = stack_info[0]
         self.picture = stack_info[1]
         self.spinner = stack_info[2]
@@ -162,7 +150,7 @@ class GradientWindow:
                 setattr(self.processor, "padding", int(w.get_value())),
                 self._trigger_processing()
             ),
-            on_corner_radius_changed= lambda w: (
+            on_corner_radius_changed=lambda w: (
                 setattr(self.processor, "corner_radius", int(w.get_value())),
                 self._trigger_processing()
             ),
@@ -175,49 +163,40 @@ class GradientWindow:
         self.sidebar.set_visible(False)
 
     def _setup_main_layout(self):
-       self.main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-       self.main_box.set_vexpand(True)
+        self.main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        self.main_box.set_vexpand(True)
 
-       self.main_box.append(self.image_stack)
-       self.main_box.append(self.sidebar)
+        self.main_box.append(self.image_stack)
+        self.main_box.append(self.sidebar)
 
-       self.image_stack.set_hexpand(True)
-       self.sidebar.set_hexpand(False)
-       self.sidebar.set_size_request(300, -1)
+        self.image_stack.set_hexpand(True)
+        self.sidebar.set_hexpand(False)
+        self.sidebar.set_size_request(300, -1)
 
-       self.toolbar_view.set_content(self.main_box)
-       self.toast_overlay.set_child(self.toolbar_view)
+        self.toolbar_view.set_content(self.main_box)
+        self.toast_overlay.set_child(self.toolbar_view)
 
-       self.win.connect("notify::default-width", self._on_window_resize)
-       self.win.connect("notify::default-height", self._on_window_resize)
+        self.win.connect("notify::default-width", self._on_window_resize)
+        self.win.connect("notify::default-height", self._on_window_resize)
 
     def _on_window_resize(self, *args):
-       width = self.win.get_width()
-       if width < 800:
-           self.main_box.set_orientation(Gtk.Orientation.VERTICAL)
-           self.sidebar.set_size_request(-1, 200)
-       else:
-           self.main_box.set_orientation(Gtk.Orientation.HORIZONTAL)
-           self.sidebar.set_size_request(300, -1)
+        width = self.win.get_width()
+        if width < 800:
+            self.main_box.set_orientation(Gtk.Orientation.VERTICAL)
+            self.sidebar.set_size_request(-1, 200)
+        else:
+            self.main_box.set_orientation(Gtk.Orientation.HORIZONTAL)
+            self.sidebar.set_size_request(300, -1)
 
     def show(self):
         self.win.present()
-        if self.image_path:
-            self._load_initial_file()
-
-    def _load_initial_file(self):
-        if not os.path.isfile(self.image_path):
-            print(f"Initial file path does not exist: {self.image_path}")
-            return
-        self._update_sidebar_from_file(self.image_path)
-        self._start_processing()
 
     def _start_processing(self):
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
         self.image_stack.get_style_context().add_class("view")
         self._show_loading_state()
         self.process_image()
-        self._set_save_and_copy_sensitive(True)
+        self._set_save_and_toggle_(True)
 
     def _show_loading_state(self):
         self.image_stack.set_visible_child_name(self.PAGE_LOADING)
@@ -227,12 +206,10 @@ class GradientWindow:
         self.spinner.stop()
         self.image_stack.set_visible_child_name(self.PAGE_IMAGE)
 
-
-    def _update_sidebar_from_file(self, file_path):
-        filename = os.path.basename(file_path)
-        directory = os.path.dirname(file_path)
+    def _update_sidebar_info(self, filename, location):
+        """Update sidebar with file information"""
         self.sidebar_info['filename_row'].set_subtitle(filename)
-        self.sidebar_info['location_row'].set_subtitle(directory)
+        self.sidebar_info['location_row'].set_subtitle(location)
         self.sidebar.set_visible(True)
 
     def _on_gradient_changed(self, updated_gradient):
@@ -259,36 +236,13 @@ class GradientWindow:
         except Exception as e:
             print(f"Invalid aspect ratio: {text} ({e})")
 
-    def on_shadow_strength_changed(self,strength):
+    def on_shadow_strength_changed(self, strength):
         self.processor.shadow_strength = strength.get_value()
         self._trigger_processing()
 
     def _trigger_processing(self):
         if self.image_path:
             self.process_image()
-
-    def on_open_clicked(self, button):
-        file_dialog = Gtk.FileDialog()
-        file_dialog.set_title("Open Image")
-        image_filter = Gtk.FileFilter()
-        image_filter.set_name("Image Files")
-        for _, mime_type in self.SUPPORTED_INPUT_FORMATS:
-            image_filter.add_mime_type(mime_type)
-
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(image_filter)
-        file_dialog.set_filters(filters)
-
-        file_dialog.open(self.win, None, self._on_file_selected)
-
-    def _on_file_selected(self, dialog, result):
-        try:
-            file = dialog.open_finish(result)
-            self.image_path = file.get_path()
-            self._update_sidebar_from_file(self.image_path)
-            self._start_processing()
-        except Exception as e:
-            print(f"Error opening file: {e}")
 
     def process_image(self):
         if not self.image_path:
@@ -332,95 +286,10 @@ class GradientWindow:
             self.sidebar_info['processed_size_row'].set_subtitle("Error")
             print(f"Error getting processed image size: {e}")
 
-    def on_save_clicked(self, button):
-        if not self.processed_path or not os.path.exists(self.processed_path):
-            return
-
-        save_dialog = Gtk.FileDialog(title="Save Edited Image")
-        if self.image_path:
-            original_name = os.path.splitext(os.path.basename(self.image_path))[0]
-            dynamic_name = f"{original_name}_processed.png"
-        else:
-            dynamic_name = self.TEMP_PROCESSED_FILENAME
-
-        save_dialog.set_initial_name(dynamic_name)
-        png_filter = Gtk.FileFilter(name="PNG Image")
-        png_filter.add_mime_type("image/png")
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(png_filter)
-        save_dialog.set_filters(filters)
-        save_dialog.save(self.win, None, self._on_save_finished)
-
-    def _on_save_finished(self, dialog, result):
-        try:
-            file = dialog.save_finish(result)
-            if file is None:
-                return
-
-            save_path = file.get_path()
-            if self.processed_path and os.path.exists(self.processed_path):
-                shutil.copy(self.processed_path, save_path)
-            elif self.processed_pixbuf:
-                # Save directly from pixbuf if file doesn't exist
-                self.processed_pixbuf.savev(save_path, "png", [], [])
-        except Exception as e:
-            print(f"Error saving file: {e}")
-
-    def on_file_dropped(self, drop_target, value, x, y):
-        if not isinstance(value, Gio.File):
-            return False
-
-        path = value.get_path()
-        if not path or not os.path.isfile(path):
-            return False
-
-        lower_path = path.lower()
-        supported_extensions = [ext for ext, _mime in self.SUPPORTED_INPUT_FORMATS]
-
-        if any(lower_path.endswith(ext) for ext in supported_extensions):
-            self.image_path = path
-            self._update_sidebar_from_file(path)
-            self._start_processing()
-            return True
-
-        return False
-
-    def on_copy_from_clicked(self, button):
-        self._previous_stack_child = self.image_stack.get_visible_child_name()
-        self._set_loading_state(True)
-        clipboard = Gdk.Display.get_default().get_clipboard()
-        clipboard.read_texture_async(
-            None,
-            self._handle_clipboard_texture
-        )
-
-    def _handle_clipboard_texture(self, clipboard, result):
-        try:
-            texture = clipboard.read_texture_finish(result)
-            if texture is None:
-                print("No image found in clipboard")
-                return
-
-            self.image_path = save_texture_to_file(texture, self.temp_dir)
-            self._update_sidebar_for_clipboard()
-            self._start_processing()
-
-        except Exception as e:
-            print("Error" + e)
-            if "No compatible transfer format found" in str(e):
-                self._show_notification("Clipboard does not contain an image.")
-            else:
-                self._show_notification("Failed to copy image to clipboard.")
-                print(f"Error processing clipboard image: {e}")
-
-        finally:
-            self._set_loading_state(False)
-
-    def _update_sidebar_for_clipboard(self):
-        self.sidebar_info['filename_row'].set_subtitle("Clipboard Image")
-        self.sidebar_info['location_row'].set_subtitle("From clipboard")
-        self.sidebar.set_visible(True)
-        self._set_save_and_copy_sensitive(True)
+    def _show_notification(self, message):
+        if self.toast_overlay:
+            toast = Adw.Toast.new(message)
+            self.toast_overlay.add_toast(toast)
 
     def _set_loading_state(self, is_loading):
         if is_loading:
@@ -430,35 +299,13 @@ class GradientWindow:
             self.image_stack.set_visible_child_name(child)
             self.spinner.stop()
 
-    def on_copy_button_clicked(self):
-        path = save_pixbuff_to_path(self.temp_dir, self.processed_pixbuf)
-        try:
-            copy_file_to_clipboard(path)
-            self._show_notification("Modified image copied to clipboard.")
-        except Exception as e:
-            self._show_notification("Failed to copy image to clipboard.")
-            print(f"Error copying processed image to clipboard: {e}")
-
-    def _show_notification(self, message):
-        if self.toast_overlay:
-            toast = Adw.Toast.new(message)
-            self.toast_overlay.add_toast(toast)
-
-    def _on_shortcuts_activated(self, action, param):
-        shortcuts = create_shortcuts_dialog(self.win)
-        shortcuts.connect("close-request", self._on_shortcuts_closed)
-        shortcuts.present()
-
-    def _on_shortcuts_closed(self, dialog):
-        dialog.hide()
-        return True
-
     def _on_about_activated(self, action, param):
         about = create_about_dialog(version=self.version)
         about.present(self.win)
 
-    def _set_save_and_copy_sensitive(self, sensitive: bool):
-        if self.save_btn:
-            self.save_btn.set_sensitive(sensitive)
-        if self.copy_btn:
-            self.copy_btn.set_sensitive(sensitive)
+    def _set_save_and_toggle_(self, enabled: bool):
+        app = self.app
+        for action_name in ["save", "copy"]:
+            action = app.lookup_action(action_name)
+            if action:
+                action.set_enabled(enabled)

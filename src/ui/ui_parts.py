@@ -21,7 +21,7 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
-def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_from_clicked, on_copy_to_clicked):
+def create_header_bar():
     header_bar = Adw.HeaderBar()
 
     # Open button
@@ -29,7 +29,7 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     open_btn = Gtk.Button(child=open_icon)
     open_btn.get_style_context().add_class("flat")
     open_btn.set_tooltip_text("Open Image")
-    open_btn.connect("clicked", on_open_clicked)
+    open_btn.set_action_name("app.open")
     header_bar.pack_start(open_btn)
 
     # Copy from clipboard button
@@ -37,7 +37,7 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     copy_btn = Gtk.Button(child=copy_icon)
     copy_btn.get_style_context().add_class("flat")
     copy_btn.set_tooltip_text("Paste from Clipboard")
-    copy_btn.connect("clicked", on_copy_from_clicked)
+    copy_btn.set_action_name("app.paste")
     header_bar.pack_start(copy_btn)
 
     # About menu button with popover menu
@@ -45,15 +45,12 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     about_menu_btn = Gtk.MenuButton(child=about_icon)
     about_menu_btn.get_style_context().add_class("flat")
     about_menu_btn.set_tooltip_text("Main menu")
-
     menu = Gio.Menu()
     menu.append("About", "app.about")
     menu.append("Shortcuts", "app.shortcuts")
-
     popover = Gtk.PopoverMenu()
     popover.set_menu_model(menu)
     about_menu_btn.set_popover(popover)
-
     header_bar.pack_end(about_menu_btn)
 
     # Save button with icon and label inside a box
@@ -62,12 +59,10 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
     box.append(icon)
     box.append(label)
-
     save_btn = Gtk.Button(child=box)
     save_btn.get_style_context().add_class("suggested-action")
-    save_btn.connect("clicked", on_save_clicked)
+    save_btn.set_action_name("app.save")
     save_btn.set_sensitive(False)
-    save_btn_ref[0] = save_btn
 
     # Copy to clipboard button (right)
     copy_right_icon = Gtk.Image.new_from_icon_name("edit-copy-symbolic")
@@ -75,20 +70,18 @@ def create_header_bar(save_btn_ref, on_open_clicked, on_save_clicked, on_copy_fr
     copy_right_btn.get_style_context().add_class("suggested-action")
     copy_right_btn.set_tooltip_text("Copy to Clipboard")
     copy_right_btn.set_sensitive(False)
-    copy_right_btn.connect("clicked", on_copy_to_clicked)
-    save_btn_ref[1] = copy_right_btn
+    copy_right_btn.set_action_name("app.copy")
 
     # Group the two buttons in a linked box
     right_buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
     right_buttons_box.get_style_context().add_class("linked")
     right_buttons_box.append(save_btn)
     right_buttons_box.append(copy_right_btn)
-
     header_bar.pack_end(right_buttons_box)
 
     return header_bar
 
-def create_image_stack(on_file_dropped, on_open_clicked):
+def create_image_stack():
     stack = Gtk.Stack.new()
     stack.set_vexpand(True)
     stack.set_hexpand(True)
@@ -99,11 +92,8 @@ def create_image_stack(on_file_dropped, on_open_clicked):
     picture.set_can_shrink(True)
     stack.add_named(picture, "image")
 
-    # Loading spinner inside centered box with margins
+    # Loading spinner
     spinner = Gtk.Spinner.new()
-    spinner.set_vexpand(False)
-    spinner.set_hexpand(False)
-
     spinner_box = Gtk.Box(
         orientation=Gtk.Orientation.VERTICAL,
         spacing=0,
@@ -117,20 +107,25 @@ def create_image_stack(on_file_dropped, on_open_clicked):
     spinner_box.append(spinner)
     stack.add_named(spinner_box, "loading")
 
-    # Drop target for drag & drop
     drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
     drop_target.set_preload(True)
+
+    def on_file_dropped(target, value, x, y):
+        app = Gio.Application.get_default()
+        action = app.lookup_action("load-drop")
+        if action:
+            action.activate(None)
+
     drop_target.connect("drop", on_file_dropped)
     stack.add_controller(drop_target)
 
-    # Status page with button child
-    open_status_btn = Gtk.Button.new_with_label("Open Image...")
+    open_status_btn = Gtk.Button.new_with_label("Open Image…")
     open_status_btn.set_halign(Gtk.Align.CENTER)
     style_context = open_status_btn.get_style_context()
-    style_context.add_class("suggested-action")
     style_context.add_class("pill")
     style_context.add_class("text-button")
-    open_status_btn.connect("clicked", on_open_clicked)
+    style_context.add_class("suggested-action")
+    open_status_btn.set_action_name("app.open")
 
     status_page = Adw.StatusPage.new()
     status_page.set_icon_name("image-x-generic-symbolic")
@@ -142,6 +137,7 @@ def create_image_stack(on_file_dropped, on_open_clicked):
     stack.set_visible_child_name("empty")
 
     return stack, picture, spinner
+
 
 def create_image_options_group( on_padding_changed, on_aspect_ratio_changed, on_corner_radius_changed, on_shadow_strength_changed):
     padding_group = Adw.PreferencesGroup(title="Image Options")
