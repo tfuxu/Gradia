@@ -17,23 +17,17 @@
 
 import os
 import shutil
-import gi
 import threading
-import subprocess
-import cairo
 
-gi.require_version("Gtk", "4.0")
-gi.require_version("Adw", "1")
-
-from gi.repository import Gtk, Gio, Gsk, Adw, Gdk, GLib, Graphene, GdkPixbuf
-from .image_processor import ImageProcessor
-from .gradient import GradientSelector, GradientBackground
-from .text import Text, TextSelector
-from .ui_parts import *
-from .clipboard import *
-from .misc import *
-from .image_loaders import ImportManager
-from .image_exporters import ExportManager
+from gi.repository import Gtk, Gio, Adw, Gdk, GLib
+from gradia.graphics.image_processor import ImageProcessor
+from gradia.graphics.gradient import GradientSelector, GradientBackground
+from gradia.graphics.text import TextSelector
+from gradia.ui.ui_parts import *
+from gradia.clipboard import *
+from gradia.ui.misc import *
+from gradia.ui.image_loaders import ImportManager
+from gradia.ui.image_exporters import ExportManager
 
 class GradientWindow:
     DEFAULT_WINDOW_WIDTH = 900
@@ -84,8 +78,10 @@ class GradientWindow:
         self.main_paned = None
         self._previous_stack_child = self.PAGE_CONTENT
 
+        self.create_action("shortcuts", self._on_shortcuts_activated)
         self.create_action("about", self._on_about_activated)
         self.create_action('quit', lambda *_: self.app.quit(), ['<primary>q'])
+        self.create_action("shortcuts", self._on_shortcuts_activated,  ['<primary>question'])
 
         self.create_action("open", lambda *_: self.import_manager.open_file_dialog(), ["<Primary>o"])
         self.create_action("load-drop", self.import_manager._on_drop_action)
@@ -146,14 +142,8 @@ class GradientWindow:
     def _setup_sidebar(self):
         self.sidebar_info = create_sidebar_ui(
             gradient_selector_widget=self.gradient_selector.widget,
-            on_padding_changed=lambda w: (
-                setattr(self.processor, "padding", int(w.get_value())),
-                self._trigger_processing()
-            ),
-            on_corner_radius_changed=lambda w: (
-                setattr(self.processor, "corner_radius", int(w.get_value())),
-                self._trigger_processing()
-            ),
+            on_padding_changed=self.on_padding_changed,
+            on_corner_radius_changed=self.on_corner_radius_changed,
             text_selector_widget=self.text_selector.widget,
             on_aspect_ratio_changed=self.on_aspect_ratio_changed,
             on_shadow_strength_changed=self.on_shadow_strength_changed,
@@ -200,10 +190,8 @@ class GradientWindow:
 
     def _show_loading_state(self):
         self.image_stack.set_visible_child_name(self.PAGE_LOADING)
-        self.spinner.start()
 
     def _hide_loading_state(self):
-        self.spinner.stop()
         self.image_stack.set_visible_child_name(self.PAGE_IMAGE)
 
     def _update_sidebar_info(self, filename, location):
@@ -218,6 +206,14 @@ class GradientWindow:
 
     def _on_text_changed(self, updated_text):
         self.processor.text = updated_text
+        self._trigger_processing()
+
+    def on_padding_changed(self, row: Adw.SpinRow):
+        setattr(self.processor, "padding", int(row.get_value()))
+        self._trigger_processing()
+
+    def on_corner_radius_changed(self, row: Adw.SpinRow):
+        setattr(self.processor, "corner_radius", int(row.get_value()))
         self._trigger_processing()
 
     def on_aspect_ratio_changed(self, entry):
@@ -281,9 +277,9 @@ class GradientWindow:
                 size_str = f"{width}x{height}"
                 self.sidebar_info['processed_size_row'].set_subtitle(size_str)
             else:
-                self.sidebar_info['processed_size_row'].set_subtitle("Unknown")
+                self.sidebar_info['processed_size_row'].set_subtitle(_("Unknown"))
         except Exception as e:
-            self.sidebar_info['processed_size_row'].set_subtitle("Error")
+            self.sidebar_info['processed_size_row'].set_subtitle(_("Error"))
             print(f"Error getting processed image size: {e}")
 
     def _show_notification(self, message):
@@ -297,7 +293,6 @@ class GradientWindow:
         else:
             child = getattr(self, "_previous_stack_child", self.PAGE_CONTENT)
             self.image_stack.set_visible_child_name(child)
-            self.spinner.stop()
 
     def _on_about_activated(self, action, param):
         about = create_about_dialog(version=self.version)
@@ -309,3 +304,12 @@ class GradientWindow:
             action = app.lookup_action(action_name)
             if action:
                 action.set_enabled(enabled)
+
+    def _on_shortcuts_activated(self, action, param):
+        shortcuts = create_shortcuts_dialog(self.win)
+        shortcuts.connect("close-request", self._on_shortcuts_closed)
+        shortcuts.present()
+
+    def _on_shortcuts_closed(self, dialog):
+        dialog.hide()
+        return True

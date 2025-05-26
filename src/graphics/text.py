@@ -15,11 +15,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from PIL import Image, ImageDraw, ImageFont
-import gi
+from PIL import ImageDraw, ImageFont
 
-gi.require_version("Gtk", "4.0")
-gi.require_version("Adw", "1")
 from gi.repository import Gtk, Gdk, Adw
 
 
@@ -133,24 +130,24 @@ class TextSelector:
         self.widget = None
         self.text_entry = None
         self.color_button = None
-        self.size_spin = None
+        self.size_row = None
         self.gravity_buttons = {}
         self.gravity_popover = None
         self.gravity_display_button = None
 
-        self.widget, self.text_entry, self.color_button, self.size_spin = self._build_ui()
+        self.widget, self.text_entry, self.color_button, self.size_row = self._build_ui()
 
     def _build_ui(self):
-        group = Adw.PreferencesGroup(title="Text Annotation")
+        group = Adw.PreferencesGroup(title=_("Text Annotation"))
         self._build_text_entry(group)
         self._build_color_button(group)
         self._build_size_spin(group)
         self._build_gravity_selector(group)
-        return group, self.text_entry, self.color_button, self.size_spin
+        return group, self.text_entry, self.color_button, self.size_row
 
     def _build_text_entry(self, parent):
-        row = Adw.ActionRow(title="Text")
-        self.text_entry = Gtk.Entry(placeholder_text="Enter text")
+        row = Adw.ActionRow(title=_("Text"))
+        self.text_entry = Gtk.Entry(placeholder_text=_("Enter text"))
         self.text_entry.set_text(self.text_obj.text)
         self.text_entry.set_valign(Gtk.Align.CENTER)
         self.text_entry.connect("changed", self._on_text_changed)
@@ -158,7 +155,7 @@ class TextSelector:
         parent.add(row)
 
     def _build_color_button(self, parent):
-        row = Adw.ActionRow(title="Color")
+        row = Adw.ActionRow(title=_("Color"))
         self.color_button = Gtk.ColorButton()
         rgba = Gdk.RGBA()
         rgba.parse(self.text_obj.color)
@@ -169,18 +166,19 @@ class TextSelector:
         parent.add(row)
 
     def _build_size_spin(self, parent):
-        row = Adw.ActionRow(title="Size")
-        self.size_spin = Gtk.SpinButton.new_with_range(
+        row = Adw.SpinRow.new_with_range(
             self.SIZE_SPIN_MIN, self.SIZE_SPIN_MAX, self.SIZE_SPIN_STEP
         )
-        self.size_spin.set_valign(Gtk.Align.CENTER)
-        self.size_spin.set_value(self.text_obj.size)
-        self.size_spin.connect("value-changed", self._on_size_changed)
-        row.add_suffix(self.size_spin)
+
+        row.set_title(_("Size"))
+        row.set_value(self.text_obj.size)
+        row.connect("output", self._on_size_changed)
+
+        self.size_row = row
         parent.add(row)
 
     def _build_gravity_selector(self, parent):
-        action_row = Adw.ActionRow(title="Location")
+        action_row = Adw.ActionRow(title=_("Location"))
         self.gravity_display_button = Gtk.Button()
         self.gravity_display_button.set_valign(Gtk.Align.CENTER)
         self._update_gravity_button_display()
@@ -208,12 +206,13 @@ class TextSelector:
         self.gravity_buttons = {}
 
         for gravity, icon_name, col, grid_row in self.GRAVITY_POSITIONS:
-            b = Gtk.Button()
+            b = Gtk.Button.new_from_icon_name(icon_name=icon_name)
             b.set_size_request(self.BUTTON_SIZE, self.BUTTON_SIZE)
             b.add_css_class("flat")
-            b.set_child(Gtk.Image.new_from_icon_name(icon_name))
+
             if gravity == self.text_obj.gravity:
                 b.add_css_class("suggested-action")
+
             b.connect("clicked", self._on_gravity_button_clicked, gravity)
             grid.attach(b, col, grid_row, 1, 1)
             self.gravity_buttons[gravity] = b
@@ -255,8 +254,8 @@ class TextSelector:
         self.text_obj.color = f"rgb({int(rgba.red * 255)},{int(rgba.green * 255)},{int(rgba.blue * 255)})"
         self._notify_change()
 
-    def _on_size_changed(self, spin):
-        self.text_obj.size = int(spin.get_value())
+    def _on_size_changed(self, row: Adw.SpinRow):
+        self.text_obj.size = int(row.get_value())
         self._notify_change()
 
     def _notify_change(self):
