@@ -96,6 +96,7 @@ class GradientWindow:
         self.create_action("save", lambda *_: self.on_save_clicked(None) if self.save_btn and self.save_btn.get_sensitive() else None, ["<Primary>s"])
         self.create_action("copy", lambda *_: self.on_copy_button_clicked(), ["<Primary>c"])
         self.create_action("paste", lambda *_: self.on_copy_from_clicked(None), ["<Primary>v"])
+        self.create_action("quit", lambda *_: self.win.close(), ["<Primary>q"])
 
     def create_action(self, name, callback, shortcuts=None):
         action = Gio.SimpleAction.new(name, None)
