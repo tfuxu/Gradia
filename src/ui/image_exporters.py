@@ -60,7 +60,7 @@ class FileDialogExporter(BaseImageExporter):
             return
 
         save_dialog = Gtk.FileDialog()
-        save_dialog.set_title("Save Processed Image")
+        save_dialog.set_title(_("Save Processed Image"))
 
         # Set default filename
         dynamic_name = self._get_dynamic_filename()
@@ -91,7 +91,7 @@ class FileDialogExporter(BaseImageExporter):
                 raise Exception("Invalid save path")
 
             self._save_processed_image(save_path)
-            self.window._show_notification(f"Image saved to {os.path.basename(save_path)}")
+            self.window._show_notification(_("Image saved"))
 
         except Exception as e:
             error_msg = f"Failed to save image: {str(e)}"
@@ -130,7 +130,7 @@ class FileDialogExporter(BaseImageExporter):
             super()._ensure_processed_image_available()
             return True
         except Exception as e:
-            self.window._show_notification("No processed image available to save")
+            self.window._show_notification(_("No processed image available to save"))
             print(f"Export check failed: {e}")
             return False
 
@@ -154,11 +154,10 @@ class ClipboardExporter(BaseImageExporter):
 
             # Copy to clipboard
             copy_file_to_clipboard(temp_path)
-            self.window._show_notification("Image copied to clipboard")
+            self.window._show_notification(_("Image copied to clipboard"))
 
         except Exception as e:
-            error_msg = "Failed to copy image to clipboard"
-            self.window._show_notification(error_msg)
+            self.window._show_notification(_("Failed to copy image to clipboard"))
             print(f"Error copying to clipboard: {e}")
 
 class ExportManager:

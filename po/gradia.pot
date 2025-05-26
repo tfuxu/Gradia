@@ -1,6 +1,6 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the Gradia package.
+# This file is distributed under the same license as the gradia package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gradia\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-26 13:55+0200\n"
+"POT-Creation-Date: 2025-05-26 19:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,7 @@ msgid "Gradia"
 msgstr ""
 
 #: data/be.alexandervanhee.gradia.desktop.in:8
-msgid "GTK;Image;Gradient;"
+msgid "Image;Gradient;Background;Screenshot;Edit;"
 msgstr ""
 
 #: data/be.alexandervanhee.gradia.metainfo.xml.in:14
@@ -88,11 +88,11 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: src/graphics/text.py:181 src/ui/ui_parts.py:183
+#: src/graphics/text.py:181 src/ui/ui_parts.py:186
 msgid "Location"
 msgstr ""
 
-#: src/ui/ui_parts.py:26 src/ui/window.py:268
+#: src/ui/ui_parts.py:26 src/ui/image_loaders.py:59
 msgid "Open Image"
 msgstr ""
 
@@ -104,7 +104,7 @@ msgstr ""
 msgid "Main Menu"
 msgstr ""
 
-#: src/ui/ui_parts.py:44
+#: src/ui/ui_parts.py:44 src/ui/ui_parts.py:261
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -113,124 +113,137 @@ msgid "About Gradia"
 msgstr ""
 
 #. Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
-#: src/ui/ui_parts.py:57
+#: src/ui/ui_parts.py:56
 msgid "_Save Image"
 msgstr ""
 
-#: src/ui/ui_parts.py:70
+#: src/ui/ui_parts.py:68
 msgid "Copy to Clipboard"
 msgstr ""
 
 #. Status page with button child
 #. Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
-#: src/ui/ui_parts.py:122
+#: src/ui/ui_parts.py:125
 msgid "_Open Image…"
 msgstr ""
 
-#: src/ui/ui_parts.py:133
+#: src/ui/ui_parts.py:136
 msgid "No Image Loaded"
 msgstr ""
 
-#: src/ui/ui_parts.py:134
+#: src/ui/ui_parts.py:137
 msgid "Drag and drop one here"
 msgstr ""
 
-#: src/ui/ui_parts.py:143
+#: src/ui/ui_parts.py:146
 msgid "Image Options"
 msgstr ""
 
-#: src/ui/ui_parts.py:146
+#: src/ui/ui_parts.py:149
 msgid "Padding"
 msgstr ""
 
-#: src/ui/ui_parts.py:151
+#: src/ui/ui_parts.py:154
 msgid "Corner Radius"
 msgstr ""
 
-#: src/ui/ui_parts.py:155
+#: src/ui/ui_parts.py:158
 msgid "Aspect Ratio"
 msgstr ""
 
-#: src/ui/ui_parts.py:161
+#: src/ui/ui_parts.py:164
 msgid "Shadow"
 msgstr ""
 
-#: src/ui/ui_parts.py:182
+#: src/ui/ui_parts.py:185
 msgid "Name"
 msgstr ""
 
-#: src/ui/ui_parts.py:182 src/ui/ui_parts.py:183
+#: src/ui/ui_parts.py:185 src/ui/ui_parts.py:186
 msgid "No file loaded"
 msgstr ""
 
-#: src/ui/ui_parts.py:184
+#: src/ui/ui_parts.py:187
 msgid "Modified image size"
 msgstr ""
 
-#: src/ui/ui_parts.py:227
+#: src/ui/ui_parts.py:230
 msgid "Make your images ready for the world"
 msgstr ""
 
+#. Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
 #: src/ui/ui_parts.py:240
+msgid "translator-credits"
+msgstr ""
+
+#: src/ui/ui_parts.py:250
 msgid "File Actions"
 msgstr ""
 
-#: src/ui/ui_parts.py:242
-msgid "Open file"
+#: src/ui/ui_parts.py:252
+msgid "Open File"
 msgstr ""
 
-#: src/ui/ui_parts.py:243
-msgid "Save to file"
+#: src/ui/ui_parts.py:253
+msgid "Save to File"
 msgstr ""
 
-#: src/ui/ui_parts.py:244
-msgid "Copy modified image to clipboard"
+#: src/ui/ui_parts.py:254
+msgid "Copy Image to Clipboard"
 msgstr ""
 
-#: src/ui/ui_parts.py:245
-msgid "Paste from clipboard"
+#: src/ui/ui_parts.py:255
+msgid "Paste From Clipboard"
 msgstr ""
 
-#: src/ui/ui_parts.py:249
+#: src/ui/ui_parts.py:259
 msgid "General"
 msgstr ""
 
-#: src/ui/ui_parts.py:251
-msgid "Keyboard shortcuts"
-msgstr ""
-
-#: src/ui/window.py:271
-msgid "Image Files"
-msgstr ""
-
-#: src/ui/window.py:327
+#: src/ui/window.py:280
 msgid "Unknown"
 msgstr ""
 
-#: src/ui/window.py:329
+#: src/ui/window.py:282
 msgid "Error"
 msgstr ""
 
-#: src/ui/window.py:344
-msgid "PNG Image"
+#: src/ui/image_exporters.py:63
+msgid "Save Processed Image"
 msgstr ""
 
-#: src/ui/window.py:408
-msgid "No image found in clipboard."
+#: src/ui/image_exporters.py:94
+msgid "Image saved"
 msgstr ""
 
-#: src/ui/window.py:410 src/ui/window.py:436
-msgid "Failed to copy image to clipboard."
+#: src/ui/image_exporters.py:133
+msgid "No processed image available to save"
 msgstr ""
 
-#: src/ui/window.py:417
+#: src/ui/image_exporters.py:157
+msgid "Image copied to clipboard"
+msgstr ""
+
+#: src/ui/image_exporters.py:160
+msgid "Failed to copy image to clipboard"
+msgstr ""
+
+#: src/ui/image_loaders.py:141
+msgid "No image found in clipboard"
+msgstr ""
+
+#: src/ui/image_loaders.py:149
 msgid "Clipboard Image"
 msgstr ""
 
-#: src/ui/window.py:418
+#: src/ui/image_loaders.py:150
 msgid "From clipboard"
 msgstr ""
 
-#: src/ui/window.py:434
-msgid "Image copied to clipboard."
+#: src/ui/image_loaders.py:157
+msgid "Clipboard does not contain an image."
+msgstr ""
+
+#: src/ui/image_loaders.py:159
+msgid "Failed to load image from clipboard."
 msgstr ""

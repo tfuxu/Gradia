@@ -8,3 +8,6 @@ src/graphics/gradient.py
 src/graphics/text.py
 src/ui/ui_parts.py
 src/ui/window.py
+src/ui/image_exporters.py
+src/ui/image_loaders.py
+

@@ -55,14 +55,13 @@ class FileDialogImageLoader(BaseImageLoader):
 
     def open_file_dialog(self):
         """Open file dialog to select an image"""
-        print("test")
         file_dialog = Gtk.FileDialog()
-        file_dialog.set_title("Open Image")
+        file_dialog.set_title(_("Open Image"))
 
         # Create filter for supported image formats
         image_filter = Gtk.FileFilter()
         image_filter.set_name("Image Files")
-        for _, mime_type in self.SUPPORTED_INPUT_FORMATS:
+        for _unused, mime_type in self.SUPPORTED_INPUT_FORMATS:
             image_filter.add_mime_type(mime_type)
 
         filters = Gio.ListStore.new(Gtk.FileFilter)
@@ -139,7 +138,7 @@ class ClipboardImageLoader(BaseImageLoader):
             texture = clipboard.read_texture_finish(result)
             if texture is None:
                 print("No image found in clipboard")
-                self.window._show_notification("No image found in clipboard")
+                self.window._show_notification(_("No image found in clipboard"))
                 return
 
             # Save clipboard texture to temporary file
@@ -147,17 +146,17 @@ class ClipboardImageLoader(BaseImageLoader):
             if not image_path:
                 raise Exception("Failed to save clipboard image to file")
 
-            filename = "Clipboard Image"
-            location = "From clipboard"
+            filename = _("Clipboard Image")
+            location = _("From clipboard")
 
             self._set_image_and_update_ui(image_path, filename, location)
 
         except Exception as e:
             error_msg = str(e)
             if "No compatible transfer format found" in error_msg:
-                self.window._show_notification("Clipboard does not contain an image.")
+                self.window._show_notification(_("Clipboard does not contain an image."))
             else:
-                self.window._show_notification("Failed to load image from clipboard.")
+                self.window._show_notification(_("Failed to load image from clipboard."))
                 print(f"Error processing clipboard image: {e}")
 
         finally:
