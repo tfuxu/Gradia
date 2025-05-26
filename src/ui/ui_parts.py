@@ -49,15 +49,10 @@ def create_header_bar():
     about_menu_btn.set_popover(popover)
     header_bar.pack_end(about_menu_btn)
 
-    # Save button with icon and label inside a box
-    button_content = Adw.ButtonContent(
-        icon_name="document-save-symbolic",
-        # Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
-        label=_("_Save Image"),
-        use_underline=True
-    )
 
-    save_btn = Gtk.Button(child=button_content)
+    # Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
+    label = Gtk.Label(label=_("_Save Image"), use_underline=True)
+    save_btn = Gtk.Button(child=label)
     save_btn.get_style_context().add_class("suggested-action")
     save_btn.set_action_name("app.save")
     save_btn.set_sensitive(False)

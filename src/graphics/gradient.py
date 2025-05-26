@@ -234,6 +234,10 @@ class GradientSelector:
                     background-size: cover;
                     border-radius: 10px;
                     border: 1px solid rgba(0,0,0,0.1);
+                     transition: filter 0.3s ease;
+                }}
+                button#{gradient_name}:hover {{
+                    filter: brightness(1.2);
                 }}
             """
             css_provider = Gtk.CssProvider()
