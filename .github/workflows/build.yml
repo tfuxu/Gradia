@@ -20,6 +20,6 @@ jobs:
       - name: Build Flatpak bundle
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: halftone.flatpak
+          bundle: gradia.flatpak
           manifest-path: be.alexandervanhee.gradia.json
           cache-key: flatpak-builder-${{ github.sha }}
