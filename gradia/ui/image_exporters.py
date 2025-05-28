@@ -60,9 +60,9 @@ class FileDialogExporter(BaseImageExporter):
             filters.append(file_filter)
 
         save_dialog.set_filters(filters)
-        save_dialog.save(self.window.win, None, self._on_save_finished)
+        save_dialog.save(self.window, None, self._on_save_finished)
 
-    def _on_save_finished(self, dialog: Gtk.FileDialog, result: Gio.Cancellable) -> None:
+    def _on_save_finished(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
         """Handle save dialog completion"""
         try:
             file = dialog.save_finish(result)
