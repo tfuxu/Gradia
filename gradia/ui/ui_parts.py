@@ -241,6 +241,9 @@ def create_about_dialog(version: str) -> Adw.AboutDialog:
             "Alexander Vanhee https://github.com/AlexanderVanhee",
             "tfuxu https://github.com/tfuxu",
         ],
+        designers=[
+            "drpetrikov https://github.com/drpetrikov "
+        ],
         application_icon="be.alexandervanhee.gradia",
         # Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
         translator_credits=_("translator-credits"),
