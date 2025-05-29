@@ -16,7 +16,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from typing import Callable, Dict, Optional, Tuple, Union
-from gi.repository import Gtk, Gio, Adw, Gdk
+from gi.repository import Gtk, Gio, Adw, Gdk, GLib
+
+from gradia.ui.drawing_actions import DrawingMode
+from gradia.ui.drawing_overlay import DrawingOverlay
 
 def create_header_bar() -> Adw.HeaderBar:
     header_bar = Adw.HeaderBar()
@@ -73,22 +76,85 @@ def create_header_bar() -> Adw.HeaderBar:
 
     return header_bar
 
-def create_image_stack() -> Tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner]:
+
+def create_image_stack() -> Tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay']:
     stack = Gtk.Stack.new()
     stack.set_vexpand(True)
     stack.set_hexpand(True)
 
-    # Picture widget
+    picture = create_picture_widget()
+    drawing_overlay = create_drawing_overlay(picture)
+    overlay = create_image_overlay(picture, drawing_overlay)
+
+    stack.add_named(overlay, "image")
+
+    spinner_box, spinner = create_spinner_widget()
+    stack.add_named(spinner_box, "loading")
+
+    status_page = create_status_page()
+    stack.add_named(status_page, "empty")
+
+    stack.set_visible_child_name("empty")
+
+    create_drop_target(stack)
+
+    return stack, picture, spinner, drawing_overlay
+
+def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay') -> Gtk.Overlay:
+    overlay = Gtk.Overlay.new()
+    overlay.set_child(picture)
+    overlay.add_overlay(drawing_overlay)
+
+    controls_overlay = create_controls_overlay()
+    overlay.add_overlay(controls_overlay)
+
+    return overlay
+
+def create_controls_overlay() -> Gtk.Widget:
+    undo_btn = Gtk.Button.new_from_icon_name("edit-undo-symbolic")
+    redo_btn = Gtk.Button.new_from_icon_name("edit-redo-symbolic")
+    reset_btn = Gtk.Button.new_from_icon_name("user-trash-symbolic")
+
+    for btn in (undo_btn, redo_btn, reset_btn):
+        btn.get_style_context().add_class("osd")
+        btn.get_style_context().add_class("circular")
+
+
+    button_box = Gtk.Box(
+        orientation=Gtk.Orientation.HORIZONTAL,
+        spacing=6,
+        halign=Gtk.Align.END,
+        valign=Gtk.Align.END,
+        margin_end=12,
+        margin_bottom=12,
+    )
+
+    undo_btn.set_action_name("app.undo")
+    redo_btn.set_action_name("app.redo")
+    reset_btn.set_action_name("app.clear")
+
+    button_box.append(undo_btn)
+    button_box.append(redo_btn)
+    button_box.append(reset_btn)
+
+    return button_box
+
+
+def create_picture_widget() -> Gtk.Picture:
     picture = Gtk.Picture.new()
     picture.set_content_fit(Gtk.ContentFit.CONTAIN)
     picture.set_can_shrink(True)
-    stack.add_named(picture, "image")
+    return picture
 
-    # Loading spinner inside centered box with margins
+def create_drawing_overlay(picture: Gtk.Picture) -> 'DrawingOverlay':
+    drawing_overlay = DrawingOverlay()
+    drawing_overlay.set_visible(True)
+    drawing_overlay.set_picture_reference(picture)
+    return drawing_overlay
+
+def create_spinner_widget() -> Gtk.Widget:
     spinner = Adw.Spinner.new()
     spinner.set_size_request(48, 48)
-    spinner.set_vexpand(False)
-    spinner.set_hexpand(False)
 
     spinner_box = Gtk.Box(
         orientation=Gtk.Orientation.VERTICAL,
@@ -101,13 +167,33 @@ def create_image_stack() -> Tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner]:
         margin_end=20,
     )
     spinner_box.append(spinner)
-    stack.add_named(spinner_box, "loading")
+    return spinner_box, spinner
 
+def create_status_page() -> Gtk.Widget:
+    open_status_btn = Gtk.Button.new_with_label("_Open Image…")
+    open_status_btn.set_use_underline(True)
+    open_status_btn.set_halign(Gtk.Align.CENTER)
+
+    style_context = open_status_btn.get_style_context()
+    style_context.add_class("pill")
+    style_context.add_class("text-button")
+    style_context.add_class("suggested-action")
+
+    open_status_btn.set_action_name("app.open")
+
+    status_page = Adw.StatusPage.new()
+    status_page.set_icon_name("image-x-generic-symbolic")
+    status_page.set_title("No Image Loaded")
+    status_page.set_description("Drag and drop one here")
+    status_page.set_child(open_status_btn)
+
+    return status_page
+
+def create_drop_target(stack: Gtk.Stack) -> None:
     drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
     drop_target.set_preload(True)
 
-    # Drop handler callback type:
-    def on_file_dropped(_target: Gtk.DropTarget, _value: Gio.File, _x: int, _y: int) -> None:
+    def on_file_dropped(_target: Gtk.DropTarget, *value: Gio.File, _x: int, _y: int) -> None:
         app = Gio.Application.get_default()
         action = app.lookup_action("load-drop") if app else None
         if action:
@@ -116,27 +202,7 @@ def create_image_stack() -> Tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner]:
     drop_target.connect("drop", on_file_dropped)
     stack.add_controller(drop_target)
 
-    # Status page with button child
-    # Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
-    open_status_btn = Gtk.Button.new_with_label(_("_Open Image…"))
-    open_status_btn.set_use_underline(True)
-    open_status_btn.set_halign(Gtk.Align.CENTER)
-    style_context = open_status_btn.get_style_context()
-    style_context.add_class("pill")
-    style_context.add_class("text-button")
-    style_context.add_class("suggested-action")
-    open_status_btn.set_action_name("app.open")
 
-    status_page = Adw.StatusPage.new()
-    status_page.set_icon_name("image-x-generic-symbolic")
-    status_page.set_title(_("No Image Loaded"))
-    status_page.set_description(_("Drag and drop one here"))
-    status_page.set_child(open_status_btn)
-
-    stack.add_named(status_page, "empty")
-    stack.set_visible_child_name("empty")
-
-    return stack, picture, spinner
 
 def create_image_options_group(
     on_padding_changed: Callable[[Adw.SpinRow], None],
@@ -193,11 +259,131 @@ def create_file_info_group() -> Tuple[Adw.PreferencesGroup, Adw.ActionRow, Adw.A
 
     return file_info_group, filename_row, location_row, processed_size_row
 
+def create_drawing_tools_group() -> Adw.PreferencesGroup:
+    tools_group = Adw.PreferencesGroup(title=_("Annotation Tools"))
+
+    # Drawing mode buttons
+    tools_row = Adw.ActionRow()
+    tools_grid = Gtk.Grid(margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+    tools_grid.set_row_spacing(6)
+    tools_grid.set_column_spacing(6)
+    tools_grid.set_halign(Gtk.Align.CENTER)
+    tools_grid.set_valign(Gtk.Align.CENTER)
+
+    tools_data = [
+        (DrawingMode.SELECT, "pointer-primary-click-symbolic", 0, 0),
+        (DrawingMode.PEN, "edit-symbolic", 1, 0),
+        (DrawingMode.TEXT, "text-insert2-symbolic", 2, 0),
+        (DrawingMode.LINE, "draw-line-symbolic", 3, 0),
+        (DrawingMode.ARROW, "arrow1-top-right-symbolic", 4, 0),
+        (DrawingMode.SQUARE, "box-small-outline-symbolic", 0, 1),
+        (DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1),
+    ]
+
+    fill_sensitive_modes = {DrawingMode.SQUARE, DrawingMode.CIRCLE}
+    tool_buttons = {}
+
+    # Fill color row with reset button
+    fill_row = Adw.ActionRow(title=_("Fill Color"))
+    fill_row.set_sensitive(False)
+
+    reset_fill_button = Gtk.Button(icon_name="edit-clear-symbolic")
+    reset_fill_button.get_style_context().add_class("flat")
+    reset_fill_button.set_tooltip_text(_("Reset Fill"))
+    reset_fill_button.set_valign(Gtk.Align.CENTER)
+
+    fill_color_button = Gtk.ColorButton()
+    fill_color_button.set_valign(Gtk.Align.CENTER)
+    fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
+
+
+    def on_button_toggled(button: Gtk.ToggleButton, drawing_mode):
+        if button.get_active():
+            for mode_key, btn in tool_buttons.items():
+                if mode_key != drawing_mode and btn.get_active():
+                    btn.set_active(False)
+
+            fill_row.set_sensitive(drawing_mode in fill_sensitive_modes)
+            app = Gio.Application.get_default()
+            if app:
+                action = app.lookup_action("draw-mode")
+                if action:
+                    variant = GLib.Variant('s', drawing_mode.value)
+                    action.activate(variant)
+        else:
+            any_active = any(
+                btn.get_active() for mode_key, btn in tool_buttons.items() if mode_key != drawing_mode
+            )
+            if not any_active:
+                button.set_active(True)
+
+    for drawing_mode, icon_name, col, row in tools_data:
+        button = Gtk.ToggleButton()
+        button.set_icon_name(icon_name)
+        button.set_tooltip_text(_(drawing_mode.value.capitalize()))
+        button.get_style_context().add_class("flat")
+        button.get_style_context().add_class("circular")
+        button.set_size_request(40, 40)
+        button.connect("toggled", on_button_toggled, drawing_mode)
+        tools_grid.attach(button, col, row, 1, 1)
+        tool_buttons[drawing_mode] = button
+
+    # Default tool is PEN
+    if DrawingMode.PEN in tool_buttons:
+        tool_buttons[DrawingMode.PEN].set_active(True)
+
+    tools_row.set_child(tools_grid)
+    tools_group.add(tools_row)
+
+    # Stroke color row
+    stroke_color_row = Adw.ActionRow(title=_("Stroke Color"))
+    stroke_color_button = Gtk.ColorButton()
+    stroke_color_button.set_valign(Gtk.Align.CENTER)
+    stroke_color_button.set_rgba(Gdk.RGBA(red=1, green=1, blue=1, alpha=1))
+    stroke_color_row.add_suffix(stroke_color_button)
+    tools_group.add(stroke_color_row)
+
+
+    def on_reset_fill_clicked(_btn):
+        fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
+        fill_color_button.emit("color-set")
+
+    reset_fill_button.connect("clicked", on_reset_fill_clicked)
+
+    fill_row.add_suffix(reset_fill_button)
+    fill_row.add_suffix(fill_color_button)
+    tools_group.add(fill_row)
+
+    # Color-set handlers
+    def on_color_set(color_btn: Gtk.ColorButton):
+        app = Gio.Application.get_default()
+        if app:
+            action = app.lookup_action("pen-color")
+            if action:
+                rgba = color_btn.get_rgba()
+                color_str = f"{rgba.red:.3f},{rgba.green:.3f},{rgba.blue:.3f},{rgba.alpha:.3f}"
+                variant = GLib.Variant('s', color_str)
+                action.activate(variant)
+
+    def on_fill_color_set(color_btn: Gtk.ColorButton):
+        app = Gio.Application.get_default()
+        if app:
+            action = app.lookup_action("fill-color")
+            if action:
+                rgba = color_btn.get_rgba()
+                color_str = f"{rgba.red:.3f},{rgba.green:.3f},{rgba.blue:.3f},{rgba.alpha:.3f}"
+                variant = GLib.Variant('s', color_str)
+                action.activate(variant)
+
+    stroke_color_button.connect("color-set", on_color_set)
+    fill_color_button.connect("color-set", on_fill_color_set)
+
+    return tools_group
+
 def create_sidebar_ui(
     gradient_selector_widget: Gtk.Widget,
     on_padding_changed: Callable[[Adw.SpinRow], None],
     on_corner_radius_changed: Callable[[Adw.SpinRow], None],
-    text_selector_widget: Gtk.Widget,
     on_aspect_ratio_changed: Callable[[Gtk.Entry], None],
     on_shadow_strength_changed: Callable[[Gtk.Scale], None],
 ) -> Dict[str, Union[Gtk.Widget, Adw.ActionRow, Adw.SpinRow, Gtk.Entry]]:
@@ -206,13 +392,15 @@ def create_sidebar_ui(
     controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20,
                            margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
 
+    drawing_tools_group = create_drawing_tools_group()
+    controls_box.append(drawing_tools_group)
+
     controls_box.append(gradient_selector_widget)
     # Add grouped UI elements
     padding_group, padding_row, aspect_ratio_entry = create_image_options_group(
         on_padding_changed, on_aspect_ratio_changed, on_corner_radius_changed, on_shadow_strength_changed)
     controls_box.append(padding_group)
 
-    controls_box.append(text_selector_widget)
 
     file_info_group, filename_row, location_row, processed_size_row = create_file_info_group()
     controls_box.append(file_info_group)
@@ -262,6 +450,14 @@ def create_shortcuts_dialog(parent: Optional[Gtk.Window] = None) -> Gtk.Shortcut
                 (_("Save to File"), "<Ctrl>S"),
                 (_("Copy Image to Clipboard"), "<Ctrl>C"),
                 (_("Paste From Clipboard"), "<Ctrl>V"),
+            ]
+        },
+        {
+            "title": _("Annotations"),
+            "shortcuts": [
+                (_("Undo"), "<Ctrl>Z"),
+                (_("Redo"), "<Ctrl><Shift>Z"),
+                (_("Remove Selected"), "Delete")
             ]
         },
         {

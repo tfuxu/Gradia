@@ -22,7 +22,6 @@ from typing import Optional, Callable, Any, Union
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 from gradia.graphics.image_processor import ImageProcessor
 from gradia.graphics.gradient import GradientSelector, GradientBackground
-from gradia.graphics.text import TextSelector
 from gradia.ui.ui_parts import *
 from gradia.clipboard import *
 from gradia.ui.misc import *
@@ -65,9 +64,6 @@ class GradientWindow(Adw.ApplicationWindow):
             gradient=GradientBackground(),
             callback=self._on_gradient_changed
         )
-        self.text_selector: TextSelector = TextSelector(
-            callback=self._on_text_changed
-        )
 
         self.processor: ImageProcessor = ImageProcessor(padding=5, background=GradientBackground())
 
@@ -87,8 +83,28 @@ class GradientWindow(Adw.ApplicationWindow):
 
         self.create_action("quit", lambda *_: self.close(), ["<Primary>q"])
 
+
+        self.create_action("undo", lambda *_: self.drawing_overlay.undo(), ["<Primary>z"])
+        self.create_action("redo", lambda *_: self.drawing_overlay.redo(), ["<Primary><Shift>z"])
+        self.create_action("clear", lambda *_: self.drawing_overlay.clear_drawing())
+        self.create_action("draw-mode", lambda *_: self.drawing_overlay.set_drawing_mode(mode))
+        self.create_action_with_param("draw-mode", lambda action, param: self.drawing_overlay.set_drawing_mode(DrawingMode(param.get_string())))
+
+        self.create_action_with_param("pen-color", lambda action, param: self._set_pen_color_from_string(param.get_string()))
+        self.create_action_with_param("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()))
+        self.create_action("del-selected", lambda *_: self.drawing_overlay.remove_selected_action(), ["<Primary>x", "Delete"])
+
+
     def create_action(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True) -> None:
         action: Gio.SimpleAction = Gio.SimpleAction.new(name, None)
+        action.connect("activate", callback)
+        action.set_enabled(enabled)
+        self.app.add_action(action)
+        if shortcuts:
+            self.app.set_accels_for_action(f"app.{name}", shortcuts)
+
+    def create_action_with_param(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True) -> None:
+        action: Gio.SimpleAction = Gio.SimpleAction.new(name, GLib.VariantType.new("s"))
         action.connect("activate", callback)
         action.set_enabled(enabled)
         self.app.add_action(action)
@@ -133,13 +149,13 @@ class GradientWindow(Adw.ApplicationWindow):
         self.image_stack: Gtk.Stack = stack_info[0]
         self.picture: Gtk.Picture = stack_info[1]
         self.spinner: Gtk.Widget = stack_info[2]
+        self.drawing_overlay = stack_info[3]
 
     def _setup_sidebar(self) -> None:
         self.sidebar_info = create_sidebar_ui(
             gradient_selector_widget=self.gradient_selector.widget,
             on_padding_changed=self.on_padding_changed,
             on_corner_radius_changed=self.on_corner_radius_changed,
-            text_selector_widget=self.text_selector.widget,
             on_aspect_ratio_changed=self.on_aspect_ratio_changed,
             on_shadow_strength_changed=self.on_shadow_strength_changed,
         )
@@ -230,6 +246,15 @@ class GradientWindow(Adw.ApplicationWindow):
     def on_shadow_strength_changed(self, strength) -> None:
         self.processor.shadow_strength = strength.get_value()
         self._trigger_processing()
+
+    def _parse_rgba(self, color_string):
+        return map(float, color_string.split(','))
+
+    def _set_pen_color_from_string(self, color_string):
+        self.drawing_overlay.set_pen_color(*self._parse_rgba(color_string))
+
+    def _set_fill_color_from_string(self, color_string):
+        self.drawing_overlay.set_fill_color(*self._parse_rgba(color_string))
 
     def _trigger_processing(self) -> None:
         if self.image_path:
