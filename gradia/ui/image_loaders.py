@@ -248,8 +248,10 @@ class ImportManager:
         self.file_loader.open_file_dialog()
 
     def _on_drop_action(self, action: Optional[object], param: object) -> None:
-        if param and isinstance(param, Gio.File):
-            self.drag_drop_loader.handle_file_drop(None, param, 0, 0)
+        if isinstance(param, GLib.Variant):
+            uri = param.get_string()
+            file = Gio.File.new_for_uri(uri)
+            self.drag_drop_loader.handle_file_drop(None, file, 0, 0)
         else:
             print("ImportManager._on_drop_action: Invalid drop parameter")
 

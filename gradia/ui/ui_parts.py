@@ -212,11 +212,13 @@ def create_drop_target(stack: Gtk.Stack) -> None:
     drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
     drop_target.set_preload(True)
 
-    def on_file_dropped(_target: Gtk.DropTarget, *value: Gio.File, _x: int, _y: int) -> None:
-        app = Gio.Application.get_default()
-        action = app.lookup_action("load-drop") if app else None
-        if action:
-            action.activate(None)
+    def on_file_dropped(_target: Gtk.DropTarget, value: Gio.File, _x: int, _y: int) -> None:
+        uri = value.get_uri()
+        if uri:
+            app = Gio.Application.get_default()
+            action = app.lookup_action("load-drop") if app else None
+            if action:
+                action.activate(GLib.Variant('s', uri))
 
     drop_target.connect("drop", on_file_dropped)
     stack.add_controller(drop_target)

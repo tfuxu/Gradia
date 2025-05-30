@@ -75,7 +75,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action("shortcuts", self._on_shortcuts_activated,  ['<primary>question'])
 
         self.create_action("open", lambda *_: self.import_manager.open_file_dialog(), ["<Primary>o"])
-        self.create_action("load-drop", self.import_manager._on_drop_action)
+        self.create_action_with_param("load-drop", self.import_manager._on_drop_action)
         self.create_action("paste", lambda *_: self.import_manager.load_from_clipboard(), ["<Primary>v"])
         self.create_action("screenshot", lambda *_: self.import_manager.take_screenshot(), ["<Primary>a"])
 
