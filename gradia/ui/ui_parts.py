@@ -112,13 +112,17 @@ def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay'
 
 def create_controls_overlay() -> Gtk.Widget:
     undo_btn = Gtk.Button.new_from_icon_name("edit-undo-symbolic")
+    undo_btn.set_tooltip_text(_("Undo the last action"))
+
     redo_btn = Gtk.Button.new_from_icon_name("edit-redo-symbolic")
+    redo_btn.set_tooltip_text(_("Redo the last undone action"))
+
     reset_btn = Gtk.Button.new_from_icon_name("user-trash-symbolic")
+    reset_btn.set_tooltip_text(_("Clear all annotations"))
 
     for btn in (undo_btn, redo_btn, reset_btn):
         btn.get_style_context().add_class("osd")
         btn.get_style_context().add_class("circular")
-
 
     button_box = Gtk.Box(
         orientation=Gtk.Orientation.HORIZONTAL,

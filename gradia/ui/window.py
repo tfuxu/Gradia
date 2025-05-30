@@ -300,7 +300,7 @@ class GradientWindow(Adw.ApplicationWindow):
             if self.processed_pixbuf:
                 width: int = self.processed_pixbuf.get_width()
                 height: int = self.processed_pixbuf.get_height()
-                size_str: str = f"{width}x{height}"
+                size_str: str = f"{width}×{height}"
                 self.sidebar_info['processed_size_row'].set_subtitle(size_str)
             else:
                 self.sidebar_info['processed_size_row'].set_subtitle(_("Unknown"))
