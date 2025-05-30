@@ -129,7 +129,7 @@ class ArrowAction(DrawingAction):
         max_x = max(self.start[0], self.end[0])
         min_y = min(self.start[1], self.end[1])
         max_y = max(self.start[1], self.end[1])
-        padding = max(self.width, self.arrow_head_size) / 200.0
+        padding = 0.025
         return min_x - padding, min_y - padding, max_x + padding, max_y + padding
 
     def translate(self, dx, dy):
