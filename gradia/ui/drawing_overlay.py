@@ -15,13 +15,12 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo
+from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo, Adw
 from enum import Enum
 from gradia.ui.drawing_actions import *
 import math
 import re
 
-SELECTION_BOX_COLOR = (0.5, 0.5, 1.0, 0.8)
 SELECTION_BOX_PADDING = 0
 DEFAULT_PEN_SIZE = 3.0
 DEFAULT_ARROW_HEAD_SIZE = 25.0
@@ -161,7 +160,8 @@ class DrawingOverlay(Gtk.DrawingArea):
         x2 += SELECTION_BOX_PADDING
         y2 += SELECTION_BOX_PADDING
 
-        cr.set_source_rgba(*SELECTION_BOX_COLOR)
+        accent = Adw.StyleManager.get_default().get_accent_color_rgba()
+        cr.set_source_rgba(accent.red, accent.green, accent.blue, accent.alpha)
         cr.set_line_width(1.0)
         cr.set_dash([5.0, 5.0])
         cr.rectangle(x1, y1, x2 - x1, y2 - y1)

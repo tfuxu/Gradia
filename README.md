@@ -49,3 +49,13 @@ If you'd like Gradia to **open automatically** after taking a screenshot, you ca
   <img src="screenshots/showcase.webp" alt="Showcase screenshot" style="width:45%; margin-right: 5%;">
   <img src="screenshots/home.webp" alt="Home screenshot" style="width:45%;">
 </p>
+
+
+## How to build
+
+### GNOME Builder
+
+1. Install Builder from [Flathub](https://flathub.org/apps/org.gnome.Builder).
+2. Click the **Clone Repository** button at the bottom right and enter the repository URL.
+3. Once cloned, locate the dropdown menu next to the `be.alexandervanhee.gradia.json` text at the top of the screen.
+4. Use the dropdown to press **Build** to compile the project. From the same menu, you can also **Run** the project or **Export** it as a Flatpak bundle.
