@@ -17,11 +17,12 @@
 
 
 import os
-from typing import Optional, Tuple
+from typing import Optional
+
 from gi.repository import Gtk, Gio, Gdk, GLib, Xdp
 from gradia.clipboard import save_texture_to_file
 
-ImportFormat = Tuple[str, str]
+ImportFormat = tuple[str, str]
 
 class BaseImageLoader:
     """Base class for image loading handlers"""

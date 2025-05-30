@@ -16,7 +16,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo
-from typing import Tuple, List, Optional, Union
 from enum import Enum
 from gradia.ui.drawing_actions import *
 import math
@@ -218,7 +217,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         hbox.add_css_class("linked")
 
         entry = Gtk.Entry()
-        entry.set_placeholder_text("Enter text...")
+        entry.set_placeholder_text(_("Enter text…"))
         entry.set_width_chars(12)
         entry.connect("activate", self._on_text_entry_activate)
         entry.connect("changed", self._on_text_entry_changed)

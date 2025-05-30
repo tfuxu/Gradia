@@ -15,7 +15,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from typing import Callable, Dict, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Optional
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
 from gradia.ui.drawing_actions import DrawingMode
@@ -77,7 +78,7 @@ def create_header_bar() -> Adw.HeaderBar:
     return header_bar
 
 
-def create_image_stack() -> Tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay']:
+def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay']:
     stack = Gtk.Stack.new()
     stack.set_vexpand(True)
     stack.set_hexpand(True)
@@ -110,7 +111,7 @@ def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay'
 
     return overlay
 
-def create_controls_overlay() -> Gtk.Widget:
+def create_controls_overlay() -> Gtk.Box:
     undo_btn = Gtk.Button.new_from_icon_name("edit-undo-symbolic")
     undo_btn.set_tooltip_text(_("Undo the last action"))
 
@@ -156,7 +157,7 @@ def create_drawing_overlay(picture: Gtk.Picture) -> 'DrawingOverlay':
     drawing_overlay.set_picture_reference(picture)
     return drawing_overlay
 
-def create_spinner_widget() -> Gtk.Widget:
+def create_spinner_widget() -> tuple[Gtk.Box, Adw.Spinner]:
     spinner = Adw.Spinner.new()
     spinner.set_size_request(48, 48)
 
@@ -173,8 +174,8 @@ def create_spinner_widget() -> Gtk.Widget:
     spinner_box.append(spinner)
     return spinner_box, spinner
 
-def create_status_page() -> Gtk.Widget:
-    screenshot_btn = Gtk.Button.new_with_label("_Take a screenshot…")
+def create_status_page() -> Adw.StatusPage:
+    screenshot_btn = Gtk.Button.new_with_label(_("_Take a screenshot…"))
     screenshot_btn.set_use_underline(True)
     screenshot_btn.set_halign(Gtk.Align.CENTER)
 
@@ -185,7 +186,7 @@ def create_status_page() -> Gtk.Widget:
 
     screenshot_btn.set_action_name("app.screenshot")
 
-    open_status_btn = Gtk.Button.new_with_label("_Open Image…")
+    open_status_btn = Gtk.Button.new_with_label(_("_Open Image…"))
     open_status_btn.set_use_underline(True)
     open_status_btn.set_halign(Gtk.Align.CENTER)
 
@@ -202,8 +203,8 @@ def create_status_page() -> Gtk.Widget:
 
     status_page = Adw.StatusPage.new()
     status_page.set_icon_name("image-x-generic-symbolic")
-    status_page.set_title("No Image Loaded")
-    status_page.set_description("Drag and drop one here")
+    status_page.set_title(_("No Image Loaded"))
+    status_page.set_description(_("Drag and drop one here"))
     status_page.set_child(button_box)
 
     return status_page
@@ -223,14 +224,12 @@ def create_drop_target(stack: Gtk.Stack) -> None:
     drop_target.connect("drop", on_file_dropped)
     stack.add_controller(drop_target)
 
-
-
 def create_image_options_group(
     on_padding_changed: Callable[[Adw.SpinRow], None],
     on_aspect_ratio_changed: Callable[[Gtk.Entry], None],
     on_corner_radius_changed: Callable[[Adw.SpinRow], None],
     on_shadow_strength_changed: Callable[[Gtk.Scale], None]
-) -> Tuple[Adw.PreferencesGroup, Adw.SpinRow, Gtk.Entry]:
+) -> tuple[Adw.PreferencesGroup, Adw.SpinRow, Gtk.Entry]:
     padding_group = Adw.PreferencesGroup(title=_("Image Options"))
 
     padding_adjustment = Gtk.Adjustment(value=5, lower=-25, upper=75, step_increment=5, page_increment=5)
@@ -267,12 +266,12 @@ def create_image_options_group(
 
     return padding_group, padding_row, aspect_ratio_entry
 
-def create_file_info_group() -> Tuple[Adw.PreferencesGroup, Adw.ActionRow, Adw.ActionRow, Adw.ActionRow]:
-    file_info_group = Adw.PreferencesGroup(title="Current File")
+def create_file_info_group() -> tuple[Adw.PreferencesGroup, Adw.ActionRow, Adw.ActionRow, Adw.ActionRow]:
+    file_info_group = Adw.PreferencesGroup(title=_("Current File"))
 
     filename_row = Adw.ActionRow(title=_("Name"), subtitle=_("No file loaded"))
     location_row = Adw.ActionRow(title=_("Location"), subtitle=_("No file loaded"))
-    processed_size_row = Adw.ActionRow(title=_("Modified image size"), subtitle="N/A")
+    processed_size_row = Adw.ActionRow(title=_("Modified image size"), subtitle=_("N/A"))
 
     file_info_group.add(filename_row)
     file_info_group.add(location_row)
@@ -407,7 +406,7 @@ def create_sidebar_ui(
     on_corner_radius_changed: Callable[[Adw.SpinRow], None],
     on_aspect_ratio_changed: Callable[[Gtk.Entry], None],
     on_shadow_strength_changed: Callable[[Gtk.Scale], None],
-) -> Dict[str, Union[Gtk.Widget, Adw.ActionRow, Adw.SpinRow, Gtk.Entry]]:
+) -> dict[str, Gtk.Widget | Adw.ActionRow | Adw.SpinRow | Gtk.Entry]:
     sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     settings_scroll = Gtk.ScrolledWindow(vexpand=True)
     controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20,
