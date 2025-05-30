@@ -27,6 +27,7 @@ DEFAULT_ARROW_HEAD_SIZE = 25.0
 DEFAULT_FONT_SIZE = 22.0
 DEFAULT_FONT_FAMILY = "Caveat"
 DEFAULT_PEN_COLOR = (1.0, 1.0, 1.0, 0.8)
+DEFAULT_HIGHLIGHTER_SIZE = 12.0
 
 class DrawingOverlay(Gtk.DrawingArea):
     def __init__(self):
@@ -40,6 +41,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.font_size = DEFAULT_FONT_SIZE
         self.font_family = DEFAULT_FONT_FAMILY
         self.pen_color = DEFAULT_PEN_COLOR
+        self.highlighter_size = DEFAULT_HIGHLIGHTER_SIZE
         self.fill_color = None
         self.is_drawing = False
         self.current_stroke = []
@@ -106,7 +108,6 @@ class DrawingOverlay(Gtk.DrawingArea):
             root = self.get_root()
             if hasattr(root, "add_action"):
                 root.add_action(action)
-
 
     def remove_selected_action(self) -> bool :
         if self.selected_action and self.selected_action in self.actions:
@@ -325,7 +326,7 @@ class DrawingOverlay(Gtk.DrawingArea):
 
         self.is_drawing = True
         rel = self._widget_to_image_coords(x, y)
-        if self.drawing_mode == DrawingMode.PEN:
+        if self.drawing_mode == DrawingMode.PEN or self.drawing_mode == DrawingMode.HIGHLIGHTER:
             self.current_stroke = [rel]
         else:
             self.start_point = rel
@@ -351,7 +352,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         if not self.is_drawing:
             return
 
-        if self.drawing_mode == DrawingMode.PEN:
+        if self.drawing_mode == DrawingMode.PEN or self.drawing_mode == DrawingMode.HIGHLIGHTER:
             self.current_stroke.append((rel_x, rel_y))
         else:
             self.end_point = (rel_x, rel_y)
@@ -371,14 +372,18 @@ class DrawingOverlay(Gtk.DrawingArea):
 
         self.is_drawing = False
         mode = self.drawing_mode
-        if mode == DrawingMode.PEN and len(self.current_stroke) > 1:
-            self.actions.append(StrokeAction(self.current_stroke.copy(), self.pen_color, self.pen_size))
+        if (mode == DrawingMode.PEN or mode == DrawingMode.HIGHLIGHTER) and len(self.current_stroke) > 1:
+            if mode == DrawingMode.PEN:
+                self.actions.append(StrokeAction(self.current_stroke.copy(), self.pen_color, self.pen_size))
+            else:
+                highlighter_color = (self.pen_color[0], self.pen_color[1], self.pen_color[2], 0.3)
+                self.actions.append(HighlighterAction(self.current_stroke.copy(), highlighter_color, self.highlighter_size))
             self.current_stroke.clear()
         elif self.start_point and self.end_point:
             if mode == DrawingMode.ARROW:
                 self.actions.append(ArrowAction(self.start_point, self.end_point, self.pen_color, self.arrow_head_size, self.pen_size))
             elif mode == DrawingMode.LINE:
-                self.actions.append(LineAction(self.start_point, self.end_point, self.pen_color, self.pen_size))
+                self.actions.append(LineAction(self.start_point, self.end_point, self.pen_color, 0,self.pen_size))
             elif mode == DrawingMode.SQUARE:
                 self.actions.append(RectAction(self.start_point, self.end_point, self.pen_color, self.pen_size, self.fill_color))
             elif mode == DrawingMode.CIRCLE:
@@ -400,7 +405,7 @@ class DrawingOverlay(Gtk.DrawingArea):
             else:
                 name = "default"
         else:
-            name = "crosshair" if self.drawing_mode == DrawingMode.PEN else "cell"
+            name = "crosshair" if self.drawing_mode == DrawingMode.PEN or self.drawing_mode == DrawingMode.HIGHLIGHTER else "cell"
             if not self._is_point_in_image(x, y):
                 name = "default"
         self.set_cursor(Gdk.Cursor.new_from_name(name, None))
@@ -420,11 +425,14 @@ class DrawingOverlay(Gtk.DrawingArea):
             cr.set_source_rgba(*self.pen_color)
             if self.drawing_mode == DrawingMode.PEN and len(self.current_stroke) > 1:
                 StrokeAction(self.current_stroke, self.pen_color, self.pen_size).draw(cr, self._image_to_widget_coords, scale)
+            elif self.drawing_mode == DrawingMode.HIGHLIGHTER and len(self.current_stroke) > 1:
+                highlighter_color = (self.pen_color[0], self.pen_color[1], self.pen_color[2], 0.3)
+                HighlighterAction(self.current_stroke, highlighter_color, self.highlighter_size).draw(cr, self._image_to_widget_coords, scale)
             elif self.start_point and self.end_point:
                 if self.drawing_mode == DrawingMode.ARROW:
                     ArrowAction(self.start_point, self.end_point, self.pen_color, self.arrow_head_size, self.pen_size).draw(cr, self._image_to_widget_coords, scale)
                 elif self.drawing_mode == DrawingMode.LINE:
-                    LineAction(self.start_point, self.end_point, self.pen_color, self.pen_size).draw(cr, self._image_to_widget_coords, scale)
+                    LineAction(self.start_point, self.end_point, self.pen_color, 0, self.pen_size).draw(cr, self._image_to_widget_coords, scale)
                 elif self.drawing_mode == DrawingMode.SQUARE:
                     RectAction(self.start_point, self.end_point, self.pen_color, self.pen_size, self.fill_color).draw(cr, self._image_to_widget_coords, scale)
                 elif self.drawing_mode == DrawingMode.CIRCLE:
@@ -500,6 +508,9 @@ class DrawingOverlay(Gtk.DrawingArea):
 
     def set_font_family(self, family):
         self.font_family = family if family else "Sans"
+
+    def set_highlighter_size(self, s):
+        self.highlighter_size = max(1.0, s)
 
     def set_drawing_visible(self, v):
         self.set_visible(v)
