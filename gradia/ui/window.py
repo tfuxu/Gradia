@@ -46,7 +46,7 @@ class GradientWindow(Adw.ApplicationWindow):
     # Temp file names
     TEMP_PROCESSED_FILENAME: str = "processed.png"
 
-    def __init__(self, temp_dir: str, version: str, init_with_screenshot: bool = False, **kwargs) -> None:
+    def __init__(self, temp_dir: str, version: str, init_with_screenshot: bool = False, file_path: str = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.app: Adw.Application = kwargs['application']
@@ -94,6 +94,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action_with_param("pen-color", lambda action, param: self._set_pen_color_from_string(param.get_string()))
         self.create_action_with_param("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()))
         self.create_action("del-selected", lambda *_: self.drawing_overlay.remove_selected_action(), ["<Primary>x", "Delete"])
+        self.file_path = file_path
 
         if init_with_screenshot:
             self.import_manager.take_screenshot()
@@ -131,6 +132,9 @@ class GradientWindow(Adw.ApplicationWindow):
         self._setup_image_stack()
         self._setup_sidebar()
         self._setup_main_layout()
+
+        if self.file_path:
+            self.import_manager.load_from_file(self.file_path)
 
     def _setup_window(self) -> None:
         self.set_title("Gradia")

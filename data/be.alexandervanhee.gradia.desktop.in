@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=Gradia
+Comment=Make your images ready for the world
 Exec=gradia %f
 Icon=be.alexandervanhee.gradia
 Terminal=false
@@ -8,3 +9,4 @@ Categories=Graphics;
 Keywords=Image;Gradient;Background;Screenshot;Edit;
 StartupNotify=true
 DBusActivatable=true
+MimeType=image/png;image/jpeg;image/webp;

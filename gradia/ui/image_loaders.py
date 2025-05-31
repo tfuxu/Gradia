@@ -48,7 +48,8 @@ class BaseImageLoader:
     def _set_image_and_update_ui(self, image_path: str, filename: str, location: str) -> None:
         """Common method to set image and update UI"""
         self.window.image_path = image_path
-        self.window.drawing_overlay.clear_drawing()
+        if hasattr(self.window, 'drawing_overlay') and self.window.drawing_overlay:
+            self.window.drawing_overlay.clear_drawing()
         self.window._update_sidebar_info(filename, location)
         self.window._start_processing()
 
@@ -234,6 +235,34 @@ class ScreenshotImageLoader(BaseImageLoader):
         finally:
             self.window._set_loading_state(False)
 
+class CommandlineLoader(BaseImageLoader):
+    """Handles loading images from command line arguments or programmatic file paths"""
+
+    def __init__(self, window: Gtk.ApplicationWindow, temp_dir: str) -> None:
+        super().__init__(window, temp_dir)
+
+    def load_from_file(self, file_path: str) -> None:
+        """Load image from a given file path"""
+        try:
+            if not file_path:
+                print("No file path provided")
+                return
+
+            if not os.path.isfile(file_path):
+                print(f"File does not exist: {file_path}")
+                return
+
+            if not self._is_supported_format(file_path):
+                print(f"Unsupported file format: {file_path}")
+                return
+
+            filename = os.path.basename(file_path)
+            directory = os.path.dirname(file_path)
+
+            self._set_image_and_update_ui(file_path, filename, directory)
+
+        except Exception as e:
+            print(f"Error loading file from command line: {e}")
 
 class ImportManager:
     def __init__(self, window: Gtk.ApplicationWindow, temp_dir: str) -> None:
@@ -244,6 +273,7 @@ class ImportManager:
         self.drag_drop_loader: DragDropImageLoader = DragDropImageLoader(window, temp_dir)
         self.clipboard_loader: ClipboardImageLoader = ClipboardImageLoader(window, temp_dir)
         self.screenshot_loader: ScreenshotImageLoader = ScreenshotImageLoader(window, temp_dir)
+        self.commandline_loader: CommandlineLoader = CommandlineLoader(window, temp_dir)
 
     def open_file_dialog(self) -> None:
         self.file_loader.open_file_dialog()
@@ -261,3 +291,6 @@ class ImportManager:
 
     def take_screenshot(self) -> None:
         self.screenshot_loader.take_screenshot()
+
+    def load_from_file(self, file_path: str) -> None:
+        self.commandline_loader.load_from_file(file_path)

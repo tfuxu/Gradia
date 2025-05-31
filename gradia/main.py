@@ -20,6 +20,7 @@ import tempfile
 import shutil
 
 from collections.abc import Sequence
+from typing import Optional
 
 from gi.repository import Adw, Gio
 
@@ -32,15 +33,30 @@ class GradiaApp(Adw.Application):
     def __init__(self, version: str):
         super().__init__(
             application_id="be.alexandervanhee.gradia",
-            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.HANDLES_OPEN
         )
         self.temp_dir = tempfile.mkdtemp()
         self.version = version
         self.init_with_screenshot = False
+        self.file_to_open: Optional[str] = None
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
         args = command_line.get_arguments()[1:]
+
         self.init_with_screenshot = "--screenshot" in args
+
+        # Extract the first non-option argument
+        for arg in args:
+            if not arg.startswith("--"):
+                try:
+                    file = Gio.File.new_for_commandline_arg(arg)
+                    path = file.get_path()
+                    if path:
+                        self.file_to_open = path
+                        break
+                except Exception as e:
+                    print(f"Failed to parse file URI {arg}: {e}")
+
         self.activate()
         return 0
 
@@ -49,12 +65,18 @@ class GradiaApp(Adw.Application):
             self.temp_dir,
             version=self.version,
             application=self,
-            init_with_screenshot=self.init_with_screenshot
+            init_with_screenshot=self.init_with_screenshot,
+            file_path=self.file_to_open
         )
+        print(self.file_to_open)
         self.ui.build_ui()
         self.ui.show()
 
     def do_open(self, files: Sequence[Gio.File], hint: str):
+        if files:
+            path = files[0].get_path()
+            if path:
+                self.file_to_open = path
         self.activate()
 
     def do_shutdown(self):
@@ -65,6 +87,7 @@ class GradiaApp(Adw.Application):
             print(f"Warning: Failed to clean up temporary directory: {e}")
         finally:
             Gio.Application.do_shutdown(self)
+
 
 def main(version: str):
     try:
