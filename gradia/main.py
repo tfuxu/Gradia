@@ -23,7 +23,7 @@ import shutil
 from collections.abc import Sequence
 from typing import Optional
 
-from gi.repository import Adw, Gio
+from gi.repository import Adw, Gio, Xdp
 
 from gradia.ui.window import GradientWindow
 from gradia.backend.logger import Logger
@@ -39,7 +39,7 @@ class GradiaApp(Adw.Application):
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.HANDLES_OPEN
         )
         self.version = version
-        self.screenshot_mode = False
+        self.screenshot_flags: Optional[Xdp.ScreenshotFlags] = None
         self.temp_dirs: list[str] = []
 
         # Connect to shutdown signal for cleanup
@@ -50,7 +50,7 @@ class GradiaApp(Adw.Application):
 
         logging.debug(f"Command line arguments: {args}")
 
-        self.screenshot_mode = "--screenshot" in args
+        self.screenshot_flags = self._parse_screenshot_flag(args)
         files_to_open = []
 
         for arg in args:
@@ -74,6 +74,22 @@ class GradiaApp(Adw.Application):
 
         return 0
 
+    def _parse_screenshot_flag(self, args: list[str]) -> Optional[Xdp.ScreenshotFlags]:
+        for arg in args:
+            if arg.startswith("--screenshot"):
+                if "=" in arg:
+                    mode = arg.split("=", 1)[1].strip().upper()
+                else:
+                    mode = "INTERACTIVE"
+                if mode == "INTERACTIVE":
+                    return Xdp.ScreenshotFlags.INTERACTIVE
+                elif mode == "FULL":
+                    return Xdp.ScreenshotFlags.NONE
+                else:
+                    logging.warning(f"Unknown screenshot mode: {mode}. Defaulting to INTERACTIVE.")
+                    return Xdp.ScreenshotFlags.INTERACTIVE
+        return None
+
     def do_open(self, files: Sequence[Gio.File], hint: str):
         logging.debug(f"do_open called with files: {[file.get_path() for file in files]} and hint: {hint}")
         for file in files:
@@ -84,11 +100,10 @@ class GradiaApp(Adw.Application):
 
     def do_activate(self):
         logging.debug("do_activate called")
-        # Fallback if app is run without args and not via do_open/command_line
         self._open_window(None)
 
     def _open_window(self, file_path: Optional[str]):
-        logging.debug(f"Opening window with file_path={file_path}, screenshot_mode={self.screenshot_mode}")
+        logging.debug(f"Opening window with file_path={file_path}, screenshot_flags={self.screenshot_flags}")
         temp_dir = tempfile.mkdtemp()
         logging.debug(f"Created temp directory: {temp_dir}")
         self.temp_dirs.append(temp_dir)
@@ -97,7 +112,7 @@ class GradiaApp(Adw.Application):
             temp_dir=temp_dir,
             version=self.version,
             application=self,
-            init_with_screenshot=self.screenshot_mode,
+            init_screenshot_mode=self.screenshot_flags,
             file_path=file_path
         )
         window.build_ui()

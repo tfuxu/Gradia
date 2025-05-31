@@ -186,12 +186,12 @@ class ScreenshotImageLoader(BaseImageLoader):
         super().__init__(window, temp_dir)
         self.portal = Xdp.Portal()
 
-    def take_screenshot(self) -> None:
-        """Initiate screenshot capture"""
+    def take_screenshot(self, flags: Xdp.ScreenshotFlags = Xdp.ScreenshotFlags.INTERACTIVE) -> None:
+        """Initiate screenshot capture with optional flags"""
         try:
             self.portal.take_screenshot(
                 None,
-                Xdp.ScreenshotFlags.INTERACTIVE,
+                flags,
                 None,
                 self._on_screenshot_taken,
                 None
@@ -289,8 +289,8 @@ class ImportManager:
     def load_from_clipboard(self) -> None:
         self.clipboard_loader.load_from_clipboard()
 
-    def take_screenshot(self) -> None:
-        self.screenshot_loader.take_screenshot()
+    def take_screenshot(self, flags: Xdp.ScreenshotFlags = Xdp.ScreenshotFlags.INTERACTIVE) -> None:
+        self.screenshot_loader.take_screenshot(flags)
 
     def load_from_file(self, file_path: str) -> None:
         self.commandline_loader.load_from_file(file_path)
