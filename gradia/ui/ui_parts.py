@@ -299,6 +299,8 @@ def create_drawing_tools_group() -> Adw.PreferencesGroup:
         (DrawingMode.SQUARE, "box-small-outline-symbolic", 0, 1),
         (DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1),
         (DrawingMode.HIGHLIGHTER, "marker-symbolic", 2, 1),
+        #(DrawingMode.CENSOR, "checkerboard-big-symbolic", 3, 1),
+        #(DrawingMode.NUMBER, "one-circle-symbolic", 4, 1),
     ]
 
     fill_sensitive_modes = {DrawingMode.SQUARE, DrawingMode.CIRCLE}
@@ -341,7 +343,7 @@ def create_drawing_tools_group() -> Adw.PreferencesGroup:
     for drawing_mode, icon_name, col, row in tools_data:
         button = Gtk.ToggleButton()
         button.set_icon_name(icon_name)
-        button.set_tooltip_text(_(drawing_mode.value.capitalize()))
+        button.set_tooltip_text(drawing_mode.value)
         button.get_style_context().add_class("flat")
         button.get_style_context().add_class("circular")
         button.set_size_request(40, 40)

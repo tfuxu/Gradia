@@ -20,14 +20,16 @@ from enum import Enum
 import math
 
 class DrawingMode(Enum):
-    PEN = "pen"
-    ARROW = "arrow"
-    LINE = "line"
-    SQUARE = "square"
-    CIRCLE = "circle"
-    TEXT = "text"
-    SELECT = "select"
-    HIGHLIGHTER = "highlighter"
+    PEN = _("Pen")
+    ARROW = _("Arrow")
+    LINE = _("Line")
+    SQUARE = _("Square")
+    CIRCLE = _("Circle")
+    TEXT = _("Text")
+    SELECT = _("Select")
+    HIGHLIGHTER = _("Highlighter")
+    CENSOR = _("Censor")
+    NUMBER = _("Number")
 
 class DrawingAction:
     DEFAULT_PADDING = 0.02

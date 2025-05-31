@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gradia\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-30 18:14+0200\n"
+"POT-Creation-Date: 2025-05-31 09:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -80,7 +80,7 @@ msgstr ""
 msgid "Main Menu"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:49 gradia/ui/ui_parts.py:486
+#: gradia/ui/ui_parts.py:49 gradia/ui/ui_parts.py:489
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -174,65 +174,65 @@ msgid "Annotation Tools"
 msgstr ""
 
 #. Fill color row with reset button
-#: gradia/ui/ui_parts.py:307
+#: gradia/ui/ui_parts.py:310
 msgid "Fill Color"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:312
+#: gradia/ui/ui_parts.py:315
 msgid "Reset Fill"
 msgstr ""
 
 #. Stroke color row
-#: gradia/ui/ui_parts.py:359
+#: gradia/ui/ui_parts.py:362
 msgid "Stroke Color"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:444
+#: gradia/ui/ui_parts.py:447
 msgid "Make your images ready for the world"
 msgstr ""
 
 #. Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
-#: gradia/ui/ui_parts.py:457
+#: gradia/ui/ui_parts.py:460
 msgid "translator-credits"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:467
+#: gradia/ui/ui_parts.py:470
 msgid "File Actions"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:469
+#: gradia/ui/ui_parts.py:472
 msgid "Open File"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:470
+#: gradia/ui/ui_parts.py:473
 msgid "Save to File"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:471
+#: gradia/ui/ui_parts.py:474
 msgid "Copy Image to Clipboard"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:472
+#: gradia/ui/ui_parts.py:475
 msgid "Paste From Clipboard"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:476
+#: gradia/ui/ui_parts.py:479
 msgid "Annotations"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:478
+#: gradia/ui/ui_parts.py:481
 msgid "Undo"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:479
+#: gradia/ui/ui_parts.py:482
 msgid "Redo"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:480
+#: gradia/ui/ui_parts.py:483
 msgid "Remove Selected"
 msgstr ""
 
-#: gradia/ui/ui_parts.py:484
+#: gradia/ui/ui_parts.py:487
 msgid "General"
 msgstr ""
 
@@ -312,6 +312,46 @@ msgstr ""
 msgid "Failed to process screenshot"
 msgstr ""
 
-#: gradia/ui/drawing_overlay.py:220
+#: gradia/ui/drawing_overlay.py:221
 msgid "Enter text…"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:23
+msgid "Pen"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:24
+msgid "Arrow"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:25
+msgid "Line"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:26
+msgid "Square"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:27
+msgid "Circle"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:28
+msgid "Text"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:29
+msgid "Select"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:30
+msgid "Highlighter"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:31
+msgid "Censor"
+msgstr ""
+
+#: gradia/ui/drawing_actions.py:32
+msgid "Number"
 msgstr ""

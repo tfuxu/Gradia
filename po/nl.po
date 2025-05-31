@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gradia\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-30 18:14+0200\n"
-"PO-Revision-Date: 2025-05-30 18:14+0200\n"
+"POT-Creation-Date: 2025-05-31 09:42+0200\n"
+"PO-Revision-Date: 2025-05-31 09:44+0200\n"
 "Last-Translator: Alexander Vanhee\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -87,7 +87,7 @@ msgstr "Maak een schermafbeelding"
 msgid "Main Menu"
 msgstr "Hoofdmenu"
 
-#: gradia/ui/ui_parts.py:49 gradia/ui/ui_parts.py:486
+#: gradia/ui/ui_parts.py:49 gradia/ui/ui_parts.py:489
 msgid "Keyboard Shortcuts"
 msgstr "Sneltoetsen"
 
@@ -185,72 +185,72 @@ msgid "Annotation Tools"
 msgstr "Tekstannotatie"
 
 #. Fill color row with reset button
-#: gradia/ui/ui_parts.py:307
+#: gradia/ui/ui_parts.py:310
 #, fuzzy
 msgid "Fill Color"
 msgstr "Kleur"
 
-#: gradia/ui/ui_parts.py:312
+#: gradia/ui/ui_parts.py:315
 msgid "Reset Fill"
 msgstr "Vulling opnieuw instellen"
 
 #. Stroke color row
-#: gradia/ui/ui_parts.py:359
+#: gradia/ui/ui_parts.py:362
 #, fuzzy
 msgid "Stroke Color"
 msgstr "Startkleur"
 
-#: gradia/ui/ui_parts.py:444
+#: gradia/ui/ui_parts.py:447
 msgid "Make your images ready for the world"
 msgstr "Maak je afbeeldingen klaar voor de wereld"
 
 #. Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
-#: gradia/ui/ui_parts.py:457
+#: gradia/ui/ui_parts.py:460
 msgid "translator-credits"
 msgstr "Alexander Vanhee https://github.com/AlexanderVanhee/Gradia"
 
-#: gradia/ui/ui_parts.py:467
+#: gradia/ui/ui_parts.py:470
 msgid "File Actions"
 msgstr "Bestandshandelingen"
 
-#: gradia/ui/ui_parts.py:469
+#: gradia/ui/ui_parts.py:472
 #, fuzzy
 msgid "Open File"
 msgstr "Bestand openen"
 
-#: gradia/ui/ui_parts.py:470
+#: gradia/ui/ui_parts.py:473
 #, fuzzy
 msgid "Save to File"
 msgstr "Opslaan naar bestand"
 
-#: gradia/ui/ui_parts.py:471
+#: gradia/ui/ui_parts.py:474
 #, fuzzy
 msgid "Copy Image to Clipboard"
 msgstr "Kopiëren naar klembord"
 
-#: gradia/ui/ui_parts.py:472
+#: gradia/ui/ui_parts.py:475
 #, fuzzy
 msgid "Paste From Clipboard"
 msgstr "Plakken vanaf klembord"
 
-#: gradia/ui/ui_parts.py:476
+#: gradia/ui/ui_parts.py:479
 #, fuzzy
 msgid "Annotations"
 msgstr "Tekstannotatie"
 
-#: gradia/ui/ui_parts.py:478
+#: gradia/ui/ui_parts.py:481
 msgid "Undo"
 msgstr "Ongedaan maken"
 
-#: gradia/ui/ui_parts.py:479
+#: gradia/ui/ui_parts.py:482
 msgid "Redo"
 msgstr "Opnieuw uitvoeren"
 
-#: gradia/ui/ui_parts.py:480
+#: gradia/ui/ui_parts.py:483
 msgid "Remove Selected"
 msgstr "Geselecteerde verwijderen"
 
-#: gradia/ui/ui_parts.py:484
+#: gradia/ui/ui_parts.py:487
 msgid "General"
 msgstr "Algemeen"
 
@@ -337,13 +337,50 @@ msgstr "Schermafbeelding vastgelegd!"
 msgid "Failed to process screenshot"
 msgstr "Verwerken van schermafbeelding mislukt"
 
-#: gradia/ui/drawing_overlay.py:220
+#: gradia/ui/drawing_overlay.py:221
 #, fuzzy
 msgid "Enter text…"
 msgstr "Voer tekst in"
 
-#~ msgid "Text"
-#~ msgstr "Tekst"
+#: gradia/ui/drawing_actions.py:23
+msgid "Pen"
+msgstr "Pen"
+
+#: gradia/ui/drawing_actions.py:24
+msgid "Arrow"
+msgstr "Pijl"
+
+#: gradia/ui/drawing_actions.py:25
+msgid "Line"
+msgstr "Lijn"
+
+#: gradia/ui/drawing_actions.py:26
+msgid "Square"
+msgstr "Vierkant"
+
+#: gradia/ui/drawing_actions.py:27
+msgid "Circle"
+msgstr "Cirkel"
+
+#: gradia/ui/drawing_actions.py:28
+msgid "Text"
+msgstr "Tekst"
+
+#: gradia/ui/drawing_actions.py:29
+msgid "Select"
+msgstr "Selecteren"
+
+#: gradia/ui/drawing_actions.py:30
+msgid "Highlighter"
+msgstr "Fluostift"
+
+#: gradia/ui/drawing_actions.py:31
+msgid "Censor"
+msgstr "Censureren"
+
+#: gradia/ui/drawing_actions.py:32
+msgid "Number"
+msgstr "Nummer"
 
 #~ msgid "Size"
 #~ msgstr "Grootte"

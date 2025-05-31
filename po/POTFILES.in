@@ -10,3 +10,4 @@ gradia/ui/window.py
 gradia/ui/image_exporters.py
 gradia/ui/image_loaders.py
 gradia/ui/drawing_overlay.py
+gradia/ui/drawing_actions.py
