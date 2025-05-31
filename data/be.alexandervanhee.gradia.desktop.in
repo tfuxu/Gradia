@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Gradia
 Comment=Make your images ready for the world
-Exec=gradia %f
+Exec=gradia
 Icon=be.alexandervanhee.gradia
 Terminal=false
 Type=Application

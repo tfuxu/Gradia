@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 import sys
 import os
 import tempfile
@@ -25,7 +26,9 @@ from typing import Optional
 from gi.repository import Adw, Gio
 
 from gradia.ui.window import GradientWindow
+from gradia.backend.logger import Logger
 
+logging = Logger()
 
 class GradiaApp(Adw.Application):
     __gtype_name__ = "GradiaApp"
@@ -35,65 +38,90 @@ class GradiaApp(Adw.Application):
             application_id="be.alexandervanhee.gradia",
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.HANDLES_OPEN
         )
-        self.temp_dir = tempfile.mkdtemp()
         self.version = version
-        self.init_with_screenshot = False
-        self.file_to_open: Optional[str] = None
+        self.screenshot_mode = False
+        self.temp_dirs: list[str] = []
+
+        # Connect to shutdown signal for cleanup
+        self.connect("shutdown", self.on_shutdown)
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
         args = command_line.get_arguments()[1:]
 
-        self.init_with_screenshot = "--screenshot" in args
+        logging.debug(f"Command line arguments: {args}")
 
-        # Extract the first non-option argument
+        self.screenshot_mode = "--screenshot" in args
+        files_to_open = []
+
         for arg in args:
             if not arg.startswith("--"):
                 try:
                     file = Gio.File.new_for_commandline_arg(arg)
                     path = file.get_path()
                     if path:
-                        self.file_to_open = path
-                        break
+                        files_to_open.append(path)
+                        logging.debug(f"File to open detected: {path}")
+                    else:
+                        logging.warning(f"Argument {arg} does not have a valid path.")
                 except Exception as e:
-                    print(f"Failed to parse file URI {arg}: {e}")
+                    logging.warning(f"Failed to parse file URI {arg}.", exception=e, show_exception=True)
 
-        self.activate()
+        if files_to_open:
+            for path in files_to_open:
+                self._open_window(path)
+        else:
+            self._open_window(None)
+
         return 0
 
+    def do_open(self, files: Sequence[Gio.File], hint: str):
+        logging.debug(f"do_open called with files: {[file.get_path() for file in files]} and hint: {hint}")
+        for file in files:
+            path = file.get_path()
+            if path:
+                logging.debug(f"Opening file from do_open: {path}")
+                self._open_window(path)
+
     def do_activate(self):
-        self.ui = GradientWindow(
-            self.temp_dir,
+        logging.debug("do_activate called")
+        # Fallback if app is run without args and not via do_open/command_line
+        self._open_window(None)
+
+    def _open_window(self, file_path: Optional[str]):
+        logging.debug(f"Opening window with file_path={file_path}, screenshot_mode={self.screenshot_mode}")
+        temp_dir = tempfile.mkdtemp()
+        logging.debug(f"Created temp directory: {temp_dir}")
+        self.temp_dirs.append(temp_dir)
+
+        window = GradientWindow(
+            temp_dir=temp_dir,
             version=self.version,
             application=self,
-            init_with_screenshot=self.init_with_screenshot,
-            file_path=self.file_to_open
+            init_with_screenshot=self.screenshot_mode,
+            file_path=file_path
         )
-        print(self.file_to_open)
-        self.ui.build_ui()
-        self.ui.show()
+        window.build_ui()
+        window.show()
 
-    def do_open(self, files: Sequence[Gio.File], hint: str):
-        if files:
-            path = files[0].get_path()
-            if path:
-                self.file_to_open = path
-        self.activate()
-
-    def do_shutdown(self):
-        try:
-            if hasattr(self, 'temp_dir') and os.path.exists(self.temp_dir):
-                shutil.rmtree(self.temp_dir)
-        except Exception as e:
-            print(f"Warning: Failed to clean up temporary directory: {e}")
-        finally:
-            Gio.Application.do_shutdown(self)
+    def on_shutdown(self, application):
+        logging.info("Application shutdown started, cleaning temp directories...")
+        for temp_dir in self.temp_dirs:
+            try:
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
+                    logging.debug(f"Deleted temp dir: {temp_dir}")
+            except Exception as e:
+                logging.warning(f"Failed to clean up temp dir {temp_dir}.", exception=e, show_exception=True)
+        logging.info("Cleanup complete.")
 
 
 def main(version: str):
     try:
+        logging.info("Application starting...")
+
         app = GradiaApp(version=version)
         return app.run(sys.argv)
     except Exception as e:
-        print('Application closed with an exception:', e)
+        logging.critical("Application closed with an exception.", exception=e, show_exception=True)
         return 1
 

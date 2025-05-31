@@ -81,6 +81,8 @@ class DrawingOverlay(Gtk.DrawingArea):
         offset_x = (widget_w - disp_w) / 2
         offset_y = (widget_h - disp_h) / 2
         return offset_x, offset_y, disp_w, disp_h
+    def _get_modified_image_bounds(self):
+        return  self.picture_widget.get_paintable().get_intrinsic_width(), self.picture_widget.get_paintable().get_intrinsic_height()
 
     def _get_scale_factor(self):
         _, _, dw, dh = self._get_image_bounds()
@@ -273,6 +275,7 @@ class DrawingOverlay(Gtk.DrawingArea):
                             text,
                             self.pen_color,
                             self.font_size,
+                            self._get_modified_image_bounds(),
                             self.font_family
                         )
                         self.actions.append(action)
@@ -444,6 +447,7 @@ class DrawingOverlay(Gtk.DrawingArea):
                 self.live_text,
                 self.pen_color,
                 self.font_size,
+                self._get_modified_image_bounds(),
                 self.font_family
             )
             preview.draw(cr, self._image_to_widget_coords, scale)

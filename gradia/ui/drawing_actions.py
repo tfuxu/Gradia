@@ -18,6 +18,9 @@
 from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo
 from enum import Enum
 import math
+from gradia.backend.logger import Logger
+
+logging = Logger()
 
 class DrawingMode(Enum):
     PEN = _("Pen")
@@ -135,12 +138,13 @@ class ArrowAction(DrawingAction):
         self.end = (self.end[0] + dx, self.end[1] + dy)
 
 class TextAction(DrawingAction):
-    def __init__(self, position, text, color, font_size, font_family="Sans"):
+    def __init__(self, position, text, color, font_size,image_bounds, font_family="Sans"):
         self.position = position
         self.text = text
         self.color = color
         self.font_size = font_size
         self.font_family = font_family
+        self.image_bounds = image_bounds
 
     def draw(self, cr, image_to_widget_coords, scale):
         if not self.text.strip():
@@ -160,14 +164,43 @@ class TextAction(DrawingAction):
         PangoCairo.show_layout(cr, layout)
 
     def get_bounds(self):
-        char_width_factor = 0.6
-        width = len(self.text) * self.font_size * char_width_factor / 800.0
-        height = self.font_size / 400.0
+        if not self.text.strip():
+            x, y = self.position
+            return (x, y, x, y)
+
+        # Create a temporary surface and context to measure text
+        import cairo
+        temp_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1, 1)
+        temp_cr = cairo.Context(temp_surface)
+
+        layout = PangoCairo.create_layout(temp_cr)
+        font_desc = Pango.FontDescription()
+        font_desc.set_family(self.font_family)
+        font_desc.set_size(int(self.font_size * Pango.SCALE))
+        layout.set_font_description(font_desc)
+        layout.set_text(self.text, -1)
+
+        _, logical_rect = layout.get_extents()
+        text_width_px = logical_rect.width / Pango.SCALE
+        text_height_px = logical_rect.height / Pango.SCALE
+
+        reference_width = self.image_bounds[0]
+        reference_height = self.image_bounds[1]
+        logging.info(self.image_bounds)
+        text_width = text_width_px / reference_width
+        text_height = text_height_px / reference_height
+
         x, y = self.position
-        return self.apply_padding((x - width / 2, y - height, x + width / 2, y))
+        left = x - text_width / 2
+        right = x + text_width / 2
+        top = y - text_height
+        bottom = y
+
+        return self.apply_padding((left, top, right, bottom))
 
     def translate(self, dx, dy):
         self.position = (self.position[0] + dx, self.position[1] + dy)
+
 
 class LineAction(ArrowAction):
     def draw(self, cr, image_to_widget_coords, scale):
