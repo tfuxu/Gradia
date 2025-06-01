@@ -186,7 +186,6 @@ class TextAction(DrawingAction):
 
         reference_width = self.image_bounds[0]
         reference_height = self.image_bounds[1]
-        logging.info(self.image_bounds)
         text_width = text_width_px / reference_width
         text_height = text_height_px / reference_height
 
