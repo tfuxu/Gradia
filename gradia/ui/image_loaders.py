@@ -178,7 +178,6 @@ class ClipboardImageLoader(BaseImageLoader):
         finally:
             self.window._set_loading_state(False)
 
-
 class ScreenshotImageLoader(BaseImageLoader):
     """Handles loading images through screenshot capture"""
 
@@ -187,7 +186,16 @@ class ScreenshotImageLoader(BaseImageLoader):
         self.portal = Xdp.Portal()
 
     def take_screenshot(self, flags: Xdp.ScreenshotFlags = Xdp.ScreenshotFlags.INTERACTIVE) -> None:
-        """Initiate screenshot capture with optional flags"""
+        """Hide the window, then take screenshot after short delay"""
+        try:
+            self.window.hide()
+
+            GLib.timeout_add(50, self._do_take_screenshot, flags)
+        except Exception as e:
+            print(f"Failed to initiate screenshot: {e}")
+            self.window._show_notification(_("Failed to take screenshot"))
+
+    def _do_take_screenshot(self, flags: Xdp.ScreenshotFlags) -> bool:
         try:
             self.portal.take_screenshot(
                 None,
@@ -197,17 +205,21 @@ class ScreenshotImageLoader(BaseImageLoader):
                 None
             )
         except Exception as e:
-            print(f"Failed to initiate screenshot: {e}")
+            print(f"Failed during screenshot: {e}")
             self.window._show_notification(_("Failed to take screenshot"))
+            self.window.show()
+        return False
 
     def _on_screenshot_taken(self, portal_object, result, user_data) -> None:
-        """Handle screenshot completion"""
+        """Handle screenshot completion and restore window"""
         try:
             uri = self.portal.take_screenshot_finish(result)
             self._handle_screenshot_uri(uri)
         except GLib.Error as e:
             print(f"Screenshot error: {e}")
             self.window._show_notification(_("Screenshot cancelled"))
+        finally:
+            self.window.show()
 
     def _handle_screenshot_uri(self, uri: str) -> None:
         """Process the screenshot URI and convert to local file"""

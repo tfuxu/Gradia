@@ -17,7 +17,8 @@
 
 from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo, Adw
 from enum import Enum
-from gradia.ui.drawing_actions import *
+from gradia.overlay.drawing_actions import *
+import cairo as cairo_lib
 import math
 import re
 
@@ -154,20 +155,18 @@ class DrawingOverlay(Gtk.DrawingArea):
             return
 
         min_x, min_y, max_x, max_y = self.selected_action.get_bounds()
-
         x1, y1 = self._image_to_widget_coords(min_x, min_y)
         x2, y2 = self._image_to_widget_coords(max_x, max_y)
 
-        x1 -= SELECTION_BOX_PADDING
-        y1 -= SELECTION_BOX_PADDING
-        x2 += SELECTION_BOX_PADDING
-        y2 += SELECTION_BOX_PADDING
+        padding = SELECTION_BOX_PADDING
+        x, y = x1 - padding, y1 - padding
+        w, h = (x2 - x1) + 2 * padding, (y2 - y1) + 2 * padding
 
         accent = Adw.StyleManager.get_default().get_accent_color_rgba()
-        cr.set_source_rgba(accent.red, accent.green, accent.blue, accent.alpha)
+        cr.set_source_rgba(*accent)
         cr.set_line_width(1.0)
         cr.set_dash([5.0, 5.0])
-        cr.rectangle(x1, y1, x2 - x1, y2 - y1)
+        cr.rectangle(x, y, w, h)
         cr.stroke()
         cr.set_dash([])
 
@@ -458,23 +457,12 @@ class DrawingOverlay(Gtk.DrawingArea):
     def export_to_pixbuf(self):
         if not self.picture_widget or not self.picture_widget.get_paintable():
             return None
-        img_w = self.picture_widget.get_paintable().get_intrinsic_width()
-        img_h = self.picture_widget.get_paintable().get_intrinsic_height()
-        if img_w <= 0 or img_h <= 0:
-            return None
-        import cairo as cairo_lib
-        surface = cairo_lib.ImageSurface(cairo_lib.Format.ARGB32, img_w, img_h)
-        cr = cairo_lib.Context(surface)
-        cr.set_operator(cairo_lib.Operator.CLEAR)
-        cr.paint()
-        cr.set_operator(cairo_lib.Operator.OVER)
-        def image_coords_to_self(x, y): return (x * img_w, y * img_h)
-        cr.set_line_cap(cairo_lib.LineCap.ROUND)
-        cr.set_line_join(cairo_lib.LineJoin.ROUND)
-        for action in self.actions:
-            action.draw(cr, image_coords_to_self, 1.0)
-        surface.flush()
-        return Gdk.pixbuf_get_from_surface(surface, 0, 0, img_w, img_h)
+
+        paintable = self.picture_widget.get_paintable()
+        img_w = paintable.get_intrinsic_width()
+        img_h = paintable.get_intrinsic_height()
+
+        return render_actions_to_pixbuf(self.actions, img_w, img_h)
 
     def clear_drawing(self):
         self._close_text_entry()
@@ -521,3 +509,27 @@ class DrawingOverlay(Gtk.DrawingArea):
 
     def get_drawing_visible(self):
         return self.get_visible()
+
+
+def render_actions_to_pixbuf(actions, img_w, img_h):
+    if img_w <= 0 or img_h <= 0:
+        return None
+
+    surface = cairo_lib.ImageSurface(cairo_lib.Format.ARGB32, img_w, img_h)
+    cr = cairo_lib.Context(surface)
+
+    cr.set_operator(cairo_lib.Operator.CLEAR)
+    cr.paint()
+    cr.set_operator(cairo_lib.Operator.OVER)
+
+    def image_coords_to_self(x, y):
+        return (x * img_w, y * img_h)
+
+    cr.set_line_cap(cairo_lib.LineCap.ROUND)
+    cr.set_line_join(cairo_lib.LineJoin.ROUND)
+
+    for action in actions:
+        action.draw(cr, image_coords_to_self, 1.0)
+
+    surface.flush()
+    return Gdk.pixbuf_get_from_surface(surface, 0, 0, img_w, img_h)

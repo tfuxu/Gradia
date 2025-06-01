@@ -19,8 +19,8 @@ from collections.abc import Callable
 from typing import Optional
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
-from gradia.ui.drawing_actions import DrawingMode
-from gradia.ui.drawing_overlay import DrawingOverlay
+from gradia.overlay.drawing_actions import DrawingMode
+from gradia.overlay.drawing_overlay import DrawingOverlay
 
 def create_header_bar() -> Adw.HeaderBar:
     header_bar = Adw.HeaderBar()
