@@ -84,6 +84,9 @@ def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingO
     stack.set_vexpand(True)
     stack.set_hexpand(True)
 
+    stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+    stack.set_transition_duration(200)
+
     picture = create_picture_widget()
     drawing_overlay = create_drawing_overlay(picture)
     overlay = create_image_overlay(picture, drawing_overlay)
@@ -93,10 +96,7 @@ def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingO
     spinner_box, spinner = create_spinner_widget()
     stack.add_named(spinner_box, "loading")
 
-    status_page = create_status_page()
-    stack.add_named(status_page, "empty")
-
-    stack.set_visible_child_name("empty")
+    stack.set_visible_child_name("loading")
 
     create_drop_target(stack)
 

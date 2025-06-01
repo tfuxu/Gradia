@@ -185,7 +185,7 @@ class ScreenshotImageLoader(BaseImageLoader):
         try:
             self._error_callback = on_error_or_cancel
             self.window.hide()
-            GLib.timeout_add(50, self._do_take_screenshot, flags)
+            GLib.timeout_add(150, self._do_take_screenshot, flags)
         except Exception as e:
             print(f"Failed to initiate screenshot: {e}")
             self.window._show_notification(_("Failed to take screenshot"))

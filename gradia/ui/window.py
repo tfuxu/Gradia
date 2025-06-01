@@ -175,17 +175,29 @@ class GradientWindow(Adw.ApplicationWindow):
         self.sidebar.set_visible(False)
 
     def _setup_main_layout(self) -> None:
+        self.top_stack: Gtk.Stack = Gtk.Stack.new()
+        self.top_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        self.top_stack.set_transition_duration(200)
+
+        # Status page
+        status_page = create_status_page()
+        self.top_stack.add_named(status_page, "empty")
+
+        # Actual content
         self.main_box: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.main_box.set_vexpand(True)
 
-        self.main_box.append(self.image_stack)
         self.main_box.append(self.sidebar)
+        self.main_box.append(self.image_stack)
 
         self.image_stack.set_hexpand(True)
         self.sidebar.set_hexpand(False)
         self.sidebar.set_size_request(300, -1)
 
-        self.toolbar_view.set_content(self.main_box)
+        self.top_stack.add_named(self.main_box, "main")
+
+
+        self.toolbar_view.set_content(self.top_stack)
         self.toast_overlay.set_child(self.toolbar_view)
 
     def show(self) -> None:
@@ -193,12 +205,14 @@ class GradientWindow(Adw.ApplicationWindow):
 
     def _start_processing(self) -> None:
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
+
         self.image_stack.get_style_context().add_class("view")
         self._show_loading_state()
         self.process_image()
         self._set_save_and_toggle_(True)
 
     def _show_loading_state(self) -> None:
+        self.top_stack.set_visible_child_name("main")
         self.image_stack.set_visible_child_name(self.PAGE_LOADING)
 
     def _hide_loading_state(self) -> None:
