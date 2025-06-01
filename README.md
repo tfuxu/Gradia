@@ -39,8 +39,9 @@ If you'd like Gradia to **open automatically** after taking a screenshot, you ca
 4. For the **Command**, enter:
 
    ```
-   flatpak run be.alexandervanhee.gradia --screenshot
+   flatpak run be.alexandervanhee.gradia --screenshot=INTERACTIVE
    ```
+   (You can also use `--screenshot=FULL` to take a screenshot of all existing screens instantly.)
 5. Assign a keyboard shortcut of your choice (`Ctrl + Print` should be free by default).
 
 ## Screenshots
