@@ -18,6 +18,7 @@
 from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo, Adw
 from enum import Enum
 from gradia.overlay.drawing_actions import *
+from gradia.overlay.text_entry_popover import TextEntryPopover
 import cairo as cairo_lib
 import math
 import re
@@ -209,52 +210,22 @@ class DrawingOverlay(Gtk.DrawingArea):
 
     def _show_text_entry(self, x, y):
         if self.text_entry_popup:
-            self._close_text_entry()
+            self.text_entry_popup.popdown()
+            self.text_entry_popup = None
 
         self.text_position = self._widget_to_image_coords(x, y)
         self.is_text_editing = True
         self.live_text = ""
 
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        hbox.add_css_class("linked")
-
-        entry = Gtk.Entry()
-        entry.set_placeholder_text(_("Enter text…"))
-        entry.set_width_chars(12)
-        entry.connect("activate", self._on_text_entry_activate)
-        entry.connect("changed", self._on_text_entry_changed)
-
-        adjustment = Gtk.Adjustment(
-            value=self.font_size,
-            lower=8.0,
-            upper=72.0,
-            step_increment=4.0,
-            page_increment=4.0
+        self.text_entry_popup = TextEntryPopover(
+            parent=self,
+            on_text_activate=self._on_text_entry_activate,
+            on_text_changed=self._on_text_entry_changed,
+            on_font_size_changed=self._on_font_size_changed,
+            font_size=self.font_size
         )
-        spin = Gtk.SpinButton()
-        spin.set_adjustment(adjustment)
-        spin.set_digits(0)
-        spin.set_size_request(60, -1)
-        spin.connect("value-changed", self._on_font_size_changed)
-
-        hbox.append(entry)
-        hbox.append(spin)
-
-        allocation = self.get_allocation()
-        rect = Gdk.Rectangle()
-        rect.x = allocation.x + int(x)
-        rect.y = allocation.y + int(y)
-        rect.width = 1
-        rect.height = 1
-
-        self.text_entry_popup = Gtk.Popover()
-        self.text_entry_popup.set_parent(self)
-        self.text_entry_popup.set_pointing_to(rect)
-        self.text_entry_popup.set_position(Gtk.PositionType.BOTTOM)
-        self.text_entry_popup.set_child(hbox)
         self.text_entry_popup.connect("closed", self._on_text_entry_popover_closed)
-        self.text_entry_popup.popup()
-        entry.grab_focus()
+        self.text_entry_popup.popup_at_widget_coords(self, x, y)
 
     def _on_font_size_changed(self, spin_button):
         self.font_size = spin_button.get_value()

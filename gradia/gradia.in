@@ -25,6 +25,9 @@ import signal
 import locale
 import gettext
 
+import logging
+logging.getLogger("PIL").setLevel(logging.WARNING)
+
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
 localedir = '@localedir@'

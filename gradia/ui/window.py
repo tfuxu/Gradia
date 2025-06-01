@@ -38,8 +38,6 @@ class GradientWindow(Adw.ApplicationWindow):
     DEFAULT_PANED_POSITION: int = 650
     SIDEBAR_WIDTH: int = 200
 
-    # Stack page names
-    PAGE_CONTENT: str = "content"
     PAGE_IMAGE: str = "image"
     PAGE_LOADING: str = "loading"
 
@@ -67,8 +65,6 @@ class GradientWindow(Adw.ApplicationWindow):
         )
 
         self.processor: ImageProcessor = ImageProcessor(padding=5, background=GradientBackground())
-
-        self._previous_stack_child: str = self.PAGE_CONTENT
 
         self.create_action("shortcuts", self._on_shortcuts_activated)
         self.create_action("about", self._on_about_activated)
@@ -327,7 +323,7 @@ class GradientWindow(Adw.ApplicationWindow):
         if is_loading:
             self._show_loading_state()
         else:
-            child: str = getattr(self, "_previous_stack_child", self.PAGE_CONTENT)
+            child: str = getattr(self, "_previous_stack_child", self.PAGE_IMAGE)
             self.image_stack.set_visible_child_name(child)
 
     def _on_about_activated(self, action: Gio.SimpleAction, param) -> None:
