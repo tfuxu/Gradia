@@ -148,7 +148,7 @@ class GradientWindow(Adw.ApplicationWindow):
     def _setup_header_bar(self) -> None:
         # btn_refs unused in original code but kept
         btn_refs: list[Optional[Any]] = [None, None]
-        header_bar = create_header_bar()
+        header_bar = HeaderBar()
         self.toolbar_view.add_top_bar(header_bar)
 
     def _setup_image_stack(self) -> None:

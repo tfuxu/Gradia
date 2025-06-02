@@ -1,3 +1,7 @@
+gnome = import('gnome')
+
+subdir('ui')
+
 desktop_file = i18n.merge_file(
         input: 'be.alexandervanhee.gradia.desktop.in',
        output: 'be.alexandervanhee.gradia.desktop',
@@ -50,11 +54,11 @@ configure_file(
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )
 
-gnome = import('gnome')
 resources = gnome.compile_resources(
   'resources',
   'resources.data.gresource.xml.in',
   gresource_bundle: true,
+  dependencies: blueprints,
   source_dir: meson.current_build_dir(),
   install: true,
   install_dir: get_option('datadir') / meson.project_name(),

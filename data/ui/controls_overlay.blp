@@ -1,0 +1,43 @@
+using Gtk 4.0;
+
+template $ControlsOverlay : Gtk.Box {
+  orientation: horizontal;
+  spacing: 6;
+  halign: end;
+  valign: end;
+  margin-end: 12;
+  margin-bottom: 12;
+
+  Gtk.Button undo_btn {
+    icon-name: "edit-undo-symbolic";
+    tooltip-text: _("Undo the last action");
+    action-name: "app.undo";
+
+    styles [
+      "osd",
+      "circular"
+    ]
+  }
+
+  Gtk.Button redo_btn {
+    icon-name: "edit-redo-symbolic";
+    tooltip-text: _("Redo the last undone action");
+    action-name: "app.redo";
+
+    styles [
+      "osd",
+      "circular"
+    ]
+  }
+
+  Gtk.Button reset_btn {
+    icon-name: "user-trash-symbolic";
+    tooltip-text: _("Clear all annotations");
+    action-name: "app.clear";
+
+    styles [
+      "osd",
+      "circular"
+    ]
+  }
+}

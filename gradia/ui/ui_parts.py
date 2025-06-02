@@ -23,61 +23,19 @@ from gradia.overlay.drawing_actions import DrawingMode
 from gradia.overlay.drawing_overlay import DrawingOverlay
 from gradia.ui.recent_picker import RecentPicker
 
-def create_header_bar() -> Adw.HeaderBar:
-    header_bar = Adw.HeaderBar()
+@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/header_bar.ui")
+class HeaderBar(Adw.Bin):
+    __gtype_name__ = "HeaderBarContainer"
 
-    # Open button
-    open_btn = Gtk.Button.new_from_icon_name("document-open-symbolic")
-    open_btn.get_style_context().add_class("flat")
-    open_btn.set_tooltip_text(_("Open Image"))
-    open_btn.set_action_name("app.open")
-    header_bar.pack_start(open_btn)
+    header_bar = Gtk.Template.Child()
+    open_btn = Gtk.Template.Child()
+    screenshot_btn = Gtk.Template.Child()
+    save_btn = Gtk.Template.Child()
+    copy_right_btn = Gtk.Template.Child()
+    about_menu_btn = Gtk.Template.Child()
 
-    # Screenshot button
-    screenshot_btn = Gtk.Button.new_from_icon_name("screenshooter-symbolic")
-    screenshot_btn.get_style_context().add_class("flat")
-    screenshot_btn.set_tooltip_text(_("Take a screenshot"))
-    screenshot_btn.set_action_name("app.screenshot")
-    header_bar.pack_start(screenshot_btn)
-
-    # About menu button with popover menu
-    about_menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic")
-    about_menu_btn.get_style_context().add_class("flat")
-    about_menu_btn.set_tooltip_text(_("Main Menu"))
-    about_menu_btn.set_primary(True)
-
-    menu = Gio.Menu()
-    menu.append(_("Keyboard Shortcuts"), "app.shortcuts")
-    menu.append(_("About Gradia"), "app.about")
-
-    popover = Gtk.PopoverMenu()
-    popover.set_menu_model(menu)
-    about_menu_btn.set_popover(popover)
-    header_bar.pack_end(about_menu_btn)
-
-    # Translators: The prefixed underscore is used to indicate a mnemonic. Do NOT remove it.
-    label = Gtk.Label(label=_("_Save Image"), use_underline=True)
-    save_btn = Gtk.Button(child=label)
-    save_btn.get_style_context().add_class("suggested-action")
-    save_btn.set_action_name("app.save")
-    save_btn.set_sensitive(False)
-
-    # Copy to clipboard button (right)
-    copy_right_btn = Gtk.Button.new_from_icon_name("edit-copy-symbolic")
-    copy_right_btn.get_style_context().add_class("suggested-action")
-    copy_right_btn.set_tooltip_text(_("Copy to Clipboard"))
-    copy_right_btn.set_sensitive(False)
-    copy_right_btn.set_action_name("app.copy")
-
-    # Group the two buttons in a linked box
-    right_buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-    right_buttons_box.get_style_context().add_class("linked")
-    right_buttons_box.append(save_btn)
-    right_buttons_box.append(copy_right_btn)
-    header_bar.pack_end(right_buttons_box)
-
-    return header_bar
-
+    def __init__(self):
+        super().__init__()
 
 def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay']:
     stack = Gtk.Stack.new()
@@ -107,43 +65,21 @@ def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay'
     overlay.set_child(picture)
     overlay.add_overlay(drawing_overlay)
 
-    controls_overlay = create_controls_overlay()
+    controls_overlay = ControlsOverlay()
     overlay.add_overlay(controls_overlay)
 
     return overlay
 
-def create_controls_overlay() -> Gtk.Box:
-    undo_btn = Gtk.Button.new_from_icon_name("edit-undo-symbolic")
-    undo_btn.set_tooltip_text(_("Undo the last action"))
+@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/controls_overlay.ui")
+class ControlsOverlay(Gtk.Box):
+    __gtype_name__ = "ControlsOverlay"
 
-    redo_btn = Gtk.Button.new_from_icon_name("edit-redo-symbolic")
-    redo_btn.set_tooltip_text(_("Redo the last undone action"))
+    undo_btn = Gtk.Template.Child()
+    redo_btn = Gtk.Template.Child()
+    reset_btn = Gtk.Template.Child()
 
-    reset_btn = Gtk.Button.new_from_icon_name("user-trash-symbolic")
-    reset_btn.set_tooltip_text(_("Clear all annotations"))
-
-    for btn in (undo_btn, redo_btn, reset_btn):
-        btn.get_style_context().add_class("osd")
-        btn.get_style_context().add_class("circular")
-
-    button_box = Gtk.Box(
-        orientation=Gtk.Orientation.HORIZONTAL,
-        spacing=6,
-        halign=Gtk.Align.END,
-        valign=Gtk.Align.END,
-        margin_end=12,
-        margin_bottom=12,
-    )
-
-    undo_btn.set_action_name("app.undo")
-    redo_btn.set_action_name("app.redo")
-    reset_btn.set_action_name("app.clear")
-
-    button_box.append(undo_btn)
-    button_box.append(redo_btn)
-    button_box.append(reset_btn)
-
-    return button_box
+    def __init__(self):
+        super().__init__()
 
 
 def create_picture_widget() -> Gtk.Picture:
