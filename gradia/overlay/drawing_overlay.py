@@ -61,6 +61,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.text_position = None
         self.is_text_editing = False
         self.live_text = None
+        self.editing_text_action = None
 
         self._setup_gestures()
 
@@ -191,22 +192,52 @@ class DrawingOverlay(Gtk.DrawingArea):
     def _on_click(self, gesture, n_press, x, y):
         if self.drawing_mode == DrawingMode.TEXT and self._is_point_in_image(x, y):
             self.grab_focus()
-            self._show_text_entry(x, y)
+            # Only show text entry for single click in TEXT mode
+            if n_press == 1:
+                self._show_text_entry(x, y)
         elif self.drawing_mode == DrawingMode.SELECT and self._is_point_in_image(x, y):
             self.grab_focus()
             img_x, img_y = self._widget_to_image_coords(x, y)
 
-            if self.selected_action and not self._is_point_in_selection_bounds(img_x, img_y):
-                self.selected_action = None
-                self.queue_draw()
+            # Check for double click on sellected text action for reediting
+            if (n_press == 2 and
+                self.selected_action and
+                isinstance(self.selected_action, TextAction) and
+                self.selected_action.contains_point(img_x, img_y)):
+                self._start_text_edit(self.selected_action, x, y)
+                return
 
-            action = self._find_action_at_point(img_x, img_y)
-            if action and action != self.selected_action:
-                self.selected_action = action
-                self.queue_draw()
-            elif not action and self.selected_action:
-                self.selected_action = None
-                self.queue_draw()
+            # Single click behaviour for selection
+            if n_press == 1:
+                if self.selected_action and not self._is_point_in_selection_bounds(img_x, img_y):
+                    self.selected_action = None
+                    self.queue_draw()
+
+                action = self._find_action_at_point(img_x, img_y)
+                if action and action != self.selected_action:
+                    self.selected_action = action
+                    self.queue_draw()
+                elif not action and self.selected_action:
+                    self.selected_action = None
+                    self.queue_draw()
+
+    def _start_text_edit(self, text_action, widget_x, widget_y):
+        self.editing_text_action = text_action
+        self.text_position = text_action.position
+        self.is_text_editing = True
+        self.live_text = text_action.text
+
+        # Create text entry popup with existing text
+        self.text_entry_popup = TextEntryPopover(
+            parent=self,
+            on_text_activate=self._on_text_entry_activate,
+            on_text_changed=self._on_text_entry_changed,
+            on_font_size_changed=self._on_font_size_changed,
+            font_size=text_action.font_size,
+            initial_text=text_action.text
+        )
+        self.text_entry_popup.connect("closed", self._on_text_entry_popover_closed)
+        self.text_entry_popup.popup_at_widget_coords(self, widget_x, widget_y)
 
     def _show_text_entry(self, x, y):
         if self.text_entry_popup:
@@ -216,6 +247,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.text_position = self._widget_to_image_coords(x, y)
         self.is_text_editing = True
         self.live_text = ""
+        self.editing_text_action = None
 
         self.text_entry_popup = TextEntryPopover(
             parent=self,
@@ -228,7 +260,14 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.text_entry_popup.popup_at_widget_coords(self, x, y)
 
     def _on_font_size_changed(self, spin_button):
-        self.font_size = spin_button.get_value()
+        font_size = spin_button.get_value()
+        if self.editing_text_action:
+            # Update the existing text action's font size
+            self.editing_text_action.font_size = font_size
+        else:
+            # Update the default font size for new text
+            self.font_size = font_size
+
         if self.live_text:
             self.queue_draw()
 
@@ -239,22 +278,39 @@ class DrawingOverlay(Gtk.DrawingArea):
                 entry = vbox.get_first_child()
                 if entry and isinstance(entry, Gtk.Entry):
                     text = entry.get_text().strip()
-                    if text:
-                        action = TextAction(
-                            self.text_position,
-                            text,
-                            self.pen_color,
-                            self.font_size,
-                            self._get_modified_image_bounds(),
-                            self.font_family
-                        )
-                        self.actions.append(action)
+
+                    if self.editing_text_action:
+                        # Update existing text action
+                        if text:
+                            self.editing_text_action.text = text
+                        else:
+                            # Remove empty text action
+                            if self.editing_text_action in self.actions:
+                                self.actions.remove(self.editing_text_action)
+                            if self.selected_action == self.editing_text_action:
+                                self.selected_action = None
                         self.redo_stack.clear()
+                    else:
+                        # Create new text action
+                        if text:
+                            action = TextAction(
+                                self.text_position,
+                                text,
+                                self.pen_color,
+                                self.font_size,
+                                self._get_modified_image_bounds(),
+                                self.font_family
+                            )
+                            self.actions.append(action)
+                            self.redo_stack.clear()
+
         self._cleanup_text_entry()
         self.queue_draw()
 
     def _on_text_entry_changed(self, entry):
         self.live_text = entry.get_text()
+        if self.editing_text_action:
+            self.editing_text_action.text = self.live_text
         self.queue_draw()
 
     def _on_text_entry_activate(self, entry):
@@ -267,6 +323,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.text_position = None
         self.live_text = None
         self.is_text_editing = False
+        self.editing_text_action = None
 
     def _close_text_entry(self):
         if self.text_entry_popup:
@@ -275,6 +332,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.text_position = None
         self.live_text = None
         self.is_text_editing = False
+        self.editing_text_action = None
 
     def _on_drag_begin(self, gesture, x, y):
         if self.drawing_mode == DrawingMode.TEXT or self.text_entry_popup:
@@ -392,6 +450,8 @@ class DrawingOverlay(Gtk.DrawingArea):
         cr.clip()
 
         for action in self.actions:
+            if action == self.editing_text_action and self.is_text_editing:
+                continue
             action.draw(cr, self._image_to_widget_coords, scale)
 
         if self.is_drawing and self.drawing_mode != DrawingMode.TEXT:
@@ -412,14 +472,26 @@ class DrawingOverlay(Gtk.DrawingArea):
                     CircleAction(self.start_point, self.end_point, self.pen_color, self.pen_size, self.fill_color).draw(cr, self._image_to_widget_coords, scale)
 
         if self.is_text_editing and self.text_position and self.live_text:
-            preview = TextAction(
-                self.text_position,
-                self.live_text,
-                self.pen_color,
-                self.font_size,
-                self._get_modified_image_bounds(),
-                self.font_family
-            )
+            if self.editing_text_action:
+                # Edit old text
+                preview = TextAction(
+                    self.text_position,
+                    self.live_text,
+                    self.editing_text_action.color,
+                    self.editing_text_action.font_size,
+                    self._get_modified_image_bounds(),
+                    self.editing_text_action.font_family
+                )
+            else:
+                # Create new text
+                preview = TextAction(
+                    self.text_position,
+                    self.live_text,
+                    self.pen_color,
+                    self.font_size,
+                    self._get_modified_image_bounds(),
+                    self.font_family
+                )
             preview.draw(cr, self._image_to_widget_coords, scale)
 
         if self.selected_action:

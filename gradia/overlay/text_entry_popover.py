@@ -18,7 +18,7 @@
 from gi.repository import Gtk, Gdk
 
 class TextEntryPopover(Gtk.Popover):
-    def __init__(self, parent, on_text_activate, on_text_changed, on_font_size_changed, font_size=14):
+    def __init__(self, parent, on_text_activate, on_text_changed, on_font_size_changed, font_size=14, initial_text=""):
         super().__init__()
         self.set_parent(parent)
         self.set_position(Gtk.PositionType.BOTTOM)
@@ -31,6 +31,11 @@ class TextEntryPopover(Gtk.Popover):
         self.entry.set_width_chars(12)
         self.entry.connect("activate", on_text_activate)
         self.entry.connect("changed", on_text_changed)
+
+        # Set initial text if provided
+        if initial_text:
+            self.entry.set_text(initial_text)
+            self.entry.select_region(0, -1)
 
         adjustment = Gtk.Adjustment(value=font_size, lower=8.0, upper=72.0, step_increment=4.0, page_increment=4.0)
         self.spin = Gtk.SpinButton()
@@ -50,8 +55,6 @@ class TextEntryPopover(Gtk.Popover):
         rect.y = allocation.y + int(y)
         rect.width = 1
         rect.height = 1
-
         self.set_pointing_to(rect)
         self.popup()
         self.entry.grab_focus()
-
