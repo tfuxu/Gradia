@@ -26,18 +26,23 @@ from gradia.ui.recent_picker import RecentPicker
 @Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/header_bar.ui")
 class HeaderBar(Adw.Bin):
     __gtype_name__ = "HeaderBarContainer"
+    def __init__(self):
+        super().__init__()
 
-    header_bar = Gtk.Template.Child()
-    open_btn = Gtk.Template.Child()
-    screenshot_btn = Gtk.Template.Child()
-    save_btn = Gtk.Template.Child()
-    copy_right_btn = Gtk.Template.Child()
-    about_menu_btn = Gtk.Template.Child()
+
+@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/controls_overlay.ui")
+class ControlsOverlay(Gtk.Box):
+    __gtype_name__ = "ControlsOverlay"
+
+    delete_revealer = Gtk.Template.Child()
 
     def __init__(self):
         super().__init__()
 
-def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay']:
+    def set_delete_visible(self, show: bool):
+        self.delete_revealer.set_reveal_child(show)
+
+def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingOverlay', 'ControlsOverlay']:
     stack = Gtk.Stack.new()
     stack.set_vexpand(True)
     stack.set_hexpand(True)
@@ -46,8 +51,10 @@ def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingO
     stack.set_transition_duration(200)
 
     picture = create_picture_widget()
+
     drawing_overlay = create_drawing_overlay(picture)
-    overlay = create_image_overlay(picture, drawing_overlay)
+    overlay, controls_overlay = create_image_overlay(picture, drawing_overlay)
+    drawing_overlay.set_controls_overlay(controls_overlay)
 
     stack.add_named(overlay, "image")
 
@@ -58,7 +65,7 @@ def create_image_stack() -> tuple[Gtk.Stack, Gtk.Picture, Adw.Spinner, 'DrawingO
 
     create_drop_target(stack)
 
-    return stack, picture, spinner, drawing_overlay
+    return stack, picture, spinner, drawing_overlay, controls_overlay
 
 def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay') -> Gtk.Overlay:
     overlay = Gtk.Overlay.new()
@@ -68,18 +75,7 @@ def create_image_overlay(picture: Gtk.Picture, drawing_overlay: 'DrawingOverlay'
     controls_overlay = ControlsOverlay()
     overlay.add_overlay(controls_overlay)
 
-    return overlay
-
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/controls_overlay.ui")
-class ControlsOverlay(Gtk.Box):
-    __gtype_name__ = "ControlsOverlay"
-
-    undo_btn = Gtk.Template.Child()
-    redo_btn = Gtk.Template.Child()
-    reset_btn = Gtk.Template.Child()
-
-    def __init__(self):
-        super().__init__()
+    return overlay, controls_overlay
 
 
 def create_picture_widget() -> Gtk.Picture:

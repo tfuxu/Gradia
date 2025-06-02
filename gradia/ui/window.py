@@ -146,8 +146,6 @@ class GradientWindow(Adw.ApplicationWindow):
         self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
 
     def _setup_header_bar(self) -> None:
-        # btn_refs unused in original code but kept
-        btn_refs: list[Optional[Any]] = [None, None]
         header_bar = HeaderBar()
         self.toolbar_view.add_top_bar(header_bar)
 
@@ -157,6 +155,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.picture: Gtk.Picture = stack_info[1]
         self.spinner: Gtk.Widget = stack_info[2]
         self.drawing_overlay = stack_info[3]
+        self.controls_overlay = stack_info[4]
 
     def _setup_sidebar(self) -> None:
         self.sidebar_info = create_sidebar_ui(

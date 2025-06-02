@@ -52,7 +52,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.actions = []
         self.redo_stack = []
 
-        self.selected_action = None
+        self._selected_action = None
         self.selection_start_pos = None
         self.is_moving_selection = False
         self.move_start_point = None
@@ -68,6 +68,18 @@ class DrawingOverlay(Gtk.DrawingArea):
     def set_picture_reference(self, picture):
         self.picture_widget = picture
         picture.connect("notify::paintable", lambda *args: self.queue_draw())
+
+    def set_controls_overlay(self, controls_overlay):
+        self.controls_overlay = controls_overlay
+
+    @property
+    def selected_action(self):
+        return self._selected_action
+
+    @selected_action.setter
+    def selected_action(self, action):
+        self._selected_action = action
+        self.controls_overlay.set_delete_visible(action is not None)
 
     def _get_image_bounds(self):
         if not self.picture_widget or not self.picture_widget.get_paintable():
