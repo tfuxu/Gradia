@@ -257,6 +257,7 @@ def create_drawing_tools_group() -> Adw.PreferencesGroup:
 
     fill_color_button = Gtk.ColorButton()
     fill_color_button.set_valign(Gtk.Align.CENTER)
+    fill_color_button.set_use_alpha(True)
     fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
 
 
