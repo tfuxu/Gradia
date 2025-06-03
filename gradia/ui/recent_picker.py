@@ -65,7 +65,6 @@ class RecentImageGetter:
         pass
 
     def get_recent_screenshot_files(self) -> list:
-        """Returns a list of RecentFile object with the 6 most recent screenshots"""
         screenshots_dir = self._get_screenshots_directory()
         if not screenshots_dir.exists():
             print("Screenshots directory does not exist.")
@@ -73,7 +72,7 @@ class RecentImageGetter:
 
         image_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.avif'}
         all_files = [f for f in screenshots_dir.iterdir()
-                    if f.is_file() and f.suffix.lower() in image_extensions]
+                     if f.is_file() and f.suffix.lower() in image_extensions]
 
         sorted_files = sorted(all_files, key=lambda f: f.stat().st_mtime, reverse=True)
         top_files = sorted_files[:self.MAX_RESULTS]
@@ -117,8 +116,12 @@ class RecentPicker(Gtk.Box):
         self.recent_files = []
 
         self.gradient_colors = PREDEFINED_GRADIENTS
-
-        random.shuffle(self.gradient_colors)
+        self.original_gradient_indexes = list(range(len(self.gradient_colors)))
+        combined = list(zip(self.gradient_colors, self.original_gradient_indexes))
+        random.shuffle(combined)
+        self.gradient_colors, self.original_gradient_indexes = zip(*combined)
+        self.gradient_colors = list(self.gradient_colors)
+        self.original_gradient_indexes = list(self.original_gradient_indexes)
 
         self.create_widgets()
         self.load_images()
@@ -271,8 +274,10 @@ class RecentPicker(Gtk.Box):
     def on_image_click(self, index):
         if index < len(self.recent_files):
             file_path = self.recent_files[index].path
+            original_gradient_index = self.original_gradient_indexes[index % len(self.original_gradient_indexes)]
             if self.callback:
-                self.callback(str(file_path))
+                self.callback(str(file_path), original_gradient_index)
 
     def refresh(self):
         self.load_images()
+

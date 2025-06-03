@@ -72,10 +72,19 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action("shortcuts", self._on_shortcuts_activated,  ['<primary>question'])
 
         self.create_action("open", lambda *_: self.import_manager.open_file_dialog(), ["<Primary>o"])
-        self.create_action_with_param("load-drop", self.import_manager._on_drop_action)
+        self.create_action("load-drop", self.import_manager._on_drop_action, vt="(s)")
         self.create_action("paste", lambda *_: self.import_manager.load_from_clipboard(), ["<Primary>v"])
         self.create_action("screenshot", lambda *_: self.import_manager.take_screenshot(), ["<Primary>a"])
-        self.create_action_with_param("open-path", lambda action, param: self.import_manager.load_from_file(param.get_string()))
+        self.create_action("open-path", lambda action, param: self.import_manager.load_from_file(param.get_string()), vt="s")
+
+        self.create_action(
+            "open-path-with-gradient",
+            lambda action, param: (
+                self.import_manager.load_from_file(param.unpack()[0]),
+                setattr(self.processor, 'background', GradientBackground.fromIndex(param.unpack()[1]))
+            ),
+            vt="(si)"
+        )
 
         self.create_action("save", lambda *_: self.export_manager.save_to_file(), ["<Primary>s"], enabled=False)
         self.create_action("copy", lambda *_: self.export_manager.copy_to_clipboard(), ["<Primary>c"], enabled=False)
@@ -86,10 +95,10 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action("undo", lambda *_: self.drawing_overlay.undo(), ["<Primary>z"])
         self.create_action("redo", lambda *_: self.drawing_overlay.redo(), ["<Primary><Shift>z"])
         self.create_action("clear", lambda *_: self.drawing_overlay.clear_drawing())
-        self.create_action_with_param("draw-mode", lambda action, param: self.drawing_overlay.set_drawing_mode(DrawingMode(param.get_string())))
+        self.create_action("draw-mode", lambda action, param: self.drawing_overlay.set_drawing_mode(DrawingMode(param.get_string())), vt="s")
 
-        self.create_action_with_param("pen-color", lambda action, param: self._set_pen_color_from_string(param.get_string()))
-        self.create_action_with_param("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()))
+        self.create_action("pen-color", lambda action, param: self._set_pen_color_from_string(param.get_string()), vt="s")
+        self.create_action("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()), vt="s")
         self.create_action("del-selected", lambda *_: self.drawing_overlay.remove_selected_action(), ["<Primary>x", "Delete"])
         self.file_path = file_path
 
@@ -103,16 +112,9 @@ class GradientWindow(Adw.ApplicationWindow):
             self.import_manager.take_screenshot(init_screenshot_mode, screenshot_error_callback, screenshot_success_callback)
 
 
-    def create_action(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True) -> None:
-        action: Gio.SimpleAction = Gio.SimpleAction.new(name, None)
-        action.connect("activate", callback)
-        action.set_enabled(enabled)
-        self.app.add_action(action)
-        if shortcuts:
-            self.app.set_accels_for_action(f"app.{name}", shortcuts)
-
-    def create_action_with_param(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True) -> None:
-        action: Gio.SimpleAction = Gio.SimpleAction.new(name, GLib.VariantType.new("s"))
+    def create_action(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True, vt: str = None) -> None:
+        variant_type = GLib.VariantType.new(vt) if vt is not None else None
+        action: Gio.SimpleAction = Gio.SimpleAction.new(name, variant_type)
         action.connect("activate", callback)
         action.set_enabled(enabled)
         self.app.add_action(action)

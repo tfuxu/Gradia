@@ -108,11 +108,11 @@ def create_spinner_widget() -> tuple[Gtk.Box, Adw.Spinner]:
     return spinner_box, spinner
 
 def create_status_page() -> Adw.StatusPage:
-    def on_recent_image_click(path: str):
+    def on_recent_image_click(path: str, gradient_index: int):
             app = Gio.Application.get_default()
-            action = app.lookup_action("open-path")
+            action = app.lookup_action("open-path-with-gradient")
             if action:
-                param = GLib.Variant("s", path)
+                param = GLib.Variant('(si)', (path, gradient_index))
                 action.activate(param)
 
     picker = RecentPicker(callback=on_recent_image_click)

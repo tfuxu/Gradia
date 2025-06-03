@@ -62,6 +62,13 @@ class GradientBackground:
         self.angle: int = angle
         self._load_c_lib()
 
+    @classmethod
+    def fromIndex(cls, index: int) -> 'GradientBackground':
+        if not (0 <= index < len(PREDEFINED_GRADIENTS)):
+            raise IndexError(f"Gradient index {index} is out of range.")
+        start_color, end_color, angle = PREDEFINED_GRADIENTS[index]
+        return cls(start_color=start_color, end_color=end_color, angle=angle)
+
     def get_name(self) -> str:
         return f"gradient-{self.start_color}-{self.end_color}-{self.angle}"
 
