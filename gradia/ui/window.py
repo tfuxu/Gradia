@@ -96,7 +96,11 @@ class GradientWindow(Adw.ApplicationWindow):
         if init_screenshot_mode is not None:
             def screenshot_error_callback(error_message: str) -> None:
                  self.app.quit()
-            self.import_manager.take_screenshot(init_screenshot_mode, screenshot_error_callback)
+
+            def screenshot_success_callback() -> None:
+                self.show()
+
+            self.import_manager.take_screenshot(init_screenshot_mode, screenshot_error_callback, screenshot_success_callback)
 
 
     def create_action(self, name: str, callback: Callable[..., None], shortcuts: Optional[list[str]] = None, enabled: bool = True) -> None:

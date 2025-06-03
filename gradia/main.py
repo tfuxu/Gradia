@@ -116,7 +116,9 @@ class GradiaApp(Adw.Application):
             file_path=file_path
         )
         window.build_ui()
-        window.show()
+        if not self.screenshot_flags:
+            # Do not yet show the window if triggered from the shortcut.
+            window.show()
 
     def on_shutdown(self, application):
         logging.info("Application shutdown started, cleaning temp directories...")

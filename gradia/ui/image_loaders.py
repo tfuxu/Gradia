@@ -15,7 +15,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-
 import os
 from typing import Optional, Callable
 
@@ -176,21 +175,24 @@ class ScreenshotImageLoader(BaseImageLoader):
         super().__init__(window, temp_dir)
         self.portal = Xdp.Portal()
         self._error_callback: Optional[Callable[[str], None]] = None
+        self._success_callback: Optional[Callable[[], None]] = None
 
     def take_screenshot(
         self,
         flags: Xdp.ScreenshotFlags = Xdp.ScreenshotFlags.INTERACTIVE,
-        on_error_or_cancel: Optional[Callable[[str], None]] = None
+        on_error_or_cancel: Optional[Callable[[str], None]] = None,
+        on_success: Optional[Callable[[], None]] = None
     ) -> None:
         try:
             self._error_callback = on_error_or_cancel
+            self._success_callback = on_success
             self.window.hide()
             GLib.timeout_add(150, self._do_take_screenshot, flags)
         except Exception as e:
             print(f"Failed to initiate screenshot: {e}")
             self.window._show_notification(_("Failed to take screenshot"))
             if on_error_or_cancel:
-                on_error_or_cancel(str(e)) # Used for shutting down the app after cancelling a screenshot.
+                on_error_or_cancel(str(e))
 
     def _do_take_screenshot(self, flags: Xdp.ScreenshotFlags) -> bool:
         try:
@@ -243,6 +245,9 @@ class ScreenshotImageLoader(BaseImageLoader):
 
             self._set_image_and_update_ui(temp_path, filename, location)
             self.window._show_notification(_("Screenshot captured!"))
+
+            if self._success_callback:
+                self._success_callback()
 
         except Exception as e:
             print(f"Error processing screenshot: {e}")
@@ -305,9 +310,11 @@ class ImportManager:
     def take_screenshot(
         self,
         flags: Xdp.ScreenshotFlags = Xdp.ScreenshotFlags.INTERACTIVE,
-        on_error_or_cancel: Optional[Callable[[str], None]] = None
+        on_error_or_cancel: Optional[Callable[[str], None]] = None,
+        on_success: Optional[Callable[[], None]] = None
     ) -> None:
-        self.screenshot_loader.take_screenshot(flags, on_error_or_cancel)
+        self.screenshot_loader.take_screenshot(flags, on_error_or_cancel, on_success)
 
     def load_from_file(self, file_path: str) -> None:
         self.commandline_loader.load_from_file(file_path)
+
