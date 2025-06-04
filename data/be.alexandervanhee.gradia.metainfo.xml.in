@@ -90,15 +90,15 @@
 	</releases>
 	<screenshots>
 		<screenshot type="default">
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/4bf1a514c7e8adb2d9eb921e8fccaae08913b4de/screenshots/showcase.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/showcase.webp</image>
 			<caption>Edited screenshot</caption>
 		</screenshot>
 		<screenshot>
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/4bf1a514c7e8adb2d9eb921e8fccaae08913b4de/screenshots/dark.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/dark.webp</image>
 			<caption>Edited picture</caption>
 		</screenshot>
 		<screenshot>
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/4bf1a514c7e8adb2d9eb921e8fccaae08913b4de/screenshots/home.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/home.webp</image>
 			<caption>Startup view</caption>
 		</screenshot>
 	</screenshots>
