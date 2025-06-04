@@ -15,12 +15,16 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo
+from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo, GdkPixbuf
 from enum import Enum
 import math
 from gradia.backend.logger import Logger
+import time
+import random
 
 logging = Logger()
+
+start_time_seed = int(time.time())
 
 class DrawingMode(Enum):
     PEN = _("Pen")
@@ -278,3 +282,122 @@ class HighlighterAction(StrokeAction):
         cr.set_operator(cairo.Operator.OVER)
         cr.set_line_cap(cairo.LineCap.ROUND)
 
+class CensorAction(RectAction):
+    def __init__(self, start, end, pixelation_level=8, background_pixbuf=None):
+        super().__init__(start, end, (0, 0, 0, 0), 0, None)
+        self.pixelation_level = pixelation_level
+        self.background_pixbuf = background_pixbuf
+
+    def set_background(self, pixbuf):
+        self.background_pixbuf = pixbuf
+
+    def draw(self, cr, image_to_widget_coords, scale):
+        rect = self._get_widget_rect(image_to_widget_coords)
+        if not rect or not self.background_pixbuf:
+            return self._draw_fallback(cr, rect)
+
+        crop = self._get_crop_region()
+        if not crop:
+            return
+
+        cropped = self._crop_pixbuf(crop)
+        if not cropped:
+            return
+
+        # Scale down for pixelation
+        pixel_size = self.pixelation_level
+        small = cropped.scale_simple(
+            max(1, cropped.get_width() // pixel_size),
+            max(1, cropped.get_height() // pixel_size),
+            GdkPixbuf.InterpType.NEAREST
+        )
+
+        randomized = self._randomize_pixels(small)
+        if not randomized:
+            return
+
+        pixelated = randomized.scale_simple(
+            int(rect['width']),
+            int(rect['height']),
+            GdkPixbuf.InterpType.NEAREST
+        )
+
+        self._draw_pixbuf(cr, pixelated, rect)
+
+    def _get_widget_rect(self, transform):
+        x1, y1 = transform(*self.start)
+        x2, y2 = transform(*self.end)
+        rect = {
+            'x': min(x1, x2),
+            'y': min(y1, y2),
+            'width': abs(x2 - x1),
+            'height': abs(y2 - y1)
+        }
+        return rect if rect['width'] >= 1 and rect['height'] >= 1 else None
+
+    def _draw_fallback(self, cr, rect):
+        if rect:
+            cr.set_source_rgba(0.5, 0.5, 0.5, 0.8)
+            cr.rectangle(rect['x'], rect['y'], rect['width'], rect['height'])
+            cr.fill()
+
+    def _get_crop_region(self):
+        w, h = self.background_pixbuf.get_width(), self.background_pixbuf.get_height()
+        x1, y1 = int(self.start[0] * w), int(self.start[1] * h)
+        x2, y2 = int(self.end[0] * w), int(self.end[1] * h)
+
+        x1, x2 = sorted((max(0, min(x1, w - 1)), max(0, min(x2, w - 1))))
+        y1, y2 = sorted((max(0, min(y1, h - 1)), max(0, min(y2, h - 1))))
+
+        crop_w, crop_h = x2 - x1 + 1, y2 - y1 + 1
+        if crop_w <= 0 or crop_h <= 0:
+            return None
+
+        return {'x': x1, 'y': y1, 'width': crop_w, 'height': crop_h}
+
+    def _crop_pixbuf(self, crop):
+        try:
+            return GdkPixbuf.Pixbuf.new_subpixbuf(
+                self.background_pixbuf,
+                crop['x'], crop['y'],
+                crop['width'], crop['height']
+            )
+        except Exception as e:
+            print(f"Crop failed: {e}")
+            return None
+
+    def _randomize_pixels(self, pixbuf):
+        pixels = bytearray(pixbuf.get_pixels())
+        w, h = pixbuf.get_width(), pixbuf.get_height()
+        stride, channels = pixbuf.get_rowstride(), pixbuf.get_n_channels()
+        offsets = [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]
+        random.seed(42)
+
+        for y in range(h):
+            for x in range(w):
+                if random.random() < 0.3:
+                    neighbors = [(x+dx, y+dy) for dx, dy in offsets if 0 <= x+dx < w and 0 <= y+dy < h]
+                    if neighbors:
+                        nx, ny = random.choice(neighbors)
+                        i1 = y * stride + x * channels
+                        i2 = ny * stride + nx * channels
+                        for c in range(channels):
+                            pixels[i1 + c], pixels[i2 + c] = pixels[i2 + c], pixels[i1 + c]
+
+        try:
+            return GdkPixbuf.Pixbuf.new_from_data(
+                bytes(pixels),
+                GdkPixbuf.Colorspace.RGB,
+                pixbuf.get_has_alpha(),
+                8, w, h, stride
+            )
+        except Exception as e:
+            print(f"Randomize failed: {e}")
+            return None
+
+    def _draw_pixbuf(self, cr, pixbuf, rect):
+        cr.save()
+        Gdk.cairo_set_source_pixbuf(cr, pixbuf, rect['x'], rect['y'])
+        cr.rectangle(rect['x'], rect['y'], rect['width'], rect['height'])
+        cr.fill()
+        cr.restore()
