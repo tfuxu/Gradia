@@ -17,18 +17,22 @@
 
 from gi.repository import Gtk, Gdk
 
+@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/text_entry_popover.ui")
 class TextEntryPopover(Gtk.Popover):
+    __gtype_name__ = "GradiaTextEntryPopover"
+
+    container: Gtk.Box = Gtk.Template.Child()
+
+    entry: Gtk.Entry = Gtk.Template.Child()
+    size_adjustment: Gtk.Adjustment = Gtk.Template.Child()
+    spin: Gtk.SpinButton = Gtk.Template.Child()
+
     def __init__(self, parent, on_text_activate, on_text_changed, on_font_size_changed, font_size=14, initial_text=""):
         super().__init__()
         self.set_parent(parent)
-        self.set_position(Gtk.PositionType.BOTTOM)
 
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        hbox.add_css_class("linked")
+        self.container.add_css_class("linked")
 
-        self.entry = Gtk.Entry()
-        self.entry.set_placeholder_text(_("Enter text…"))
-        self.entry.set_width_chars(12)
         self.entry.connect("activate", on_text_activate)
         self.entry.connect("changed", on_text_changed)
 
@@ -37,16 +41,8 @@ class TextEntryPopover(Gtk.Popover):
             self.entry.set_text(initial_text)
             self.entry.select_region(0, -1)
 
-        adjustment = Gtk.Adjustment(value=font_size, lower=8.0, upper=72.0, step_increment=4.0, page_increment=4.0)
-        self.spin = Gtk.SpinButton()
-        self.spin.set_adjustment(adjustment)
-        self.spin.set_digits(0)
-        self.spin.set_size_request(60, -1)
+        self.size_adjustment.set_value(font_size)
         self.spin.connect("value-changed", on_font_size_changed)
-
-        hbox.append(self.entry)
-        hbox.append(self.spin)
-        self.set_child(hbox)
 
     def popup_at_widget_coords(self, widget, x, y):
         allocation = widget.get_allocation()
