@@ -15,6 +15,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from typing import Callable, Optional
+
 from gi.repository import Gtk, Gdk
 
 @Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/text_entry_popover.ui")
@@ -24,11 +26,22 @@ class TextEntryPopover(Gtk.Popover):
     container: Gtk.Box = Gtk.Template.Child()
 
     entry: Gtk.Entry = Gtk.Template.Child()
-    size_adjustment: Gtk.Adjustment = Gtk.Template.Child()
-    spin: Gtk.SpinButton = Gtk.Template.Child()
 
-    def __init__(self, parent, on_text_activate, on_text_changed, on_font_size_changed, font_size=14, initial_text=""):
-        super().__init__()
+    spin: Gtk.SpinButton = Gtk.Template.Child()
+    size_adjustment: Gtk.Adjustment = Gtk.Template.Child()
+
+    def __init__(
+        self,
+        parent: Gtk.Widget,
+        on_text_activate: Callable,
+        on_text_changed: Callable,
+        on_font_size_changed: Callable,
+        font_size: float | int = 14,
+        initial_text: Optional[str] = "",
+        **kwargs
+    ) -> None:
+        super().__init__(**kwargs)
+
         self.set_parent(parent)
 
         self.container.add_css_class("linked")
@@ -44,13 +57,16 @@ class TextEntryPopover(Gtk.Popover):
         self.size_adjustment.set_value(font_size)
         self.spin.connect("value-changed", on_font_size_changed)
 
-    def popup_at_widget_coords(self, widget, x, y):
+    def popup_at_widget_coords(self, widget: Gtk.Widget, x: float, y: float) -> None:
         allocation = widget.get_allocation()
+
         rect = Gdk.Rectangle()
         rect.x = allocation.x + int(x)
         rect.y = allocation.y + int(y)
         rect.width = 1
         rect.height = 1
+
         self.set_pointing_to(rect)
         self.popup()
+
         self.entry.grab_focus()

@@ -44,7 +44,14 @@ class GradientWindow(Adw.ApplicationWindow):
     # Temp file names
     TEMP_PROCESSED_FILENAME: str = "processed.png"
 
-    def __init__(self, temp_dir: str, version: str, init_screenshot_mode: Xdp.ScreenshotFlags , file_path: str = None, **kwargs) -> None:
+    def __init__(
+        self,
+        temp_dir: str,
+        version: str,
+        init_screenshot_mode: Xdp.ScreenshotFlags,
+        file_path: Optional[str] = None,
+        **kwargs
+    ) -> None:
         super().__init__(**kwargs)
 
         self.app: Adw.Application = kwargs['application']
