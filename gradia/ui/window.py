@@ -162,7 +162,7 @@ class GradientWindow(Adw.ApplicationWindow):
 
     def _setup_sidebar(self) -> None:
         self.sidebar_info = create_sidebar_ui(
-            gradient_selector_widget=self.gradient_selector.widget,
+            gradient_selector_widget=self.gradient_selector,
             on_padding_changed=self.on_padding_changed,
             on_corner_radius_changed=self.on_corner_radius_changed,
             on_aspect_ratio_changed=self.on_aspect_ratio_changed,
