@@ -8,12 +8,8 @@ template $GradiaGradientSelector : Adw.PreferencesGroup {
   Gtk.MenuButton {
     icon-name: "columns-symbolic";
     tooltip-text: _("Gradient Presets");
-    valign: center;
-    focusable: false;
-    can-focus: false;
     popover: gradient_popover;
-
-    //clicked => $_on_gradient_presets_clicked();
+    valign: center;
 
     styles [
       "flat"
@@ -22,28 +18,24 @@ template $GradiaGradientSelector : Adw.PreferencesGroup {
 
   Adw.ActionRow start_color_row {
     title: _("Start Color");
+    activatable-widget: start_color_button;
 
     // TODO: Replace with ColorDialogButton
     [suffix]
     Gtk.ColorButton start_color_button {
       valign: center;
-      focusable: false;
-      can-focus: false;
-
       color-set => $_on_start_color_set();
     }
   }
 
   Adw.ActionRow end_color_row {
     title: _("End Color");
+    activatable-widget: end_color_button;
 
     // TODO: Replace with ColorDialogButton
     [suffix]
     Gtk.ColorButton end_color_button {
       valign: center;
-      focusable: false;
-      can-focus: false;
-
       color-set => $_on_end_color_set();
     }
   }
