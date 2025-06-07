@@ -31,6 +31,7 @@ from gradia.ui.misc import *
 from gradia.ui.image_loaders import ImportManager
 from gradia.ui.image_exporters import ExportManager
 from gradia.ui.image_sidebar import ImageSidebar
+from gradia.ui.welcome_page import WelcomePage
 
 
 class GradientWindow(Adw.ApplicationWindow):
@@ -183,7 +184,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.top_stack.set_transition_duration(200)
 
         # Status page
-        status_page = create_status_page()
+        status_page = WelcomePage()
         self.top_stack.add_named(status_page, "empty")
 
         # Actual content

@@ -15,3 +15,4 @@ gradia/overlay/drawing_actions.py
 data/ui/controls_overlay.blp
 data/ui/text_entry_popover.blp
 data/ui/image_sidebar.blp
+data/ui/welcome_page.blp
