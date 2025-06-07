@@ -22,10 +22,8 @@ from typing import Optional
 from PIL import Image
 from gi.repository import Gtk, Gdk, Adw
 from gradia.constants import PREDEFINED_GRADIENTS
+from gradia.utils.colors import hex_to_rgb, hex_to_rgba, rgba_to_hex, HexColor
 
-
-HexColor = str
-RGBTuple = tuple[int, int, int]
 CacheKey = tuple[str, str, int, int, int]
 GradientPreset = tuple[str, str, int]
 CacheInfo = dict[str, int | list[CacheKey] | bool]
@@ -72,17 +70,12 @@ class GradientBackground:
     def get_name(self) -> str:
         return f"gradient-{self.start_color}-{self.end_color}-{self.angle}"
 
-    def _hex_to_rgb(self, hex_color: HexColor) -> RGBTuple:
-        hex_color = hex_color.lstrip('#')
-        r, g, b = (int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        return (r, g, b)
-
     def _generate_gradient_c(self, width: int, height: int) -> Image.Image:
         if not self._c_lib or self._c_lib is False:
             raise RuntimeError("C gradient library not loaded")
 
-        start_rgb = self._hex_to_rgb(self.start_color)
-        end_rgb = self._hex_to_rgb(self.end_color)
+        start_rgb = hex_to_rgb(self.start_color)
+        end_rgb = hex_to_rgb(self.end_color)
         pixel_count = width * height * 4
         pixel_buffer = (c_uint8 * pixel_count)()
 
@@ -187,17 +180,17 @@ class GradientSelector(Adw.PreferencesGroup):
     def _setup(self) -> None:
         self.angle_adjustment.set_value(self.gradient.angle)
 
-        self.start_color_button.set_rgba(self._hex_to_rgba(self.gradient.start_color))
-        self.end_color_button.set_rgba(self._hex_to_rgba(self.gradient.end_color))
+        self.start_color_button.set_rgba(hex_to_rgba(self.gradient.start_color))
+        self.end_color_button.set_rgba(hex_to_rgba(self.gradient.end_color))
 
     @Gtk.Template.Callback()
     def _on_start_color_set(self, button: Gtk.ColorButton, *args) -> None:
-        self.gradient.start_color = self._rgba_to_hex(button.get_rgba())
+        self.gradient.start_color = rgba_to_hex(button.get_rgba())
         self._notify()
 
     @Gtk.Template.Callback()
     def _on_end_color_set(self, button: Gtk.ColorButton, *args) -> None:
-        self.gradient.end_color = self._rgba_to_hex(button.get_rgba())
+        self.gradient.end_color = rgba_to_hex(button.get_rgba())
         self._notify()
 
     @Gtk.Template.Callback()
@@ -210,8 +203,8 @@ class GradientSelector(Adw.PreferencesGroup):
         self.gradient.end_color = end
         self.gradient.angle = angle
 
-        self.start_color_button.set_rgba(self._hex_to_rgba(start))
-        self.end_color_button.set_rgba(self._hex_to_rgba(end))
+        self.start_color_button.set_rgba(hex_to_rgba(start))
+        self.end_color_button.set_rgba(hex_to_rgba(end))
         self.angle_spin_row.set_value(angle)
 
         self._notify()
@@ -221,14 +214,3 @@ class GradientSelector(Adw.PreferencesGroup):
     def _notify(self) -> None:
         if self.callback:
             self.callback(self.gradient)
-
-    def _hex_to_rgba(self, hex_color: HexColor) -> Gdk.RGBA:
-        rgba = Gdk.RGBA()
-        rgba.parse(hex_color)
-        return rgba
-
-    def _rgba_to_hex(self, rgba: Gdk.RGBA) -> HexColor:
-        r = int(rgba.red * 255)
-        g = int(rgba.green * 255)
-        b = int(rgba.blue * 255)
-        return f"#{r:02x}{g:02x}{b:02x}"
