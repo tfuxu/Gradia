@@ -19,13 +19,6 @@ from typing import Optional
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
 from gradia.overlay.drawing_overlay import DrawingOverlay
-from gradia.ui.recent_picker import RecentPicker
-
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/home_bar.ui")
-class HomeBar(Adw.Bin):
-    __gtype_name__ = "HomeBar"
-    def __init__(self):
-        super().__init__()
 
 @Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/controls_overlay.ui")
 class ControlsOverlay(Gtk.Box):
