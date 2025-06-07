@@ -22,12 +22,12 @@ from typing import Optional, Any
 
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib, Xdp
 
+from gradia.utils.aspect_ratio import parse_aspect_ratio, check_aspect_ratio_bounds
 from gradia.overlay.drawing_actions import DrawingMode
 from gradia.graphics.image_processor import ImageProcessor
 from gradia.graphics.gradient import GradientBackground
 from gradia.ui.ui_parts import *
 from gradia.clipboard import *
-from gradia.ui.misc import *
 from gradia.ui.image_loaders import ImportManager
 from gradia.ui.image_exporters import ExportManager
 from gradia.ui.image_sidebar import ImageSidebar
