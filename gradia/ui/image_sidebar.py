@@ -22,7 +22,7 @@ from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 from gradia.constants import PREDEFINED_GRADIENTS
 from gradia.overlay.drawing_actions import DrawingMode
 from gradia.graphics.gradient import GradientBackground
-from gradia.utils.colors import hex_to_rgb, hex_to_rgba, rgba_to_hex, HexColor
+from gradia.utils.colors import hex_to_rgba, rgba_to_hex, HexColor
 
 @Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/image_sidebar.ui")
 class ImageSidebar(Adw.Bin):

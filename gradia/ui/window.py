@@ -21,6 +21,8 @@ from collections.abc import Callable
 from typing import Optional, Any
 
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib, Xdp
+
+from gradia.overlay.drawing_actions import DrawingMode
 from gradia.graphics.image_processor import ImageProcessor
 from gradia.graphics.gradient import GradientBackground
 from gradia.ui.ui_parts import *
