@@ -1,7 +1,7 @@
 blueprints = custom_target('blueprints',
   input: files(
-    'controls_overlay.blp',
     'image_sidebar.blp',
+    'image_stack.blp',
     'recent_picker.blp',
     'text_entry_popover.blp',
     'welcome_page.blp'

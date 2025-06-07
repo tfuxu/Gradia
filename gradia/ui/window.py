@@ -31,6 +31,7 @@ from gradia.ui.misc import *
 from gradia.ui.image_loaders import ImportManager
 from gradia.ui.image_exporters import ExportManager
 from gradia.ui.image_sidebar import ImageSidebar
+from gradia.ui.image_stack import ImageStack
 from gradia.ui.welcome_page import WelcomePage
 
 
@@ -77,7 +78,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action("shortcuts", self._on_shortcuts_activated,  ['<primary>question'])
 
         self.create_action("open", lambda *_: self.import_manager.open_file_dialog(), ["<Primary>o"])
-        self.create_action("load-drop", self.import_manager._on_drop_action, vt="(s)")
+        self.create_action("load-drop", self.import_manager._on_drop_action, vt="s")
         self.create_action("paste", lambda *_: self.import_manager.load_from_clipboard(), ["<Primary>v"])
         self.create_action("screenshot", lambda *_: self.import_manager.take_screenshot(), ["<Primary>a"])
         self.create_action("open-path", lambda action, param: self.import_manager.load_from_file(param.get_string()), vt="s")
@@ -157,13 +158,11 @@ class GradientWindow(Adw.ApplicationWindow):
 
 
     def _setup_image_stack(self) -> None:
-        stack_info = create_image_stack()
-        self.image_stack: Gtk.Stack = stack_info[0]
-        self.picture: Gtk.Picture = stack_info[1]
-        self.spinner: Gtk.Widget = stack_info[2]
-        self.drawing_overlay = stack_info[3]
-        self.controls_overlay = stack_info[4]
-        self.stack_box = stack_info[5]
+        self.image_box = ImageStack()
+        self.image_stack = self.image_box.stack
+        self.picture = self.image_box.picture
+        self.drawing_overlay = self.image_box.drawing_overlay
+        self.controls_overlay = self.image_box.controls_box
 
     def _setup_sidebar(self) -> None:
         self.sidebar = ImageSidebar(
@@ -192,7 +191,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.main_box.set_vexpand(True)
 
         self.main_box.append(self.sidebar)
-        self.main_box.append(self.stack_box)
+        self.main_box.append(self.image_box)
 
         self.image_stack.set_hexpand(True)
         self.sidebar.set_hexpand(False)
