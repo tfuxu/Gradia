@@ -201,7 +201,7 @@ class ImageProcessor:
         return Image.new("RGBA", (width, height), (0, 0, 0, 0))
 
     def _create_shadow(self, image: Image.Image, offset: tuple[int, int] = (10, 10), shadow_strength: float = 1.0) -> tuple[Image.Image, tuple[int, int]]:
-        shadow_strength = max(0.0, min(shadow_strength, 1.0))
+        shadow_strength = max(0.0, min(shadow_strength, 10)) /5
         blur_radius = int(10 * shadow_strength)
         shadow_alpha = int(150 * shadow_strength)
         shadow_color = (0, 0, 0, shadow_alpha)

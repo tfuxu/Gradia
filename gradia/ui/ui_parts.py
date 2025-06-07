@@ -436,7 +436,8 @@ def create_bottom_bar() -> Adw.HeaderBar:
     bottom_bar.set_show_start_title_buttons(False)
     bottom_bar.set_show_end_title_buttons(False)
 
-    action_buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
+    action_buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
+    spacing=15, margin_top=5, margin_bottom=5)
 
     save_btn = Gtk.Button()
     save_btn.set_icon_name("document-save-symbolic")
@@ -451,7 +452,7 @@ def create_bottom_bar() -> Adw.HeaderBar:
     copy_btn.set_tooltip_text(_("Copy to Clipboard"))
     copy_btn.set_action_name("app.copy")
     copy_btn.set_sensitive(False)
-    copy_btn.add_css_class("suggested-action")
+    copy_btn.add_css_class("raised")
     copy_btn.add_css_class("pill")
 
     action_buttons_box.append(save_btn)
