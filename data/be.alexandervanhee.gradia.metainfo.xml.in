@@ -35,6 +35,18 @@
 		<color type="primary" scheme_preference="dark">#073c6f</color>
 	</branding>
 	<releases>
+	  <release version="1.4.0" date="2025-06-07">
+	    <description translate="no">
+		    <p>This feature release includes:</p>
+		    <ul>
+			    <li>French and Russian translations</li>
+			    <li>Support for image and solid color backgrounds</li>
+			    <li>Layout redesign in line with the contemporary Adwaita style</li>
+			    <li>Menubar shortcut to quickly delete original screenshots</li>
+			    <li>(Semi-)transparency support for foreground and background elements</li>
+		    </ul>
+	    </description>
+    </release>
 		<release version="1.3.0" date="2025-06-04">
 			<description translate="no">
 				<p>Second major post-release update featuring:</p>
@@ -90,15 +102,15 @@
 	</releases>
 	<screenshots>
 		<screenshot type="default">
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/showcase.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/f8dfbc8ea85422a191dff553fb552bda159bb83d/screenshots/showcase.webp</image>
 			<caption>Edited screenshot</caption>
 		</screenshot>
 		<screenshot>
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/dark.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/f8dfbc8ea85422a191dff553fb552bda159bb83d/screenshots/dark.webp</image>
 			<caption>Edited picture</caption>
 		</screenshot>
 		<screenshot>
-			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/60f363d40c2118e4ec16fb7b1373f92e997fe223/screenshots/home.webp</image>
+			<image>https://raw.githubusercontent.com/AlexanderVanhee/Gradia/f8dfbc8ea85422a191dff553fb552bda159bb83d/screenshots/home.webp</image>
 			<caption>Startup view</caption>
 		</screenshot>
 	</screenshots>
