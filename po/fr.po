@@ -3,12 +3,12 @@
 # This file is distributed under the same license as the gradia package.
 # Thomas Citharel <dev@tcit.fr>, 2025.
 #
-#, fuzzy
+
 msgid ""
 msgstr ""
 "Project-Id-Version: gradia\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-04 15:58+0200\n"
+"POT-Creation-Date: 2025-06-07 19:28+0200\n"
 "PO-Revision-Date: 2025-06-04 18:48+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -24,7 +24,7 @@ msgstr ""
 msgid "Gradia"
 msgstr "Gradia"
 
-#: data/be.alexandervanhee.gradia.desktop.in:3 gradia/ui/ui_parts.py:388
+#: data/be.alexandervanhee.gradia.desktop.in:3 gradia/ui/ui_parts.py:469
 msgid "Make your images ready for the world"
 msgstr "Rendez vos images prêtes pour le monde entier"
 
@@ -62,15 +62,15 @@ msgstr ""
 msgid "Alexander Vanhee"
 msgstr "Alexander Vanhee"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:94
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:106
 msgid "Edited screenshot"
 msgstr "Capture d'écran éditée"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:98
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:110
 msgid "Edited picture"
 msgstr "Image éditée"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:102
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:114
 msgid "Startup view"
 msgstr "Vue au démarrage"
 
@@ -94,140 +94,219 @@ msgstr "Couleur de fin"
 msgid "Angle"
 msgstr "Angle"
 
-#: gradia/ui/ui_parts.py:120
+#: gradia/graphics/solid.py:71
+msgid "Solid Color Background"
+msgstr "Fond en couleur unie"
+
+#: gradia/graphics/solid.py:77
+msgid "Color"
+msgstr "Couleur"
+
+#: gradia/graphics/image.py:87
+msgid "Image Background"
+msgstr "Fond en image"
+
+#: gradia/graphics/image.py:90
+msgid "Select Image"
+msgstr "Sélectionner une image"
+
+#: gradia/graphics/image.py:134
+msgid "Image files"
+msgstr "Fichiers image"
+
+#. Create action buttons
+#: gradia/ui/ui_parts.py:156
 msgid "_Take a screenshot…"
 msgstr "_Prendre une capture d'écran…"
 
-#: gradia/ui/ui_parts.py:128
+#: gradia/ui/ui_parts.py:164
 msgid "_Open Image…"
 msgstr "_Ouvrir l'image…"
 
-#: gradia/ui/ui_parts.py:146
+#: gradia/ui/ui_parts.py:183
 msgid "Enhance an Image"
 msgstr "Améliorer une image"
 
-#: gradia/ui/ui_parts.py:147
+#: gradia/ui/ui_parts.py:184
 msgid "Drag and drop one here"
 msgstr "Déposez-en une ici par glisser-déposer"
 
-#: gradia/ui/ui_parts.py:173
+#: gradia/ui/ui_parts.py:215
 msgid "Image Options"
 msgstr "Options de l'image"
 
-#: gradia/ui/ui_parts.py:176
+#: gradia/ui/ui_parts.py:218
 msgid "Padding"
 msgstr "Marge intérieure"
 
-#: gradia/ui/ui_parts.py:181
+#: gradia/ui/ui_parts.py:223
 msgid "Corner Radius"
 msgstr "Rayon de courbure"
 
-#: gradia/ui/ui_parts.py:185
+#: gradia/ui/ui_parts.py:227
 msgid "Aspect Ratio"
 msgstr "Rapport largeur/hauteur"
 
-#: gradia/ui/ui_parts.py:191
+#: gradia/ui/ui_parts.py:233
 msgid "Shadow"
 msgstr "Ombre"
 
-#: gradia/ui/ui_parts.py:210
+#: gradia/ui/ui_parts.py:252
 msgid "Current File"
 msgstr "Fichier courant"
 
-#: gradia/ui/ui_parts.py:212
+#: gradia/ui/ui_parts.py:254
 msgid "Name"
 msgstr "Nom"
 
-#: gradia/ui/ui_parts.py:212 gradia/ui/ui_parts.py:213
+#: gradia/ui/ui_parts.py:254 gradia/ui/ui_parts.py:255
 msgid "No file loaded"
 msgstr "Aucun fichier chargé"
 
-#: gradia/ui/ui_parts.py:213
+#: gradia/ui/ui_parts.py:255
 msgid "Location"
 msgstr "Emplacement"
 
-#: gradia/ui/ui_parts.py:214
+#: gradia/ui/ui_parts.py:256
 msgid "Modified image size"
 msgstr "Taille de l'image modifiée"
 
-#: gradia/ui/ui_parts.py:214
+#: gradia/ui/ui_parts.py:256
 msgid "N/A"
 msgstr "N/A"
 
-#: gradia/ui/ui_parts.py:223
+#: gradia/ui/ui_parts.py:265
 msgid "Annotation Tools"
 msgstr "Outils d'annotation"
 
 #. Fill color row with reset button
-#: gradia/ui/ui_parts.py:250
+#: gradia/ui/ui_parts.py:292
 msgid "Fill Color"
 msgstr "Couleur de remplissage"
 
-#: gradia/ui/ui_parts.py:255
+#: gradia/ui/ui_parts.py:297
 msgid "Reset Fill"
 msgstr "Réinitialiser la couleur de remplissage"
 
 #. Stroke color row
-#: gradia/ui/ui_parts.py:303
+#: gradia/ui/ui_parts.py:345
 msgid "Stroke Color"
 msgstr "Couleur du trait"
 
+#: gradia/ui/ui_parts.py:444
+msgid "Save Image"
+msgstr "Enregistrer l'image"
+
+#: gradia/ui/ui_parts.py:452
+msgid "Copy to Clipboard"
+msgstr "Copier dans le presse-papiers"
+
 #. Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
-#: gradia/ui/ui_parts.py:401
+#: gradia/ui/ui_parts.py:482
 msgid "translator-credits"
 msgstr "Thomas Citharel"
 
-#: gradia/ui/ui_parts.py:411
+#: gradia/ui/ui_parts.py:492
 msgid "File Actions"
 msgstr "Actions de fichier"
 
-#: gradia/ui/ui_parts.py:413
+#: gradia/ui/ui_parts.py:494
 msgid "Open File"
 msgstr "Ouvrir le fichier"
 
-#: gradia/ui/ui_parts.py:414
+#: gradia/ui/ui_parts.py:495
 msgid "Save to File"
 msgstr "Enregistrer le fichier"
 
-#: gradia/ui/ui_parts.py:415
+#: gradia/ui/ui_parts.py:496
 msgid "Copy Image to Clipboard"
 msgstr "Copier l'image dans le presse-papiers"
 
-#: gradia/ui/ui_parts.py:416
+#: gradia/ui/ui_parts.py:497
 msgid "Paste From Clipboard"
-msgstr "Coller l'image depuis le presse-papiers"
+msgstr "Coller depuis le presse-papiers"
 
-#: gradia/ui/ui_parts.py:420
+#: gradia/ui/ui_parts.py:501
 msgid "Annotations"
 msgstr "Annotations"
 
-#: gradia/ui/ui_parts.py:422
+#: gradia/ui/ui_parts.py:503
 msgid "Undo"
 msgstr "Annuler"
 
-#: gradia/ui/ui_parts.py:423
+#: gradia/ui/ui_parts.py:504
 msgid "Redo"
 msgstr "Refaire"
 
-#: gradia/ui/ui_parts.py:424
+#: gradia/ui/ui_parts.py:505
 msgid "Remove Selected"
 msgstr "Supprimer la sélection"
 
-#: gradia/ui/ui_parts.py:428
+#: gradia/ui/ui_parts.py:509
 msgid "General"
 msgstr "Général"
 
-#: gradia/ui/ui_parts.py:430 data/ui/header_bar.blp:68
+#: gradia/ui/ui_parts.py:511 data/ui/header_bar.blp:46
 msgid "Keyboard Shortcuts"
 msgstr "Raccourcis clavier"
 
-#: gradia/ui/window.py:317
+#: gradia/ui/window.py:310
 msgid "Unknown"
 msgstr "Inconnu"
 
-#: gradia/ui/window.py:319
+#: gradia/ui/window.py:312
 msgid "Error"
 msgstr "Erreur"
+
+#: gradia/ui/window.py:349
+msgid "No screenshots to delete."
+msgstr "Aucune capture d'écran à supprimer."
+
+#: gradia/ui/window.py:361
+msgid "Delete Screenshot?"
+msgstr "Supprimer la capture d'écran ?"
+
+#: gradia/ui/window.py:362
+#, python-format
+msgid ""
+"Are you sure you want to delete the following file?\n"
+"\n"
+"%s"
+msgstr ""
+"Êtes-vous sûr de vouloir supprimer le fichier suivant ?\n"
+"\n"
+"%s"
+
+#: gradia/ui/window.py:364
+msgid "Delete Screenshots?"
+msgstr "Supprimer les captures d'écran ?"
+
+#: gradia/ui/window.py:365
+#, python-format
+msgid ""
+"Are you sure you want to delete the following files?\n"
+"\n"
+"%s"
+msgstr ""
+"Êtes-vous sûr de vouloir supprimer les fichiers suivants ?\n"
+"\n"
+"%s"
+
+#: gradia/ui/window.py:368
+msgid "Cancel"
+msgstr "Annuler"
+
+#: gradia/ui/window.py:369
+msgid "Delete"
+msgstr "Supprimer"
+
+#: gradia/ui/window.py:376
+msgid "Screenshot deleted."
+msgstr "Capture d'écran supprimée."
+
+#: gradia/ui/window.py:378
+msgid "Screenshots deleted."
+msgstr "Captures d'écran supprimées."
 
 #: gradia/ui/image_exporters.py:95
 msgid "Save Processed Image"
@@ -235,7 +314,7 @@ msgstr "Enregistrer l'image traitée"
 
 #: gradia/ui/image_exporters.py:124
 msgid "Image saved"
-msgstr "Image sauvegardée"
+msgstr "Image enregistrée"
 
 #: gradia/ui/image_exporters.py:127
 msgid "Failed to save image"
@@ -253,7 +332,7 @@ msgstr "Image copiée dans le presse-papiers"
 msgid "Failed to copy image to clipboard"
 msgstr "Échec de la copie de l'image dans le presse-papiers"
 
-#: gradia/ui/image_loaders.py:63 data/ui/header_bar.blp:9
+#: gradia/ui/image_loaders.py:63 data/ui/header_bar.blp:13
 msgid "Open Image"
 msgstr "Ouvrir une image"
 
@@ -275,29 +354,29 @@ msgstr "Depuis le presse-papiers"
 
 #: gradia/ui/image_loaders.py:164
 msgid "Clipboard does not contain an image."
-msgstr "Le presse papiers ne contient pas une image."
+msgstr "Le presse-papiers ne contient pas d'image."
 
 #: gradia/ui/image_loaders.py:166
 msgid "Failed to load image from clipboard."
 msgstr "Échec du chargement de l'image depuis le presse-papiers."
 
-#: gradia/ui/image_loaders.py:193 gradia/ui/image_loaders.py:208
+#: gradia/ui/image_loaders.py:201 gradia/ui/image_loaders.py:216
 msgid "Failed to take screenshot"
 msgstr "Échec de la capture d'écran"
 
-#: gradia/ui/image_loaders.py:222
+#: gradia/ui/image_loaders.py:232
 msgid "Screenshot cancelled"
 msgstr "Capture d'écran annulée"
 
-#: gradia/ui/image_loaders.py:243 gradia/ui/image_loaders.py:244
+#: gradia/ui/image_loaders.py:253 gradia/ui/image_loaders.py:254
 msgid "Screenshot"
 msgstr "Capture d'écran"
 
-#: gradia/ui/image_loaders.py:247
+#: gradia/ui/image_loaders.py:257
 msgid "Screenshot captured!"
-msgstr "Capture d'écran effectuée !"
+msgstr "Capture d'écran effectuée !"
 
-#: gradia/ui/image_loaders.py:254
+#: gradia/ui/image_loaders.py:264
 msgid "Failed to process screenshot"
 msgstr "Échec du traitement de la capture d'écran"
 
@@ -328,6 +407,19 @@ msgid "%d day ago"
 msgid_plural "%d days ago"
 msgstr[0] "il y a %d jour"
 msgstr[1] "il y a %d jours"
+
+#. Explicitly mark each string for translation
+#: gradia/ui/background_selector.py:62
+msgid "Solid"
+msgstr "Plein"
+
+#: gradia/ui/background_selector.py:63
+msgid "Gradient"
+msgstr "Dégradé"
+
+#: gradia/ui/background_selector.py:64
+msgid "Image"
+msgstr "Image"
 
 #: gradia/overlay/drawing_actions.py:30
 msgid "Pen"
@@ -363,15 +455,15 @@ msgstr "Surligneur"
 
 #: gradia/overlay/drawing_actions.py:38
 msgid "Censor"
-msgstr "Censeur"
+msgstr "Censurer"
 
 #: gradia/overlay/drawing_actions.py:39
 msgid "Number"
-msgstr "Nombre"
+msgstr "Numéro"
 
 #: data/ui/controls_overlay.blp:24
 msgid "Erase selected"
-msgstr "Supprimer la sélection"
+msgstr "Effacer la sélection"
 
 #: data/ui/controls_overlay.blp:42
 msgid "Undo the last action"
@@ -385,23 +477,19 @@ msgstr "Refaire la dernière action annulée"
 msgid "Clear all annotations"
 msgstr "Effacer toutes les annotations"
 
-#: data/ui/header_bar.blp:17
+#: data/ui/header_bar.blp:21
 msgid "Take a screenshot"
 msgstr "Prendre une capture d'écran"
 
-#: data/ui/header_bar.blp:25
+#: data/ui/header_bar.blp:29
 msgid "Main Menu"
 msgstr "Menu principal"
 
-#: data/ui/header_bar.blp:41 data/ui/header_bar.blp:47
-msgid "Save Image"
-msgstr "Enregistrer l'image"
+#: data/ui/header_bar.blp:42
+msgid "Delete taken screenshot(s)"
+msgstr "Supprimer les captures d'écran prises"
 
-#: data/ui/header_bar.blp:54
-msgid "Copy to Clipboard"
-msgstr "Copier dans le presse-papiers"
-
-#: data/ui/header_bar.blp:72
+#: data/ui/header_bar.blp:50
 msgid "About Gradia"
 msgstr "À propos de Gradia"
 

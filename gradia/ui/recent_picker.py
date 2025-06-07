@@ -7,11 +7,11 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -26,34 +26,28 @@ import re
 import threading
 import random
 import gettext
+import locale
 
+DOMAIN = 'gradia'
+LOCALE_DIR = Path(__file__).parent.parent.parent / 'locale'
+
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except locale.Error as e:
+    print(f"Warning: Could not set locale - {e}")
+
+gettext.bindtextdomain(DOMAIN, str(LOCALE_DIR))
+gettext.textdomain(DOMAIN)
+
+_ = gettext.gettext
 ngettext = gettext.ngettext
 
 class RecentFile:
     def __init__(self, path: Path):
         self.path = path
         self.folder = str(path.parent)
-        self.name = self._get_friendly_name(path)
+        self.name = str(path.parent)
 
-    def _get_friendly_name(self, path: Path) -> str:
-        modified_time = path.stat().st_mtime
-        return self._time_ago(modified_time)
-
-    def _time_ago(self, past_timestamp: float) -> str:
-        now = time.time()
-        diff = int(now - past_timestamp)
-
-        if diff < 60:
-            return ngettext("%d second ago", "%d seconds ago", diff) % diff
-        elif diff < 3600:
-            minutes = diff // 60
-            return ngettext("%d minute ago", "%d minutes ago", minutes) % minutes
-        elif diff < 86400:
-            hours = diff // 3600
-            return ngettext("%d hour ago", "%d hours ago", hours) % hours
-        else:
-            days = diff // 86400
-            return ngettext("%d day ago", "%d days ago", days) % days
 
 class RecentImageGetter:
     MAX_RESULTS = 6
@@ -251,7 +245,6 @@ class RecentPicker(Gtk.Box):
                     self.image_buttons[i].set_child(image)
                     self._fade_in_widget(image)
 
-                    self.name_labels[i].set_text(file_obj.name)
 
                 except Exception as e:
                     filename = file_obj.path.name
@@ -262,7 +255,6 @@ class RecentPicker(Gtk.Box):
                     self.image_buttons[i].set_child(error_label)
                     self._fade_in_widget(error_label)
 
-                    self.name_labels[i].set_text(file_obj.name)
                     print(f"Error loading image {file_obj.path}: {e}")
             else:
                 icon = Gtk.Image.new_from_icon_name("image-missing-symbolic")
@@ -280,4 +272,3 @@ class RecentPicker(Gtk.Box):
 
     def refresh(self):
         self.load_images()
-

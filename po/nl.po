@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gradia\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-04 15:58+0200\n"
+"POT-Creation-Date: 2025-06-07 19:28+0200\n"
 "PO-Revision-Date: 2025-06-04 20:32+0200\n"
 "Last-Translator: Alexander Vanhee\n"
 "Language-Team: \n"
@@ -23,7 +23,7 @@ msgstr ""
 msgid "Gradia"
 msgstr "Gradia"
 
-#: data/be.alexandervanhee.gradia.desktop.in:3 gradia/ui/ui_parts.py:388
+#: data/be.alexandervanhee.gradia.desktop.in:3 gradia/ui/ui_parts.py:469
 msgid "Make your images ready for the world"
 msgstr "Maak je afbeeldingen klaar voor de wereld"
 
@@ -60,15 +60,15 @@ msgstr ""
 msgid "Alexander Vanhee"
 msgstr "Alexander Vanhee"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:94
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:106
 msgid "Edited screenshot"
 msgstr "Bewerkte schermafbeelding"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:98
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:110
 msgid "Edited picture"
 msgstr "Bewerkte afbeelding"
 
-#: data/be.alexandervanhee.gradia.metainfo.xml.in:102
+#: data/be.alexandervanhee.gradia.metainfo.xml.in:114
 msgid "Startup view"
 msgstr "Opstartweergave"
 
@@ -92,137 +92,219 @@ msgstr "Eindkleur"
 msgid "Angle"
 msgstr "Hoek"
 
-#: gradia/ui/ui_parts.py:120
+#: gradia/graphics/solid.py:71
+msgid "Solid Color Background"
+msgstr "Achtergrond met effen kleur"
+
+#: gradia/graphics/solid.py:77
+msgid "Color"
+msgstr "Kleur"
+
+#: gradia/graphics/image.py:87
+msgid "Image Background"
+msgstr "Afbeelding als achtergrond"
+
+#: gradia/graphics/image.py:90
+msgid "Select Image"
+msgstr "Afbeelding selecteren"
+
+#: gradia/graphics/image.py:134
+msgid "Image files"
+msgstr "Afbeeldingsbestanden"
+
+#. Create action buttons
+#: gradia/ui/ui_parts.py:156
 msgid "_Take a screenshot…"
 msgstr "_Maak een schermafbeelding…"
 
-#: gradia/ui/ui_parts.py:128
+#: gradia/ui/ui_parts.py:164
 msgid "_Open Image…"
 msgstr "_Afbeelding openen…"
 
-#: gradia/ui/ui_parts.py:146
+#: gradia/ui/ui_parts.py:183
 msgid "Enhance an Image"
 msgstr "Verbeter een afbeelding"
 
-#: gradia/ui/ui_parts.py:147
+#: gradia/ui/ui_parts.py:184
 msgid "Drag and drop one here"
 msgstr "Sleep er hier een naartoe"
 
-#: gradia/ui/ui_parts.py:173
+#: gradia/ui/ui_parts.py:215
 msgid "Image Options"
 msgstr "Afbeeldingsopties"
 
-#: gradia/ui/ui_parts.py:176
+#: gradia/ui/ui_parts.py:218
 msgid "Padding"
 msgstr "Binnenmarge"
 
-#: gradia/ui/ui_parts.py:181
+#: gradia/ui/ui_parts.py:223
 msgid "Corner Radius"
 msgstr "Hoekradius"
 
-#: gradia/ui/ui_parts.py:185
+#: gradia/ui/ui_parts.py:227
 msgid "Aspect Ratio"
 msgstr "Beeldverhouding"
 
-#: gradia/ui/ui_parts.py:191
+#: gradia/ui/ui_parts.py:233
 msgid "Shadow"
 msgstr "Schaduw"
 
-#: gradia/ui/ui_parts.py:210
+#: gradia/ui/ui_parts.py:252
 msgid "Current File"
 msgstr "Huidig bestand"
 
-#: gradia/ui/ui_parts.py:212
+#: gradia/ui/ui_parts.py:254
 msgid "Name"
 msgstr "Naam"
 
-#: gradia/ui/ui_parts.py:212 gradia/ui/ui_parts.py:213
+#: gradia/ui/ui_parts.py:254 gradia/ui/ui_parts.py:255
 msgid "No file loaded"
 msgstr "Geen bestand geladen"
 
-#: gradia/ui/ui_parts.py:213
+#: gradia/ui/ui_parts.py:255
 msgid "Location"
 msgstr "Locatie"
 
-#: gradia/ui/ui_parts.py:214
+#: gradia/ui/ui_parts.py:256
 msgid "Modified image size"
 msgstr "Aangepaste afbeeldingsgrootte"
 
-#: gradia/ui/ui_parts.py:214
+#: gradia/ui/ui_parts.py:256
 msgid "N/A"
 msgstr "n.b."
 
-#: gradia/ui/ui_parts.py:223
+#: gradia/ui/ui_parts.py:265
 msgid "Annotation Tools"
 msgstr "Annotatietools"
 
-#: gradia/ui/ui_parts.py:250
+#. Fill color row with reset button
+#: gradia/ui/ui_parts.py:292
 msgid "Fill Color"
 msgstr "Vulkleur"
 
-#: gradia/ui/ui_parts.py:255
+#: gradia/ui/ui_parts.py:297
 msgid "Reset Fill"
 msgstr "Vulling opnieuw instellen"
 
-#: gradia/ui/ui_parts.py:303
+#. Stroke color row
+#: gradia/ui/ui_parts.py:345
 msgid "Stroke Color"
 msgstr "Lijnkleur"
 
-#: gradia/ui/ui_parts.py:401
+#: gradia/ui/ui_parts.py:444
+msgid "Save Image"
+msgstr "Afbeelding opslaan"
+
+#: gradia/ui/ui_parts.py:452
+msgid "Copy to Clipboard"
+msgstr "Kopiëren naar klembord"
+
+#. Translators: This is a place to put your credits (formats: "Name https://example.com" or "Name <email@example.com>", no quotes) and is not meant to be translated literally.
+#: gradia/ui/ui_parts.py:482
 msgid "translator-credits"
 msgstr "Alexander Vanhee https://github.com/AlexanderVanhee/Gradia"
 
-#: gradia/ui/ui_parts.py:411
+#: gradia/ui/ui_parts.py:492
 msgid "File Actions"
 msgstr "Bestandshandelingen"
 
-#: gradia/ui/ui_parts.py:413
+#: gradia/ui/ui_parts.py:494
 msgid "Open File"
 msgstr "Bestand openen"
 
-#: gradia/ui/ui_parts.py:414
+#: gradia/ui/ui_parts.py:495
 msgid "Save to File"
 msgstr "Opslaan naar bestand"
 
-#: gradia/ui/ui_parts.py:415
+#: gradia/ui/ui_parts.py:496
 msgid "Copy Image to Clipboard"
 msgstr "Afbeelding naar klembord kopiëren"
 
-#: gradia/ui/ui_parts.py:416
+#: gradia/ui/ui_parts.py:497
 msgid "Paste From Clipboard"
 msgstr "Plakken vanaf klembord"
 
-#: gradia/ui/ui_parts.py:420
+#: gradia/ui/ui_parts.py:501
 msgid "Annotations"
 msgstr "Annotaties"
 
-#: gradia/ui/ui_parts.py:422
+#: gradia/ui/ui_parts.py:503
 msgid "Undo"
 msgstr "Ongedaan maken"
 
-#: gradia/ui/ui_parts.py:423
+#: gradia/ui/ui_parts.py:504
 msgid "Redo"
 msgstr "Opnieuw uitvoeren"
 
-#: gradia/ui/ui_parts.py:424
+#: gradia/ui/ui_parts.py:505
 msgid "Remove Selected"
 msgstr "Geselecteerde verwijderen"
 
-#: gradia/ui/ui_parts.py:428
+#: gradia/ui/ui_parts.py:509
 msgid "General"
 msgstr "Algemeen"
 
-#: gradia/ui/ui_parts.py:430 data/ui/header_bar.blp:68
+#: gradia/ui/ui_parts.py:511 data/ui/header_bar.blp:46
 msgid "Keyboard Shortcuts"
 msgstr "Sneltoetsen"
 
-#: gradia/ui/window.py:317
+#: gradia/ui/window.py:310
 msgid "Unknown"
 msgstr "Onbekend"
 
-#: gradia/ui/window.py:319
+#: gradia/ui/window.py:312
 msgid "Error"
 msgstr "Fout"
+
+#: gradia/ui/window.py:349
+msgid "No screenshots to delete."
+msgstr "Geen schermafbeeldingen om te verwijderen."
+
+#: gradia/ui/window.py:361
+msgid "Delete Screenshot?"
+msgstr "Schermafbeelding verwijderen?"
+
+#: gradia/ui/window.py:362
+#, python-format
+msgid ""
+"Are you sure you want to delete the following file?\n"
+"\n"
+"%s"
+msgstr ""
+"Weet je zeker dat je het volgende bestand wilt verwijderen?\n"
+"\n"
+"%s"
+
+#: gradia/ui/window.py:364
+msgid "Delete Screenshots?"
+msgstr "Schermafbeeldingen verwijderen?"
+
+#: gradia/ui/window.py:365
+#, python-format
+msgid ""
+"Are you sure you want to delete the following files?\n"
+"\n"
+"%s"
+msgstr ""
+"Weet je zeker dat je de volgende bestanden wilt verwijderen?\n"
+"\n"
+"%s"
+
+#: gradia/ui/window.py:368
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: gradia/ui/window.py:369
+msgid "Delete"
+msgstr "Verwijderen"
+
+#: gradia/ui/window.py:376
+msgid "Screenshot deleted."
+msgstr "Schermafbeelding verwijderd."
+
+#: gradia/ui/window.py:378
+msgid "Screenshots deleted."
+msgstr "Schermafbeeldingen verwijderd."
 
 #: gradia/ui/image_exporters.py:95
 msgid "Save Processed Image"
@@ -248,7 +330,7 @@ msgstr "Afbeelding gekopieerd naar klembord"
 msgid "Failed to copy image to clipboard"
 msgstr "Kopiëren van afbeelding naar klembord mislukt"
 
-#: gradia/ui/image_loaders.py:63 data/ui/header_bar.blp:9
+#: gradia/ui/image_loaders.py:63 data/ui/header_bar.blp:13
 msgid "Open Image"
 msgstr "Open afbeelding"
 
@@ -276,23 +358,23 @@ msgstr "Klembord bevat geen geldige afbeelding."
 msgid "Failed to load image from clipboard."
 msgstr "Laden van afbeelding van klembord mislukt."
 
-#: gradia/ui/image_loaders.py:193 gradia/ui/image_loaders.py:208
+#: gradia/ui/image_loaders.py:201 gradia/ui/image_loaders.py:216
 msgid "Failed to take screenshot"
 msgstr "Schermafbeelding maken mislukt"
 
-#: gradia/ui/image_loaders.py:222
+#: gradia/ui/image_loaders.py:232
 msgid "Screenshot cancelled"
 msgstr "Schermafbeelding geannuleerd"
 
-#: gradia/ui/image_loaders.py:243 gradia/ui/image_loaders.py:244
+#: gradia/ui/image_loaders.py:253 gradia/ui/image_loaders.py:254
 msgid "Screenshot"
 msgstr "Schermafbeelding"
 
-#: gradia/ui/image_loaders.py:247
+#: gradia/ui/image_loaders.py:257
 msgid "Screenshot captured!"
 msgstr "Schermafbeelding vastgelegd!"
 
-#: gradia/ui/image_loaders.py:254
+#: gradia/ui/image_loaders.py:264
 msgid "Failed to process screenshot"
 msgstr "Verwerken van schermafbeelding mislukt"
 
@@ -323,6 +405,19 @@ msgid "%d day ago"
 msgid_plural "%d days ago"
 msgstr[0] "%d dag geleden"
 msgstr[1] "%d dagen geleden"
+
+#. Explicitly mark each string for translation
+#: gradia/ui/background_selector.py:62
+msgid "Solid"
+msgstr "Effen"
+
+#: gradia/ui/background_selector.py:63
+msgid "Gradient"
+msgstr "Verloop"
+
+#: gradia/ui/background_selector.py:64
+msgid "Image"
+msgstr "Figuur"
 
 #: gradia/overlay/drawing_actions.py:30
 msgid "Pen"
@@ -380,31 +475,26 @@ msgstr "Laatste ongedane actie opnieuw uitvoeren"
 msgid "Clear all annotations"
 msgstr "Alle annotaties wissen"
 
-#: data/ui/header_bar.blp:17
+#: data/ui/header_bar.blp:21
 msgid "Take a screenshot"
 msgstr "Maak een schermafbeelding"
 
-#: data/ui/header_bar.blp:25
+#: data/ui/header_bar.blp:29
 msgid "Main Menu"
 msgstr "Hoofdmenu"
 
-#: data/ui/header_bar.blp:41 data/ui/header_bar.blp:47
-msgid "Save Image"
-msgstr "Afbeelding opslaan"
+#: data/ui/header_bar.blp:42
+msgid "Delete taken screenshot(s)"
+msgstr "Schermafbeelding(en) verwijderen"
 
-#: data/ui/header_bar.blp:54
-msgid "Copy to Clipboard"
-msgstr "Kopiëren naar klembord"
-
-#: data/ui/header_bar.blp:72
+#: data/ui/header_bar.blp:50
 msgid "About Gradia"
 msgstr "Over Gradia"
-
 
 #~ msgid "No Image Loaded"
 #~ msgstr "Nog geen afbeelding geladen"
 
-#, fuzzy
+
 #~ msgid "Enter text…"
 #~ msgstr "Voer tekst in"
 
@@ -422,6 +512,3 @@ msgstr "Over Gradia"
 
 #~ msgid "Paste from clipboard"
 #~ msgstr "Plakken vanaf klembord"
-
-#~ msgid "PNG Image"
-#~ msgstr "PNG-afbeelding"

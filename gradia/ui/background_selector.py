@@ -58,10 +58,19 @@ class BackgroundSelector:
 
         self.toggle_buttons = {}
 
+        solid_label = _("Solid")
+        gradient_label = _("Gradient")
+        image_label = _("Image")
+
+        mode_labels = {
+            "solid": solid_label,
+            "gradient": gradient_label,
+            "image": image_label,
+        }
+
         for mode in MODES:
             toggle = Adw.Toggle(name=mode)
-            label = mode.capitalize()
-            toggle.set_child(Gtk.Label(label=_(label)))
+            toggle.set_child(Gtk.Label(label=mode_labels[mode]))
             self.toggle_group.add(toggle)
             self.toggle_buttons[mode] = toggle
 
@@ -118,4 +127,3 @@ class BackgroundSelector:
             "solid": self.solid,
             "image": self.image
         }.get(self.current_mode)
-
