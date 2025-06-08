@@ -67,7 +67,7 @@ class DrawingOverlay(Gtk.DrawingArea):
 
         self._setup_gestures()
 
-    def set_picture_reference(self, picture):
+    def set_picture_reference(self, picture: Gtk.Picture) -> None:
         self.picture_widget = picture
         picture.connect("notify::paintable", lambda *args: self.queue_draw())
 
