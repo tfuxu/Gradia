@@ -25,7 +25,7 @@ from typing import Optional
 
 from gi.repository import Adw, Gio, Xdp, Gdk, Gtk
 
-from gradia.ui.window import GradientWindow
+from gradia.ui.window import GradiaMainWindow
 from gradia.backend.logger import Logger
 
 logging = Logger()
@@ -121,14 +121,13 @@ class GradiaApp(Adw.Application):
         logging.debug(f"Created temp directory: {temp_dir}")
         self.temp_dirs.append(temp_dir)
 
-        window = GradientWindow(
+        window = GradiaMainWindow(
             temp_dir=temp_dir,
             version=self.version,
             application=self,
             init_screenshot_mode=self.screenshot_flags,
             file_path=file_path
         )
-        window.build_ui()
         if not self.screenshot_flags:
             # Do not yet show the window if triggered from the shortcut.
             window.show()
