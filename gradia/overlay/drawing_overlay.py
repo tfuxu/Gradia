@@ -15,13 +15,10 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk, Gdk, Gio, cairo, Pango, PangoCairo, Adw
-from enum import Enum
+from gi.repository import Gtk, Gdk, Gio, cairo, Adw
 from gradia.overlay.drawing_actions import *
 from gradia.overlay.text_entry_popover import TextEntryPopover
 import cairo as cairo_lib
-import math
-import re
 
 SELECTION_BOX_PADDING = 0
 DEFAULT_PEN_SIZE = 3.0

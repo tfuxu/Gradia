@@ -15,14 +15,12 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import ctypes
 from ctypes import c_int, c_double, c_uint8, POINTER, CDLL
-from collections.abc import Callable
 from typing import Optional
 from PIL import Image
-from gi.repository import Gtk, Gdk, Adw
+
 from gradia.constants import PREDEFINED_GRADIENTS
-from gradia.utils.colors import hex_to_rgb, hex_to_rgba, rgba_to_hex, HexColor
+from gradia.utils.colors import hex_to_rgb, HexColor
 
 CacheKey = tuple[str, str, int, int, int]
 GradientPreset = tuple[str, str, int]
@@ -42,7 +40,7 @@ class GradientBackground:
         try:
             from importlib.resources import files
             gradia_path = files('gradia').joinpath('libgradient_gen.so')
-            cls._c_lib = ctypes.CDLL(str(gradia_path))
+            cls._c_lib = CDLL(str(gradia_path))
 
             cls._c_lib.generate_gradient.argtypes = [
                 POINTER(c_uint8), c_int, c_int,
