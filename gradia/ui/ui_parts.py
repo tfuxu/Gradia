@@ -282,7 +282,7 @@ def create_drawing_tools_group() -> Adw.PreferencesGroup:
         (DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1),
         (DrawingMode.HIGHLIGHTER, "marker-symbolic", 2, 1),
         (DrawingMode.CENSOR, "checkerboard-big-symbolic", 3, 1),
-        #(DrawingMode.NUMBER, "one-circle-symbolic", 4, 1),
+        (DrawingMode.NUMBER, "one-circle-symbolic", 4, 1),
     ]
 
     fill_sensitive_modes = {DrawingMode.SQUARE, DrawingMode.CIRCLE}

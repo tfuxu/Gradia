@@ -401,3 +401,48 @@ class CensorAction(RectAction):
         cr.rectangle(rect['x'], rect['y'], rect['width'], rect['height'])
         cr.fill()
         cr.restore()
+
+class NumberStampAction(DrawingAction):
+    def __init__(self, position, number, radius, fill_color, text_color=None):
+        super().__init__()
+        self.position = position
+        self.number = number
+        self.radius = radius
+        self.fill_color = fill_color
+        self.creation_time = time.time()
+
+        if text_color is None:
+            r, g, b, a = fill_color
+            self.text_color = (1 - r, 1 - g, 1 - b, 1)
+        else:
+            self.text_color = text_color
+
+    def draw(self, cr, image_to_widget_coords, scale):
+        x, y = image_to_widget_coords(*self.position)
+        r = self.radius * scale * 1000
+
+        cr.set_source_rgba(*self.fill_color)
+        cr.arc(x, y, r, 0, 2 * math.pi)
+        cr.fill()
+
+        cr.set_source_rgba(*self.text_color)
+        cr.select_font_face("Sans", cairo.FontSlant.NORMAL, cairo.FontWeight.BOLD)
+        cr.set_font_size(r * 1.2)
+        text = str(self.number)
+        xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
+        cr.move_to(x - width / 2 - xbearing, y + height / 2)
+        cr.show_text(text)
+
+    def contains_point(self, px, py):
+        x, y = self.position
+        r = self.radius
+        distance = math.sqrt((px - x)**2 + (py - y)**2)
+        return distance <= r
+
+    def get_bounds(self):
+        x, y = self.position
+        r = self.radius
+        return self.apply_padding((x - r, y - r, x + r, y + r))
+
+    def translate(self, dx, dy):
+        self.position = (self.position[0] + dx, self.position[1] + dy)

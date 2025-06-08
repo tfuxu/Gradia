@@ -22,6 +22,7 @@ from gradia.overlay.text_entry_popover import TextEntryPopover
 import cairo as cairo_lib
 import math
 import re
+import time
 
 SELECTION_BOX_PADDING = 0
 DEFAULT_PEN_SIZE = 3.0
@@ -53,6 +54,9 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.end_point = None
         self.actions = []
         self.redo_stack = []
+
+        self.number_radius = 15
+        self._next_number = 1
 
         self._selected_action = None
         self.selection_start_pos = None
@@ -100,7 +104,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         return offset_x, offset_y, disp_w, disp_h
 
     def _get_modified_image_bounds(self):
-        return  self.picture_widget.get_paintable().get_intrinsic_width(), self.picture_widget.get_paintable().get_intrinsic_height()
+        return self.picture_widget.get_paintable().get_intrinsic_width(), self.picture_widget.get_paintable().get_intrinsic_height()
 
     def _get_scale_factor(self):
         _, _, dw, dh = self._get_image_bounds()
@@ -140,11 +144,28 @@ class DrawingOverlay(Gtk.DrawingArea):
             if hasattr(root, "add_action"):
                 root.add_action(action)
 
-    def remove_selected_action(self) -> bool :
+    def _get_number_actions(self):
+        return [action for action in self.actions if isinstance(action, NumberStampAction)]
+
+    def _renumber_actions(self):
+        number_actions = self._get_number_actions()
+        number_actions.sort(key=lambda action: action.creation_time)
+
+        for i, action in enumerate(number_actions, 1):
+            action.number = i
+
+        self._next_number = len(number_actions) + 1
+
+    def remove_selected_action(self) -> bool:
         if self.selected_action and self.selected_action in self.actions:
+            was_number_action = isinstance(self.selected_action, NumberStampAction)
             self.actions.remove(self.selected_action)
             self.selected_action = None
             self.redo_stack.clear()
+
+            if was_number_action:
+                self._renumber_actions()
+
             self.queue_draw()
             return True
         return False
@@ -218,14 +239,27 @@ class DrawingOverlay(Gtk.DrawingArea):
     def _on_click(self, gesture, n_press, x, y):
         if self.drawing_mode == DrawingMode.TEXT and self._is_point_in_image(x, y):
             self.grab_focus()
-            # Only show text entry for single click in TEXT mode
             if n_press == 1:
                 self._show_text_entry(x, y)
+        elif self.drawing_mode == DrawingMode.NUMBER and self._is_point_in_image(x, y) and n_press == 1:
+            self.grab_focus()
+            rel_x, rel_y = self._widget_to_image_coords(x, y)
+            number_action = NumberStampAction(
+                position=(rel_x, rel_y),
+                number=self._next_number, # Assign the current _next_number
+                radius=self.number_radius / 1000.0,
+                fill_color=self.pen_color
+            )
+
+            self.actions.append(number_action)
+            self._renumber_actions() # Recalculate numbers based on chronological order
+            self.redo_stack.clear()
+            self.queue_draw()
+
         elif self.drawing_mode == DrawingMode.SELECT and self._is_point_in_image(x, y):
             self.grab_focus()
             img_x, img_y = self._widget_to_image_coords(x, y)
 
-            # Check for double click on sellected text action for reediting
             if (n_press == 2 and
                 self.selected_action and
                 isinstance(self.selected_action, TextAction) and
@@ -233,7 +267,6 @@ class DrawingOverlay(Gtk.DrawingArea):
                 self._start_text_edit(self.selected_action, x, y)
                 return
 
-            # Single click behaviour for selection
             if n_press == 1:
                 if self.selected_action and not self._is_point_in_selection_bounds(img_x, img_y):
                     self.selected_action = None
@@ -253,7 +286,6 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.is_text_editing = True
         self.live_text = text_action.text
 
-        # Create text entry popup with existing text
         self.text_entry_popup = TextEntryPopover(
             parent=self,
             on_text_activate=self._on_text_entry_activate,
@@ -288,10 +320,8 @@ class DrawingOverlay(Gtk.DrawingArea):
     def _on_font_size_changed(self, spin_button):
         font_size = spin_button.get_value()
         if self.editing_text_action:
-            # Update the existing text action's font size
             self.editing_text_action.font_size = font_size
         else:
-            # Update the default font size for new text
             self.font_size = font_size
 
         if self.live_text:
@@ -306,18 +336,15 @@ class DrawingOverlay(Gtk.DrawingArea):
                     text = entry.get_text().strip()
 
                     if self.editing_text_action:
-                        # Update existing text action
                         if text:
                             self.editing_text_action.text = text
                         else:
-                            # Remove empty text action
                             if self.editing_text_action in self.actions:
                                 self.actions.remove(self.editing_text_action)
                             if self.selected_action == self.editing_text_action:
                                 self.selected_action = None
                         self.redo_stack.clear()
                     else:
-                        # Create new text action
                         if text:
                             action = TextAction(
                                 self.text_position,
@@ -361,7 +388,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.editing_text_action = None
 
     def _on_drag_begin(self, gesture, x, y):
-        if self.drawing_mode == DrawingMode.TEXT or self.text_entry_popup:
+        if self.drawing_mode == DrawingMode.TEXT or self.drawing_mode == DrawingMode.NUMBER or self.text_entry_popup:
             return
         if not self._is_point_in_image(x, y):
             return
@@ -390,7 +417,7 @@ class DrawingOverlay(Gtk.DrawingArea):
             self.end_point = rel
 
     def _on_drag_update(self, gesture, dx, dy):
-        if self.drawing_mode == DrawingMode.TEXT:
+        if self.drawing_mode == DrawingMode.TEXT or self.drawing_mode == DrawingMode.NUMBER:
             return
 
         start = gesture.get_start_point()
@@ -416,7 +443,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.queue_draw()
 
     def _on_drag_end(self, gesture, dx, dy):
-        if self.drawing_mode == DrawingMode.TEXT:
+        if self.drawing_mode == DrawingMode.TEXT or self.drawing_mode == DrawingMode.NUMBER:
             return
 
         if self.drawing_mode == DrawingMode.SELECT:
@@ -457,6 +484,8 @@ class DrawingOverlay(Gtk.DrawingArea):
     def _on_motion(self, controller, x, y):
         if self.drawing_mode == DrawingMode.TEXT:
             name = "text" if self._is_point_in_image(x, y) else "default"
+        elif self.drawing_mode == DrawingMode.NUMBER:
+            name = "crosshair" if self._is_point_in_image(x, y) else "default"
         elif self.drawing_mode == DrawingMode.SELECT:
             img_x, img_y = self._widget_to_image_coords(x, y)
             if self.selected_action and self._is_point_in_selection_bounds(img_x, img_y):
@@ -486,7 +515,7 @@ class DrawingOverlay(Gtk.DrawingArea):
                 continue
             action.draw(cr, self._image_to_widget_coords, scale)
 
-        if self.is_drawing and self.drawing_mode != DrawingMode.TEXT:
+        if self.is_drawing and self.drawing_mode != DrawingMode.TEXT and self.drawing_mode != DrawingMode.NUMBER:
             cr.set_source_rgba(*self.pen_color)
             if self.drawing_mode == DrawingMode.PEN and len(self.current_stroke) > 1:
                 StrokeAction(self.current_stroke, self.pen_color, self.pen_size).draw(cr, self._image_to_widget_coords, scale)
@@ -513,7 +542,6 @@ class DrawingOverlay(Gtk.DrawingArea):
 
         if self.is_text_editing and self.text_position and self.live_text:
             if self.editing_text_action:
-                # Edit old text
                 preview = TextAction(
                     self.text_position,
                     self.live_text,
@@ -523,7 +551,6 @@ class DrawingOverlay(Gtk.DrawingArea):
                     self.editing_text_action.font_family
                 )
             else:
-                # Create new text
                 preview = TextAction(
                     self.text_position,
                     self.live_text,
@@ -552,18 +579,29 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.actions.clear()
         self.redo_stack.clear()
         self.selected_action = None
+        self._next_number = 1
         self.queue_draw()
 
     def undo(self):
         if self.actions:
-            self.redo_stack.append(self.actions.pop())
+            undone_action = self.actions.pop()
+            self.redo_stack.append(undone_action)
             self.selected_action = None
+
+            if isinstance(undone_action, NumberStampAction):
+                self._renumber_actions()
+
             self.queue_draw()
 
     def redo(self):
         if self.redo_stack:
-            self.actions.append(self.redo_stack.pop())
+            redone_action = self.redo_stack.pop()
+            self.actions.append(redone_action)
             self.selected_action = None
+
+            if isinstance(redone_action, NumberStampAction):
+                self._renumber_actions()
+
             self.queue_draw()
 
     def set_pen_color(self, r, g, b, a=1):
