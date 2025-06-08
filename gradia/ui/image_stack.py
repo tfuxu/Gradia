@@ -58,7 +58,6 @@ class ImageStack(Adw.Bin):
 
     def _on_file_dropped(self, _target: Gtk.DropTarget, value: Gio.File, _x: int, _y: int) -> None:
         uri = value.get_uri()
-        print(uri)
         if uri:
             app = Gio.Application.get_default()
             action = app.lookup_action("load-drop") if app else None
