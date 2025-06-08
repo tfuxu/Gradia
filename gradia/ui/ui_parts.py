@@ -19,10 +19,10 @@ from collections.abc import Callable
 from typing import Optional
 from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
-from gradia.overlay.drawing_actions import DrawingMode
 from gradia.overlay.drawing_overlay import DrawingOverlay
 from gradia.overlay.transparency_overlay import TransparencyBackground
 from gradia.ui.recent_picker import RecentPicker
+from gradia.ui.drawing_tools_group import DrawingToolsGroup
 
 @Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/header_bar.ui")
 class HeaderBar(Adw.Bin):
@@ -261,130 +261,7 @@ def create_file_info_group() -> tuple[Adw.PreferencesGroup, Adw.ActionRow, Adw.A
 
     return file_info_group, filename_row, location_row, processed_size_row
 
-def create_drawing_tools_group() -> Adw.PreferencesGroup:
-    tools_group = Adw.PreferencesGroup(title=_("Annotation Tools"))
 
-    # Drawing mode buttons
-    tools_row = Adw.ActionRow()
-    tools_grid = Gtk.Grid(margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-    tools_grid.set_row_spacing(6)
-    tools_grid.set_column_spacing(6)
-    tools_grid.set_halign(Gtk.Align.CENTER)
-    tools_grid.set_valign(Gtk.Align.CENTER)
-
-    tools_data = [
-        (DrawingMode.SELECT, "pointer-primary-click-symbolic", 0, 0),
-        (DrawingMode.PEN, "edit-symbolic", 1, 0),
-        (DrawingMode.TEXT, "text-insert2-symbolic", 2, 0),
-        (DrawingMode.LINE, "draw-line-symbolic", 3, 0),
-        (DrawingMode.ARROW, "arrow1-top-right-symbolic", 4, 0),
-        (DrawingMode.SQUARE, "box-small-outline-symbolic", 0, 1),
-        (DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1),
-        (DrawingMode.HIGHLIGHTER, "marker-symbolic", 2, 1),
-        (DrawingMode.CENSOR, "checkerboard-big-symbolic", 3, 1),
-        (DrawingMode.NUMBER, "one-circle-symbolic", 4, 1),
-    ]
-
-    fill_sensitive_modes = {DrawingMode.SQUARE, DrawingMode.CIRCLE}
-    tool_buttons = {}
-
-    # Fill color row with reset button
-    fill_row = Adw.ActionRow(title=_("Fill Color"))
-    fill_row.set_sensitive(False)
-
-    reset_fill_button = Gtk.Button(icon_name="edit-clear-symbolic")
-    reset_fill_button.get_style_context().add_class("flat")
-    reset_fill_button.set_tooltip_text(_("Reset Fill"))
-    reset_fill_button.set_valign(Gtk.Align.CENTER)
-
-    fill_color_button = Gtk.ColorButton()
-    fill_color_button.set_valign(Gtk.Align.CENTER)
-    fill_color_button.set_use_alpha(True)
-    fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
-
-
-    def on_button_toggled(button: Gtk.ToggleButton, drawing_mode):
-        if button.get_active():
-            for mode_key, btn in tool_buttons.items():
-                if mode_key != drawing_mode and btn.get_active():
-                    btn.set_active(False)
-
-            fill_row.set_sensitive(drawing_mode in fill_sensitive_modes)
-            app = Gio.Application.get_default()
-            if app:
-                action = app.lookup_action("draw-mode")
-                if action:
-                    variant = GLib.Variant('s', drawing_mode.value)
-                    action.activate(variant)
-        else:
-            any_active = any(
-                btn.get_active() for mode_key, btn in tool_buttons.items() if mode_key != drawing_mode
-            )
-            if not any_active:
-                button.set_active(True)
-
-    for drawing_mode, icon_name, col, row in tools_data:
-        button = Gtk.ToggleButton()
-        button.set_icon_name(icon_name)
-        button.set_tooltip_text(drawing_mode.value)
-        button.get_style_context().add_class("flat")
-        button.get_style_context().add_class("circular")
-        button.set_size_request(40, 40)
-        button.connect("toggled", on_button_toggled, drawing_mode)
-        tools_grid.attach(button, col, row, 1, 1)
-        tool_buttons[drawing_mode] = button
-
-    # Default tool is PEN
-    if DrawingMode.PEN in tool_buttons:
-        tool_buttons[DrawingMode.PEN].set_active(True)
-
-    tools_row.set_child(tools_grid)
-    tools_group.add(tools_row)
-
-    # Stroke color row
-    stroke_color_row = Adw.ActionRow(title=_("Stroke Color"))
-    stroke_color_button = Gtk.ColorButton()
-    stroke_color_button.set_valign(Gtk.Align.CENTER)
-    stroke_color_button.set_rgba(Gdk.RGBA(red=1, green=1, blue=1, alpha=1))
-    stroke_color_row.add_suffix(stroke_color_button)
-    tools_group.add(stroke_color_row)
-
-
-    def on_reset_fill_clicked(_btn):
-        fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
-        fill_color_button.emit("color-set")
-
-    reset_fill_button.connect("clicked", on_reset_fill_clicked)
-
-    fill_row.add_suffix(reset_fill_button)
-    fill_row.add_suffix(fill_color_button)
-    tools_group.add(fill_row)
-
-    # Color-set handlers
-    def on_color_set(color_btn: Gtk.ColorButton):
-        app = Gio.Application.get_default()
-        if app:
-            action = app.lookup_action("pen-color")
-            if action:
-                rgba = color_btn.get_rgba()
-                color_str = f"{rgba.red:.3f},{rgba.green:.3f},{rgba.blue:.3f},{rgba.alpha:.3f}"
-                variant = GLib.Variant('s', color_str)
-                action.activate(variant)
-
-    def on_fill_color_set(color_btn: Gtk.ColorButton):
-        app = Gio.Application.get_default()
-        if app:
-            action = app.lookup_action("fill-color")
-            if action:
-                rgba = color_btn.get_rgba()
-                color_str = f"{rgba.red:.3f},{rgba.green:.3f},{rgba.blue:.3f},{rgba.alpha:.3f}"
-                variant = GLib.Variant('s', color_str)
-                action.activate(variant)
-
-    stroke_color_button.connect("color-set", on_color_set)
-    fill_color_button.connect("color-set", on_fill_color_set)
-
-    return tools_group
 
 def create_sidebar_ui(
     background_selector_widget: Gtk.Widget,
@@ -401,8 +278,7 @@ def create_sidebar_ui(
     controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20,
                            margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
 
-    drawing_tools_group = create_drawing_tools_group()
-    controls_box.append(drawing_tools_group)
+    controls_box.append(DrawingToolsGroup())
     controls_box.append(background_selector_widget)
 
     # Add grouped UI elements
