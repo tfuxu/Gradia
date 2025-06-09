@@ -24,6 +24,12 @@
 
 
 ---
+<p align="center" style="display: flex; justify-content: center; gap: 1em; flex-wrap: wrap;">
+  <img alt="Flathub Downloads" src="https://img.shields.io/flathub/downloads/be.alexandervanhee.gradia?logoColor=%234ec9a2&label=Flathub%20installs" />
+  <img alt="Flathub Version" src="https://img.shields.io/flathub/v/be.alexandervanhee.gradia?label=Flathub%20version" />
+  <img alt="GitHub License" src="https://img.shields.io/github/license/AlexanderVanhee/Gradia" />
+</p>
+
 
 Gradia allows you to quickly modify screenshots of application windows to put them better in context.
 
