@@ -14,6 +14,14 @@
     <file>help.txt</file>
   </gresource>
   <gresource prefix="/be/alexandervanhee/gradia">
+    <file>images/preset1.avif</file>
+    <file>images/preset2.avif</file>
+    <file>images/preset3.avif</file>
+    <file>images/preset4.avif</file>
+    <file>images/preset5.avif</file>
+    <file>images/preset6.avif</file>
+  </gresource>
+  <gresource prefix="/be/alexandervanhee/gradia">
     <file preprocess="xml-stripblanks">icons/scalable/actions/image-alt-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/scalable/actions/arrow1-top-right-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/scalable/actions/clipboard-symbolic.svg</file>

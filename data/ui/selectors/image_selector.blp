@@ -4,6 +4,20 @@ using Adw 1;
 template $GradiaImageSelector : Adw.PreferencesGroup {
   title: _("Image Background");
 
+  [header-suffix]
+  Gtk.MenuButton {
+    icon-name: "columns-symbolic";
+    tooltip-text: _("Image Presets");
+    popover: image_popover;
+    valign: center;
+
+    styles [
+      "flat"
+    ]
+  }
+
+
+
   Adw.ButtonRow select_image_button_row {
     title: _("Select Image");
     start-icon-name: "image-alt-symbolic";
@@ -47,4 +61,24 @@ Gtk.FileFilter image_filter {
     "image/webp",
     "image/avif"
   ];
+}
+
+
+Gtk.Popover image_popover {
+  autohide: true;
+  has-arrow: true;
+
+  child: Gtk.FlowBox popover_flowbox {
+    max-children-per-line: 3;
+    selection-mode: none;
+    row-spacing: 10;
+    column-spacing: 10;
+    homogeneous: true;
+
+    valign: center;
+    margin-top: 10;
+    margin-bottom: 10;
+    margin-start: 10;
+    margin-end: 10;
+  };
 }
