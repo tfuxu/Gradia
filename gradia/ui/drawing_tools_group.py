@@ -17,8 +17,9 @@
 
 from gi.repository import GObject, Gtk, Adw, Gdk, Gio, GLib, Pango
 from gradia.overlay.drawing_actions import DrawingMode
+from gradia.constants import rootdir  # pyright: ignore
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/drawing_tools_group.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/drawing_tools_group.ui")
 class DrawingToolsGroup(Adw.PreferencesGroup):
     __gtype_name__ = "GradiaDrawingToolsGroup"
 

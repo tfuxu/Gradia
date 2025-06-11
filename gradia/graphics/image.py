@@ -23,6 +23,7 @@ from typing import Callable, Optional
 from PIL import Image
 from gi.repository import Adw, GLib, Gdk, Gio, Gtk, GdkPixbuf
 from gradia.graphics.background import Background
+from gradia.constants import rootdir # pyright: ignore
 import io
 
 
@@ -49,7 +50,7 @@ class ImageBackground(Background):
 
     def load_image(self, path: str) -> None:
         self.file_path = path
-        if path.startswith("/be/alexandervanhee/gradia/"):
+        if path.startswith(rootdir):
             resource_data = Gio.resources_lookup_data(path, Gio.ResourceLookupFlags.NONE)
             bytes_data = resource_data.get_data()
             byte_stream = io.BytesIO(bytes_data)
@@ -85,7 +86,7 @@ class ImageBackground(Background):
         return f"image-{self.file_path or 'none'}"
 
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/selectors/image_selector.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/selectors/image_selector.ui")
 class ImageSelector(Adw.PreferencesGroup):
     __gtype_name__ = "GradiaImageSelector"
 

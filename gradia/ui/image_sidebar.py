@@ -21,8 +21,9 @@ from gi.repository import Gtk, Adw
 
 from gradia.ui.drawing_tools_group import DrawingToolsGroup
 from gradia.ui.background_selector import BackgroundSelector
+from gradia.constants import rootdir  # pyright: ignore
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/image_sidebar.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/image_sidebar.ui")
 class ImageSidebar(Adw.Bin):
     __gtype_name__ = "GradiaImageSidebar"
 

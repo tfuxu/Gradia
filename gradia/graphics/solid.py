@@ -23,6 +23,7 @@ from gi.repository import Adw, Gtk
 
 from gradia.graphics.background import Background
 from gradia.utils.colors import hex_to_rgb, hex_to_rgba, rgba_to_hex
+from gradia.constants import rootdir  # pyright: ignore
 
 
 class SolidBackground(Background):
@@ -39,7 +40,7 @@ class SolidBackground(Background):
         return Image.new('RGBA', (width, height), (*rgb, alpha_value))
 
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/selectors/solid_selector.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/selectors/solid_selector.ui")
 class SolidSelector(Adw.PreferencesGroup):
     __gtype_name__ = "GradiaSolidSelector"
 

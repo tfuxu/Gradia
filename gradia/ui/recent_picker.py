@@ -23,6 +23,7 @@ import threading
 from gi.repository import Adw, GLib, Gdk, GdkPixbuf, Gtk
 
 from gradia.app_constants import PREDEFINED_GRADIENTS
+from gradia.constants import rootdir  # pyright: ignore
 
 
 class RecentFile:
@@ -73,7 +74,7 @@ class RecentImageGetter:
         return None
 
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/recent_picker.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/recent_picker.ui")
 class RecentPicker(Adw.Bin):
     __gtype_name__ = "GradiaRecentPicker"
 

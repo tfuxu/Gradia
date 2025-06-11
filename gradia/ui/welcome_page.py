@@ -18,8 +18,9 @@
 from gi.repository import Gtk, Gio, Adw, GLib
 
 from gradia.ui.recent_picker import RecentPicker
+from gradia.constants import rootdir  # pyright: ignore
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/welcome_page.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/welcome_page.ui")
 class WelcomePage(Adw.Bin):
     __gtype_name__ = "GradiaWelcomePage"
 

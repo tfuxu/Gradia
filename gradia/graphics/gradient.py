@@ -24,7 +24,8 @@ from PIL import Image
 from gi.repository import Adw, Gtk
 
 from gradia.app_constants import PREDEFINED_GRADIENTS
-from gradia.utils.colors import HexColor, hex_to_rgb, hex_to_rgba, rgba_to_hex
+from gradia.utils.colors import HexColor, hex_to_rgb, rgba_to_hex, hex_to_rgba
+from gradia.constants import rootdir  # pyright: ignore
 
 
 CacheKey = tuple[str, str, int, int, int]
@@ -123,7 +124,7 @@ class GradientBackground:
         }
 
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/selectors/gradient_selector.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/selectors/gradient_selector.ui")
 class GradientSelector(Adw.PreferencesGroup):
     __gtype_name__ = "GradiaGradientSelector"
 

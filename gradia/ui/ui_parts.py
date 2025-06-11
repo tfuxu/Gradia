@@ -20,9 +20,10 @@ from gi.repository import Gtk, Gio, Adw, Gdk, GLib
 
 from gradia.overlay.drawing_overlay import DrawingOverlay
 from gradia.overlay.transparency_overlay import TransparencyBackground
-from gradia.ui.recent_picker import RecentPicker
+from gradia.constants import rootdir  # pyright: ignore
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/controls_overlay.ui")
+
+@Gtk.Template(resource_path=f"{rootdir}/ui/controls_overlay.ui")
 class ControlsOverlay(Gtk.Box):
     __gtype_name__ = "ControlsOverlay"
 

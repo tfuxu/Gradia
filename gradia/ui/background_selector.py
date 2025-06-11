@@ -24,11 +24,12 @@ from gradia.graphics.gradient import GradientSelector, GradientBackground
 from gradia.graphics.solid import SolidSelector, SolidBackground
 from gradia.graphics.image import ImageSelector, ImageBackground
 from gradia.graphics.background import Background
+from gradia.constants import rootdir  # pyright: ignore
 
 
 MODES = ["solid", "gradient", "image"]
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/background_selector.ui")
+@Gtk.Template(resource_path=f"{rootdir}/ui/background_selector.ui")
 class BackgroundSelector(Adw.Bin):
     __gtype_name__ = "GradiaBackgroundSelector"
 
