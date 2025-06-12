@@ -106,7 +106,8 @@ class GradientWindow(Adw.ApplicationWindow):
         self.create_action("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()), vt="s")
         self.create_action("del-selected", lambda *_: self.drawing_overlay.remove_selected_action(), ["<Primary>x", "Delete"])
         self.create_action("font", lambda action, param: self.drawing_overlay.set_font_family(param.get_string()), vt="s")
-
+        self.create_action("pen-size", lambda action, param: self.drawing_overlay.set_pen_size(param.get_double()), vt="d")
+        self.create_action("number-radius", lambda action, param: self.drawing_overlay.set_number_radius(param.get_double()), vt="d")
 
         self.create_action("delete-screenshots", lambda *_: self._create_delete_screenshots_dialog(), enabled=False)
 

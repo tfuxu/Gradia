@@ -611,7 +611,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.fill_color = (r, g, b, a)
 
     def set_pen_size(self, s):
-        self.pen_size = max(1.0, s)
+        self.pen_size = max(1, s)
 
     def set_arrow_head_size(self, s):
         self.arrow_head_size = max(5.0, s)
@@ -633,6 +633,10 @@ class DrawingOverlay(Gtk.DrawingArea):
 
     def get_drawing_visible(self):
         return self.get_visible()
+
+    def set_number_radius(self, s):
+        self.number_radius = s
+
 
 
 def render_actions_to_pixbuf(actions, img_w, img_h):
