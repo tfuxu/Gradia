@@ -18,7 +18,7 @@
 from gi.repository import GObject, Gtk, Adw, Gdk, Gio, GLib, Pango
 from gradia.overlay.drawing_actions import DrawingMode
 from gradia.constants import rootdir  # pyright: ignore
-
+from gradia.backend.settings import Settings
 
 class ToolConfig:
     def __init__(self, mode: DrawingMode, icon: str, column: int, row: int, stack_page: str = None, color_stack_page: str = None):
@@ -65,11 +65,12 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
     fill_color_button: Gtk.ColorButton = Gtk.Template.Child()
     font_string_list: Gtk.StringList = Gtk.Template.Child()
 
-    # Tool configurations accessible at class level
     tools_config = ToolConfig.get_all_tools()
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+        self.settings = Settings()
 
         self.tool_buttons: dict[DrawingMode, Gtk.ToggleButton] = {}
         self.current_stack_page = None
@@ -79,17 +80,15 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
 
         self._setup_annotation_tools_group()
         self._setup_font_dropdown()
+        self._restore_settings()
 
-        self.tool_buttons[DrawingMode.PEN].set_active(True)
+        saved_mode = DrawingMode(self.settings.draw_mode)
+        if saved_mode in self.tool_buttons:
+            self.tool_buttons[saved_mode].set_active(True)
+        else:
+            self.tool_buttons[DrawingMode.PEN].set_active(True)
 
-        self._on_pen_color_set(self.stroke_color_button)
-        self._on_highlighter_color_set(self.highlighter_color_button)
-        self._on_fill_color_set(self.fill_color_button)
-        #self._on_font_selected(self.get_template_child(Gtk.DropDown, "font_dropdown"), None)
-        self._on_size_changed(self.size_scale)
-        self._on_number_radius_changed(self.number_radius_scale)
-
-
+        self._initialize_all_actions()
 
     """
     Setup Methods
@@ -115,6 +114,42 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
     def _setup_font_dropdown(self) -> None:
         for font in self.fonts:
             self.font_string_list.append(font)
+
+    def _restore_settings(self) -> None:
+        """Restore all settings from persistent storage."""
+        self.stroke_color_button.set_rgba(self.settings.pen_color)
+        self.highlighter_color_button.set_rgba(self.settings.highlighter_color)
+        self.fill_color_button.set_rgba(self.settings.fill_color)
+
+        self.size_scale.set_value(self.settings.pen_size)
+        self.number_radius_scale.set_value(self.settings.number_radius)
+
+        saved_font = self.settings.font
+        if saved_font in self.fonts:
+            font_index = self.fonts.index(saved_font)
+            GLib.idle_add(self._set_font_selection, font_index)
+
+    def _set_font_selection(self, index: int) -> bool:
+        font_dropdown = self.get_template_child(Gtk.DropDown, "font_dropdown")
+        if font_dropdown:
+            font_dropdown.set_selected(index)
+        return False
+
+    def _initialize_all_actions(self) -> None:
+        self._activate_color_action("pen-color", self.settings.pen_color)
+        self._activate_color_action("highlighter-color", self.settings.highlighter_color)
+        self._activate_color_action("fill-color", self.settings.fill_color)
+
+        self._activate_double_action("pen-size", self.settings.pen_size)
+        self._activate_double_action("number-radius", self.settings.number_radius)
+
+        app = Gio.Application.get_default()
+        if app:
+            action = app.lookup_action("font")
+            if action:
+                action.activate(GLib.Variant('s', self.settings.font))
+
+        self._activate_draw_mode_action(DrawingMode(self.settings.draw_mode))
 
     """
     Callbacks
@@ -148,26 +183,31 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
     @Gtk.Template.Callback()
     def _on_pen_color_set(self, button: Gtk.ColorButton, *args) -> None:
         rgba = button.get_rgba()
+        self.settings.pen_color = rgba
         self._activate_color_action("pen-color", rgba)
 
     @Gtk.Template.Callback()
     def _on_highlighter_color_set(self, button: Gtk.ColorButton, *args) -> None:
         rgba = button.get_rgba()
+        self.settings.highlighter_color = rgba
         self._activate_color_action("highlighter-color", rgba)
 
     @Gtk.Template.Callback()
     def _on_fill_color_set(self, button: Gtk.ColorButton, *args) -> None:
         rgba = button.get_rgba()
+        self.settings.fill_color = rgba
         self._activate_color_action("fill-color", rgba)
 
     @Gtk.Template.Callback()
     def _on_size_changed(self, scale: Gtk.Scale, *args) -> None:
         size_value = scale.get_value()
+        self.settings.pen_size = size_value
         self._activate_double_action("pen-size", size_value)
 
     @Gtk.Template.Callback()
     def _on_number_radius_changed(self, scale: Gtk.Scale, *args) -> None:
         size_value = scale.get_value()
+        self.settings.number_radius = size_value
         self._activate_double_action("number-radius", size_value)
 
     @Gtk.Template.Callback()
@@ -175,6 +215,7 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
         selected_index = dropdown.get_selected()
         if 0 <= selected_index < len(self.fonts):
             font_name = self.fonts[selected_index]
+            self.settings.font = font_name
             app = Gio.Application.get_default()
             if app:
                 action = app.lookup_action("font")
@@ -186,6 +227,7 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
             self._deactivate_other_tools(drawing_mode)
             self._update_stack_for_mode(drawing_mode)
             self._update_color_stack_for_mode(drawing_mode)
+            self.settings.draw_mode = drawing_mode.value
             self._activate_draw_mode_action(drawing_mode)
         else:
             self._ensure_one_tool_active(button, drawing_mode)
