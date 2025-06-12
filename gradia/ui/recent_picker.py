@@ -7,20 +7,19 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from pathlib import Path
 import random
 import re
-import threading
 
-from gi.repository import Adw, GLib, GdkPixbuf, Gtk
+from gi.repository import Adw, GdkPixbuf, Gtk
 
 from gradia.app_constants import PREDEFINED_GRADIENTS
 from gradia.constants import rootdir  # pyright: ignore
@@ -81,8 +80,8 @@ class RecentPicker(Adw.Bin):
     GRID_ROWS = 2
     GRID_COLS = 3
     FRAME_SPACING = 5
-    IMAGE_WIDTH = 210
-    IMAGE_HEIGHT = 120
+    IMAGE_WIDTH = 260
+    IMAGE_HEIGHT = 160
     MAX_WIDTH_CHARS = 20
     MAX_FILENAME_LENGTH = 30
     FILENAME_TRUNCATE_LENGTH = 27
@@ -178,12 +177,8 @@ class RecentPicker(Adw.Bin):
         )
 
     def _load_images(self) -> None:
-        def load_in_thread() -> None:
-            recent_files = self.image_getter.get_recent_screenshot_files()
-            GLib.idle_add(self._update_display, recent_files)
-
-        thread = threading.Thread(target=load_in_thread, daemon=True)
-        thread.start()
+        recent_files = self.image_getter.get_recent_screenshot_files()
+        self._update_display(recent_files)
 
     def _update_display(self, recent_files: list[RecentFile]) -> None:
         self.recent_files = recent_files
