@@ -20,7 +20,7 @@ import random
 import re
 import threading
 
-from gi.repository import Adw, GLib, Gdk, GdkPixbuf, Gtk
+from gi.repository import Adw, GLib, GdkPixbuf, Gtk
 
 from gradia.app_constants import PREDEFINED_GRADIENTS
 from gradia.constants import rootdir  # pyright: ignore
@@ -117,7 +117,7 @@ class RecentPicker(Adw.Bin):
                 container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=self.FRAME_SPACING)
                 container.set_size_request(self.IMAGE_WIDTH, self.IMAGE_HEIGHT)
 
-                frame = Gtk.Frame()
+                frame = Gtk.Frame(vexpand=True)
                 frame.set_size_request(self.IMAGE_WIDTH, self.IMAGE_HEIGHT)
 
                 img_button = Gtk.Button(has_frame=False)
@@ -177,19 +177,6 @@ class RecentPicker(Adw.Bin):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-    def _fade_in_widget(self, widget: Gtk.Widget) -> None:
-        widget.set_opacity(0.0)
-        target = Adw.PropertyAnimationTarget.new(widget, "opacity")
-        animation = Adw.TimedAnimation(
-            widget=widget,
-            value_from=0.0,
-            value_to=1.0,
-            duration=300,
-            easing=Adw.Easing.EASE_OUT,
-            target=target,
-        )
-        animation.play()
-
     def _load_images(self) -> None:
         def load_in_thread() -> None:
             recent_files = self.image_getter.get_recent_screenshot_files()
@@ -206,25 +193,12 @@ class RecentPicker(Adw.Bin):
                 file_obj = recent_files[i]
 
                 try:
-                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(file_obj.path))
-
-                    width = pixbuf.get_width()
-                    height = pixbuf.get_height()
-
-                    scale_x = self.IMAGE_WIDTH / width
-                    scale_y = self.IMAGE_HEIGHT / height
-                    scale = min(scale_x, scale_y)
-
-                    new_width = int(width * scale)
-                    new_height = int(height * scale)
-
-                    scaled_pixbuf = pixbuf.scale_simple(
-                        new_width, new_height, GdkPixbuf.InterpType.BILINEAR
-                    )
-
-                    image = Gtk.Image.new_from_pixbuf(scaled_pixbuf)
-                    self.image_buttons[i].set_child(image)
-                    self._fade_in_widget(image)
+                    picture = Gtk.Picture.new_for_filename(str(file_obj.path))
+                    picture.set_margin_top(10)
+                    picture.set_margin_bottom(10)
+                    picture.set_margin_start(10)
+                    picture.set_margin_end(10)
+                    self.image_buttons[i].set_child(picture)
 
                 except Exception as e:
                     filename = file_obj.path.name
@@ -233,12 +207,9 @@ class RecentPicker(Adw.Bin):
 
                     error_label = Gtk.Label(label=filename)
                     self.image_buttons[i].set_child(error_label)
-                    self._fade_in_widget(error_label)
-
                     print(f"Error loading image {file_obj.path}: {e}")
             else:
                 icon = Gtk.Image.new_from_icon_name("image-missing-symbolic")
-                icon.set_pixel_size(64)
                 self.image_buttons[i].set_child(icon)
                 self.image_buttons[i].set_sensitive(False)
                 self.name_labels[i].set_text("")
@@ -253,3 +224,4 @@ class RecentPicker(Adw.Bin):
 
     def refresh(self) -> None:
         self._load_images()
+
