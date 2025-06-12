@@ -2,7 +2,7 @@ from gi.repository import Gio, Gdk
 
 class Settings:
     def __init__(self):
-        self._settings = Gio.Settings.new("be.alexandervanhee.gradia.annotations")
+        self._settings = Gio.Settings.new("be.alexandervanhee.gradia")
 
     def _parse_rgba(self, color_str: str, fallback: tuple[float, float, float, float]) -> Gdk.RGBA:
         rgba = Gdk.RGBA()
@@ -25,6 +25,7 @@ class Settings:
 
     @draw_mode.setter
     def draw_mode(self, value: str):
+        print(value)
         self._settings.set_string("draw-mode", value)
 
     @property
@@ -83,4 +84,16 @@ class Settings:
     @font.setter
     def font(self, value: str):
         self._settings.set_string("font", value)
+
+
+
+    @property
+    def screenshot_subfolder(self) -> str:
+        return self._settings.get_string("screenshot-subfolder")
+
+    @screenshot_subfolder.setter
+    def screenshot_subfolder(self, value: str):
+        self._settings.set_string("screenshot-subfolder", value)
+
+
 

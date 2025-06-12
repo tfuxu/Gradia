@@ -23,7 +23,7 @@ from gi.repository import Adw, GdkPixbuf, Gtk
 
 from gradia.app_constants import PREDEFINED_GRADIENTS
 from gradia.constants import rootdir  # pyright: ignore
-
+from gradia.backend.settings import Settings
 
 class RecentFile:
     def __init__(self, path: Path) -> None:
@@ -36,7 +36,6 @@ class RecentImageGetter:
     MAX_RESULTS = 6
     XDG_USER_DIRS_FILE = Path.home() / ".config" / "user-dirs.dirs"
     FALLBACK_PICTURES_PATH = Path.home() / "Pictures"
-    SCREENSHOTS_SUBDIR_NAME = "Screenshots"
 
     def __init__(self) -> None:
         pass
@@ -57,7 +56,7 @@ class RecentImageGetter:
 
     def _get_screenshots_directory(self) -> Path:
         pictures_dir = self._get_xdg_user_dir("XDG_PICTURES_DIR") or self.FALLBACK_PICTURES_PATH
-        return pictures_dir / self.SCREENSHOTS_SUBDIR_NAME
+        return pictures_dir / Settings().screenshot_subfolder
 
     def _get_xdg_user_dir(self, key: str) -> Path | None:
         if not self.XDG_USER_DIRS_FILE.exists():
