@@ -39,8 +39,8 @@ from gradia.ui.image_sidebar import ImageSidebar
 class GradientWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'GradientWindow'
 
-    DEFAULT_WINDOW_WIDTH: int = 900
-    DEFAULT_WINDOW_HEIGHT: int = 600
+    DEFAULT_WINDOW_WIDTH: int = 975
+    DEFAULT_WINDOW_HEIGHT: int = 675
     DEFAULT_PANED_POSITION: int = 650
     SIDEBAR_WIDTH: int = 300
 
