@@ -104,6 +104,7 @@ class GradientWindow(Adw.ApplicationWindow):
 
         self.create_action("pen-color", lambda action, param: self._set_pen_color_from_string(param.get_string()), vt="s")
         self.create_action("fill-color", lambda action, param: self._set_fill_color_from_string(param.get_string()), vt="s")
+        self.create_action("highlighter-color", lambda action, param: self._set_highlighter_color_from_string(param.get_string()), vt="s")
         self.create_action("del-selected", lambda *_: self.drawing_overlay.remove_selected_action(), ["<Primary>x", "Delete"])
         self.create_action("font", lambda action, param: self.drawing_overlay.set_font_family(param.get_string()), vt="s")
         self.create_action("pen-size", lambda action, param: self.drawing_overlay.set_pen_size(param.get_double()), vt="d")
@@ -270,6 +271,8 @@ class GradientWindow(Adw.ApplicationWindow):
 
     def _set_fill_color_from_string(self, color_string):
         self.drawing_overlay.set_fill_color(*self._parse_rgba(color_string))
+    def _set_highlighter_color_from_string(self, color_string):
+        self.drawing_overlay.set_highlighter_color(*self._parse_rgba(color_string))
 
     def _trigger_processing(self) -> None:
         if self.image_path:

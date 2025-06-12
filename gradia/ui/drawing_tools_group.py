@@ -21,27 +21,28 @@ from gradia.constants import rootdir  # pyright: ignore
 
 
 class ToolConfig:
-    def __init__(self, mode: DrawingMode, icon: str, column: int, row: int, stack_page: str = None):
+    def __init__(self, mode: DrawingMode, icon: str, column: int, row: int, stack_page: str = None, color_stack_page: str = None):
         self.mode = mode
         self.icon = icon
         self.column = column
         self.row = row
         self.stack_page = stack_page
+        self.color_stack_page = color_stack_page
 
     @staticmethod
     def get_all_tools():
         """Return all tool configurations."""
         return [
-            ToolConfig(DrawingMode.SELECT, "pointer-primary-click-symbolic", 0, 0, None),
-            ToolConfig(DrawingMode.PEN, "edit-symbolic", 1, 0, "size"),
-            ToolConfig(DrawingMode.TEXT, "text-insert2-symbolic", 2, 0, "font"),
-            ToolConfig(DrawingMode.LINE, "draw-line-symbolic", 3, 0, "size"),
-            ToolConfig(DrawingMode.ARROW, "arrow1-top-right-symbolic", 4, 0, "size"),
-            ToolConfig(DrawingMode.SQUARE, "box-small-outline-symbolic", 0, 1, "fill"),
-            ToolConfig(DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1, "fill"),
-            ToolConfig(DrawingMode.HIGHLIGHTER, "marker-symbolic", 2, 1, None),
-            ToolConfig(DrawingMode.CENSOR, "checkerboard-big-symbolic", 3, 1, None),
-            ToolConfig(DrawingMode.NUMBER, "one-circle-symbolic", 4, 1, "number_radius"),
+            ToolConfig(DrawingMode.SELECT, "pointer-primary-click-symbolic", 0, 0, None, None),
+            ToolConfig(DrawingMode.PEN, "edit-symbolic", 1, 0, "size", "stroke"),
+            ToolConfig(DrawingMode.TEXT, "text-insert2-symbolic", 2, 0, "font", "stroke"),
+            ToolConfig(DrawingMode.LINE, "draw-line-symbolic", 3, 0, "size", "stroke"),
+            ToolConfig(DrawingMode.ARROW, "arrow1-top-right-symbolic", 4, 0, "size", "stroke"),
+            ToolConfig(DrawingMode.SQUARE, "box-small-outline-symbolic", 0, 1, "fill", "stroke"),
+            ToolConfig(DrawingMode.CIRCLE, "circle-outline-thick-symbolic", 1, 1, "fill", "stroke"),
+            ToolConfig(DrawingMode.HIGHLIGHTER, "marker-symbolic", 2, 1, None, "highlighter"),
+            ToolConfig(DrawingMode.CENSOR, "checkerboard-big-symbolic", 3, 1, None, None),
+            ToolConfig(DrawingMode.NUMBER, "one-circle-symbolic", 4, 1, "number_radius", "stroke"),
         ]
 
 
@@ -51,7 +52,12 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
 
     tools_grid: Gtk.Grid = Gtk.Template.Child()
 
+    color_stack_row: Adw.ActionRow = Gtk.Template.Child()
+    color_stack: Gtk.Stack = Gtk.Template.Child()
     stroke_color_button: Gtk.ColorButton = Gtk.Template.Child()
+    highlighter_color_button: Gtk.ColorButton = Gtk.Template.Child()
+    size_scale: Gtk.Scale = Gtk.Template.Child()
+    number_radius_scale: Gtk.Scale = Gtk.Template.Child()
 
     stack_row: Adw.ActionRow = Gtk.Template.Child()
     fill_font_stack: Gtk.Stack = Gtk.Template.Child()
@@ -67,6 +73,7 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
 
         self.tool_buttons: dict[DrawingMode, Gtk.ToggleButton] = {}
         self.current_stack_page = None
+        self.current_color_stack_page = None
 
         self.fonts = ["Caveat", "Adwaita Sans", "Adwaita Mono", "Noto Sans"]
 
@@ -75,12 +82,22 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
 
         self.tool_buttons[DrawingMode.PEN].set_active(True)
 
+        self._on_pen_color_set(self.stroke_color_button)
+        self._on_highlighter_color_set(self.highlighter_color_button)
+        self._on_fill_color_set(self.fill_color_button)
+        #self._on_font_selected(self.get_template_child(Gtk.DropDown, "font_dropdown"), None)
+        self._on_size_changed(self.size_scale)
+        self._on_number_radius_changed(self.number_radius_scale)
+
+
+
     """
     Setup Methods
     """
 
     def _setup_annotation_tools_group(self) -> None:
-        self.stroke_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
+        self.stroke_color_button.set_rgba(Gdk.RGBA(red=1, green=1, blue=1, alpha=1))
+        self.highlighter_color_button.set_rgba(Gdk.RGBA(red=1, green=1, blue=0, alpha=0.5))
         self.fill_color_button.set_rgba(Gdk.RGBA(red=0, green=0, blue=0, alpha=0))
 
         for tool_config in self.tools_config:
@@ -134,6 +151,11 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
         self._activate_color_action("pen-color", rgba)
 
     @Gtk.Template.Callback()
+    def _on_highlighter_color_set(self, button: Gtk.ColorButton, *args) -> None:
+        rgba = button.get_rgba()
+        self._activate_color_action("highlighter-color", rgba)
+
+    @Gtk.Template.Callback()
     def _on_fill_color_set(self, button: Gtk.ColorButton, *args) -> None:
         rgba = button.get_rgba()
         self._activate_color_action("fill-color", rgba)
@@ -163,6 +185,7 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
         if button.get_active():
             self._deactivate_other_tools(drawing_mode)
             self._update_stack_for_mode(drawing_mode)
+            self._update_color_stack_for_mode(drawing_mode)
             self._activate_draw_mode_action(drawing_mode)
         else:
             self._ensure_one_tool_active(button, drawing_mode)
@@ -189,6 +212,20 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
             self.stack_row.set_sensitive(True)
             self.fill_font_stack.set_visible_child_name(required_page)
             self.current_stack_page = required_page
+
+    def _update_color_stack_for_mode(self, drawing_mode: DrawingMode) -> None:
+        required_page = None
+        for tool_config in self.tools_config:
+            if tool_config.mode == drawing_mode:
+                required_page = tool_config.color_stack_page
+                break
+
+        if required_page is None:
+            self.color_stack_row.set_sensitive(False)
+        else:
+            self.color_stack_row.set_sensitive(True)
+            self.color_stack.set_visible_child_name(required_page)
+            self.current_color_stack_page = required_page
 
     def _activate_draw_mode_action(self, drawing_mode: DrawingMode) -> None:
         app = Gio.Application.get_default()

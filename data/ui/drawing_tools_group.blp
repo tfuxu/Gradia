@@ -14,15 +14,61 @@ template $GradiaDrawingToolsGroup : Adw.PreferencesGroup {
       valign: center;
     };
   }
-  Adw.ActionRow stroke_row {
-    title: _("Stroke Color");
-    activatable-widget: stroke_color_button;
-    // TODO: Replace with ColorDialogButton
-    [suffix]
-    Gtk.ColorButton stroke_color_button {
+  Adw.ActionRow color_stack_row {
+    child: Gtk.Stack color_stack {
+      transition-type: crossfade;
+      transition-duration: 300;
+      margin-top: 8;
+      margin-bottom: 8;
+      margin-start: 12;
+      margin-end: 12;
       valign: center;
-      color-set => $_on_pen_color_set();
-    }
+      Gtk.StackPage stroke_color_page {
+        name: "stroke";
+        child: Gtk.Box stroke_color_container {
+          orientation: horizontal;
+          spacing: 6;
+          Gtk.Label stroke_color_label {
+            label: _("Color");
+            halign: start;
+            hexpand: true;
+          }
+          Gtk.Box stroke_color_suffix_box {
+            orientation: horizontal;
+            spacing: 6;
+            valign: center;
+            // TODO: Replace with ColorDialogButton
+            Gtk.ColorButton stroke_color_button {
+              valign: center;
+              color-set => $_on_pen_color_set();
+            }
+          }
+        };
+      }
+      Gtk.StackPage highlighter_color_page {
+        name: "highlighter";
+        child: Gtk.Box highlighter_color_container {
+          orientation: horizontal;
+          spacing: 6;
+          Gtk.Label highlighter_color_label {
+            label: _("Highlighter Color");
+            halign: start;
+            hexpand: true;
+          }
+          Gtk.Box highlighter_color_suffix_box {
+            orientation: horizontal;
+            spacing: 6;
+            valign: center;
+            // TODO: Replace with ColorDialogButton
+            Gtk.ColorButton highlighter_color_button {
+              valign: center;
+              use-alpha: true;
+              color-set => $_on_highlighter_color_set();
+            }
+          }
+        };
+      }
+    };
   }
   Adw.ActionRow stack_row {
     child: Gtk.Stack fill_font_stack {
