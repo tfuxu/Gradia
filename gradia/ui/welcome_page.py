@@ -15,8 +15,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk, Gio, Adw, GLib
-
+from gi.repository import Gtk, Gio, Adw, GLib, Gdk
 from gradia.ui.recent_picker import RecentPicker
 from gradia.constants import rootdir  # pyright: ignore
 
@@ -25,16 +24,44 @@ class WelcomePage(Adw.Bin):
     __gtype_name__ = "GradiaWelcomePage"
 
     recent_picker: RecentPicker = Gtk.Template.Child()
+    drop_target: Gtk.DropTarget = Gtk.Template.Child()
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-
         self.recent_picker.callback = self._on_recent_image_click
+
+        self._setup_drag_and_drop()
+
+    def _setup_drag_and_drop(self) -> None:
+        self.drop_target.set_gtypes([Gio.File])
+        self.drop_target.set_actions(Gdk.DragAction.COPY)
+        self.drop_target.set_preload(True)
+        self.drop_target.connect("drop", self._on_file_dropped)
+
+        self.drop_target.connect("enter", self._on_drag_enter)
+        self.drop_target.connect("leave", self._on_drag_leave)
+
+    def _on_file_dropped(self, target: Gtk.DropTarget, value: Gio.File, x: int, y: int) -> bool:
+        uri = value.get_uri()
+        if uri:
+            app = Gio.Application.get_default()
+            action = app.lookup_action("load-drop") if app else None
+            if action:
+                action.activate(GLib.Variant('s', uri))
+                return True
+        return False
+
+
+    def _on_drag_enter(self, drop_target, x, y) -> Gdk.DragAction:
+        self.add_css_class("drag-hover")
+        return Gdk.DragAction.COPY
+
+    def _on_drag_leave(self, drop_target) -> None:
+        self.remove_css_class("drag-hover")
 
     """
     Callbacks
     """
-
     def _on_recent_image_click(self, path: str, gradient_index: int) -> None:
         app = Gio.Application.get_default()
         if app:
