@@ -25,7 +25,6 @@ class Settings:
 
     @draw_mode.setter
     def draw_mode(self, value: str):
-        print(value)
         self._settings.set_string("draw-mode", value)
 
     @property
