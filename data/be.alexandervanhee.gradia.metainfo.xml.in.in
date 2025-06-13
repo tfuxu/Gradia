@@ -41,6 +41,17 @@
 		<color type="primary" scheme_preference="dark">#073c6f</color>
 	</branding>
 	<releases>
+	  <release version="1.4.2" date="2025-06-13">
+			<description translate="no">
+				<p>This minor release includes:</p>
+				<ul>
+					<li>Persistent annotation settings</li>
+					<li>Decoupled highlighter color</li>
+					<li>Size slider for many different annotation tools</li>
+				  <li>Smoother pen</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.1" date="2025-06-09">
 			<description translate="no">
 				<p>This minor release includes:</p>
