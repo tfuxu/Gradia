@@ -102,7 +102,7 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
         for tool_config in self.tools_config:
             button = Gtk.ToggleButton(
                 icon_name=tool_config.icon,
-                tooltip_text=tool_config.mode.value,
+                tooltip_text=tool_config.mode.label(),
                 width_request=40,
                 height_request=40,
                 css_classes=["flat", "circular"]

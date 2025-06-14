@@ -27,16 +27,31 @@ logging = Logger()
 start_time_seed = int(time.time())
 
 class DrawingMode(Enum):
-    PEN = _("Pen")
-    ARROW = _("Arrow")
-    LINE = _("Line")
-    SQUARE = _("Square")
-    CIRCLE = _("Circle")
-    TEXT = _("Text")
-    SELECT = _("Select")
-    HIGHLIGHTER = _("Highlighter")
-    CENSOR = _("Censor")
-    NUMBER = _("Number")
+    PEN = "PEN"
+    ARROW = "ARROW"
+    LINE = "LINE"
+    SQUARE = "SQUARE"
+    CIRCLE = "CIRCLE"
+    TEXT = "TEXT"
+    SELECT = "SELECT"
+    HIGHLIGHTER = "HIGHLIGHTER"
+    CENSOR = "CENSOR"
+    NUMBER = "NUMBER"
+
+    def label(self):
+        return {
+            "PEN": _("Pen"),
+            "ARROW": _("Arrow"),
+            "LINE": _("Line"),
+            "SQUARE": _("Square"),
+            "CIRCLE": _("Circle"),
+            "TEXT": _("Text"),
+            "SELECT": _("Select"),
+            "HIGHLIGHTER": _("Highlighter"),
+            "CENSOR": _("Censor"),
+            "NUMBER": _("Number"),
+        }[self.value]
+
 
 class DrawingAction:
     DEFAULT_PADDING = 0.02
