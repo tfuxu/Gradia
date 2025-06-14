@@ -17,9 +17,11 @@
 
 from typing import Callable, Optional
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gdk, Gtk
 
-@Gtk.Template(resource_path="/be/alexandervanhee/gradia/ui/text_entry_popover.ui")
+from gradia.constants import rootdir  # pyright: ignore
+
+@Gtk.Template(resource_path=f"{rootdir}/ui/text_entry_popover.ui")
 class TextEntryPopover(Gtk.Popover):
     __gtype_name__ = "GradiaTextEntryPopover"
 
@@ -56,6 +58,10 @@ class TextEntryPopover(Gtk.Popover):
 
         self.size_adjustment.set_value(font_size)
         self.spin.connect("value-changed", on_font_size_changed)
+
+    """
+    Public Methods
+    """
 
     def popup_at_widget_coords(self, widget: Gtk.Widget, x: float, y: float) -> None:
         allocation = widget.get_allocation()
