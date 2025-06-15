@@ -93,7 +93,7 @@ class GradiaMainWindow(Adw.ApplicationWindow):
         )
 
         if init_screenshot_mode is not None:
-            def screenshot_error_callback(error_message: str) -> None:
+            def screenshot_error_callback(_error_message: str) -> None:
                  self.app.quit()
 
             def screenshot_success_callback() -> None:
@@ -154,6 +154,10 @@ class GradiaMainWindow(Adw.ApplicationWindow):
 
         self.create_action("delete-screenshots", lambda *_: self._create_delete_screenshots_dialog(), enabled=False)
 
+    """
+    Setup Methods
+    """
+
     def _setup_image_stack(self) -> None:
         stack_info = create_image_stack()
         self.image_stack: Gtk.Stack = stack_info[0]
@@ -182,64 +186,9 @@ class GradiaMainWindow(Adw.ApplicationWindow):
         self.image_stack.set_hexpand(True)
         self.sidebar.set_hexpand(False)
 
-    def create_action(
-        self,
-        name: str,
-        callback: Callable[..., Any],
-        shortcuts: Optional[list[str]] = None,
-        enabled: bool = True,
-        vt: Optional[str] = None
-    ) -> None:
-        variant_type = GLib.VariantType.new(vt) if vt is not None else None
-
-        action: Gio.SimpleAction = Gio.SimpleAction.new(name, variant_type)
-        action.connect("activate", callback)
-        action.set_enabled(enabled)
-        self.app.add_action(action)
-
-        if shortcuts:
-            self.app.set_accels_for_action(f"app.{name}", shortcuts)
-
-    def _update_and_process(
-        self,
-        obj: Any,
-        attr: str,
-        transform: Callable[[Any], Any] = lambda x: x,
-        assign_to: Optional[str] = None
-    ) -> Callable[[Any], None]:
-        def handler(widget: Any) -> None:
-            value = transform(widget)
-            setattr(obj, attr, value)
-
-            if assign_to:
-                setattr(self.processor, assign_to, obj)
-
-            self._trigger_processing()
-
-        return handler
-
-    def show(self) -> None:
-        self.present()
-
-    def _start_processing(self) -> None:
-        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
-
-        self.image_stack.get_style_context().add_class("view")
-        self._show_loading_state()
-        self.process_image()
-        self._set_save_and_toggle(True)
-
-    def _show_loading_state(self) -> None:
-        self.main_stack.set_visible_child_name("main")
-        self.image_stack.set_visible_child_name(self.PAGE_LOADING)
-
-    def _hide_loading_state(self) -> None:
-        self.image_stack.set_visible_child_name(self.PAGE_IMAGE)
-
-    def _update_sidebar_file_info(self, filename: str, location: str) -> None:
-        self.sidebar.filename_row.set_subtitle(filename)
-        self.sidebar.location_row.set_subtitle(location)
-        self.sidebar.set_visible(True)
+    """
+    Callbacks
+    """
 
     def _on_background_changed(self, updated_background: Background) -> None:
         self.processor.background = updated_background
@@ -275,8 +224,94 @@ class GradiaMainWindow(Adw.ApplicationWindow):
         self.processor.shadow_strength = strength.get_value()
         self._trigger_processing()
 
-    def _parse_rgba(self, color_string: str):
-        return map(float, color_string.split(','))
+    def _on_about_activated(self, _action: Gio.SimpleAction, _param: GObject.ParamSpec) -> None:
+        about = create_about_dialog(version=self.version)
+        about.present(self)
+
+    def _on_shortcuts_activated(self, _action: Gio.SimpleAction, _param: GObject.ParamSpec) -> None:
+        shortcuts = create_shortcuts_dialog(self)
+        shortcuts.connect("close-request", self._on_shortcuts_closed)
+        shortcuts.present()
+
+    def _on_shortcuts_closed(self, dialog: Adw.Window) -> bool:
+        dialog.hide()
+        return True
+
+    """
+    Public Methods
+    """
+
+    def create_action(
+        self,
+        name: str,
+        callback: Callable[..., Any],
+        shortcuts: Optional[list[str]] = None,
+        enabled: bool = True,
+        vt: Optional[str] = None
+    ) -> None:
+        variant_type = GLib.VariantType.new(vt) if vt is not None else None
+
+        action: Gio.SimpleAction = Gio.SimpleAction.new(name, variant_type)
+        action.connect("activate", callback)
+        action.set_enabled(enabled)
+        self.app.add_action(action)
+
+        if shortcuts:
+            self.app.set_accels_for_action(f"app.{name}", shortcuts)
+
+    def show(self) -> None:
+        self.present()
+
+    def process_image(self) -> None:
+        if not self.image_path:
+            return
+
+        threading.Thread(target=self._process_in_background, daemon=True).start()
+
+    """
+    Private Methods
+    """
+
+    def _update_and_process(
+        self,
+        obj: Any,
+        attr: str,
+        transform: Callable[[Any], Any] = lambda x: x,
+        assign_to: Optional[str] = None
+    ) -> Callable[[Any], None]:
+        def handler(widget: Any) -> None:
+            value = transform(widget)
+            setattr(obj, attr, value)
+
+            if assign_to:
+                setattr(self.processor, assign_to, obj)
+
+            self._trigger_processing()
+
+        return handler
+
+    def _start_processing(self) -> None:
+        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.RAISED)
+
+        self.image_stack.get_style_context().add_class("view")
+        self._show_loading_state()
+        self.process_image()
+        self._set_save_and_toggle(True)
+
+    def _show_loading_state(self) -> None:
+        self.main_stack.set_visible_child_name("main")
+        self.image_stack.set_visible_child_name(self.PAGE_LOADING)
+
+    def _hide_loading_state(self) -> None:
+        self.image_stack.set_visible_child_name(self.PAGE_IMAGE)
+
+    def _update_sidebar_file_info(self, filename: str, location: str) -> None:
+        self.sidebar.filename_row.set_subtitle(filename)
+        self.sidebar.location_row.set_subtitle(location)
+        self.sidebar.set_visible(True)
+
+    def _parse_rgba(self, color_string: str) -> list[float]:
+        return list(map(float, color_string.split(',')))
 
     def _set_pen_color_from_string(self, color_string: str) -> None:
         self.drawing_overlay.set_pen_color(*self._parse_rgba(color_string))
@@ -290,12 +325,6 @@ class GradiaMainWindow(Adw.ApplicationWindow):
     def _trigger_processing(self) -> None:
         if self.image_path:
             self.process_image()
-
-    def process_image(self) -> None:
-        if not self.image_path:
-            return
-
-        threading.Thread(target=self._process_in_background, daemon=True).start()
 
     def _process_in_background(self) -> None:
         try:
@@ -345,24 +374,11 @@ class GradiaMainWindow(Adw.ApplicationWindow):
             child: str = getattr(self, "_previous_stack_child", self.PAGE_IMAGE)
             self.image_stack.set_visible_child_name(child)
 
-    def _on_about_activated(self, _action: Gio.SimpleAction, _param: GObject.ParamSpec) -> None:
-        about = create_about_dialog(version=self.version)
-        about.present(self)
-
     def _set_save_and_toggle(self, enabled: bool) -> None:
         for action_name in ["save", "copy"]:
             action = self.app.lookup_action(action_name)
             if action:
                 action.set_enabled(enabled)
-
-    def _on_shortcuts_activated(self, _action: Gio.SimpleAction, _param: GObject.ParamSpec) -> None:
-        shortcuts = create_shortcuts_dialog(self)
-        shortcuts.connect("close-request", self._on_shortcuts_closed)
-        shortcuts.present()
-
-    def _on_shortcuts_closed(self, dialog: Adw.Window) -> bool:
-        dialog.hide()
-        return True
 
     def _create_delete_screenshots_dialog(self) -> None:
         screenshot_uris = self.import_manager.get_screenshot_uris()
@@ -377,11 +393,9 @@ class GradiaMainWindow(Adw.ApplicationWindow):
             for uri in screenshot_uris
         ]
 
-
         file_list = Gtk.ListBox()
         file_list.set_selection_mode(Gtk.SelectionMode.NONE)
         file_list.add_css_class("boxed-list")
-
 
         for filename in filenames:
             row = Adw.ActionRow()
@@ -423,11 +437,3 @@ class GradiaMainWindow(Adw.ApplicationWindow):
                     self._show_notification(_("Screenshots deleted"))
 
         dialog.choose(self, None, on_response)
-
-    def _on_settings_activated(self, action: Gio.SimpleAction, param) -> None:
-        settings_window = SettingsWindow(self)
-        settings_window.present()
-
-    def set_screenshot_subfolder(self, subfolder) -> None:
-        Settings().screenshot_subfolder = subfolder
-        self.welcome_page.refresh_recent_picker()
