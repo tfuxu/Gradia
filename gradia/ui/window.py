@@ -391,33 +391,63 @@ class GradientWindow(Adw.ApplicationWindow):
             return
 
         filenames = [
-            GLib.filename_display_basename(GLib.uri_parse(uri, GLib.UriFlags.NONE).get_path())
+            GLib.filename_display_basename(
+                GLib.uri_parse(uri, GLib.UriFlags.NONE).get_path()
+            )
             for uri in screenshot_uris
         ]
 
-        filenames_display = "\n".join(filenames)
+
+        file_list = Gtk.ListBox()
+        file_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        file_list.add_css_class("boxed-list")
+
+
+        for filename in filenames:
+            row = Adw.ActionRow()
+            label = Gtk.Label(label=filename, xalign=0)
+            label.set_wrap(True)
+            label.set_margin_top(6)
+            label.set_margin_bottom(6)
+            label.set_margin_start(12)
+            label.set_margin_end(12)
+            row.set_child(label)
+            file_list.append(row)
 
         count = len(screenshot_uris)
         if count == 1:
             heading = _("Delete Screenshot?")
-            body = _("Are you sure you want to delete the following file?\n\n%s") % filenames_display
+            body = _("Are you sure you want to delete the following file?")
         else:
             heading = _("Delete Screenshots?")
-            body = _("Are you sure you want to delete the following files?\n\n%s") % filenames_display
+            body = _("Are you sure you want to delete the following files?")
 
-        dialog = Adw.MessageDialog.new(self, heading=heading, body=body)
+        dialog = Adw.AlertDialog(
+            heading=heading,
+            body=body,
+            close_response="cancel"
+        )
+
+        dialog.set_extra_child(file_list)
         dialog.add_response("cancel", _("Cancel"))
         dialog.add_response("delete", _("Delete"))
         dialog.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
 
-        def on_response(dialog: Adw.MessageDialog, response_name: str) -> None:
-            if response_name == "delete":
+        def on_response(dialog: Adw.AlertDialog, task: Gio.Task) -> None:
+            response = dialog.choose_finish(task)
+            if response == "delete":
                 self.import_manager.delete_screenshots()
                 if count == 1:
                     self._show_notification(_("Screenshot deleted"))
                 else:
                     self._show_notification(_("Screenshots deleted"))
-            dialog.destroy()
 
-        dialog.connect("response", on_response)
-        dialog.present()
+        dialog.choose(self, None, on_response)
+
+    def _on_settings_activated(self, action: Gio.SimpleAction, param) -> None:
+        settings_window = SettingsWindow(self)
+        settings_window.present()
+
+    def set_screenshot_subfolder(self, subfolder) -> None:
+        Settings().screenshot_subfolder = subfolder
+        self.welcome_page.refresh_recent_picker()
