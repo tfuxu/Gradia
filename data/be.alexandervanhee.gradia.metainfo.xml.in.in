@@ -41,6 +41,15 @@
 		<color type="primary" scheme_preference="dark">#073c6f</color>
 	</branding>
 	<releases>
+    <release version="1.4.3" date="2025-06-15">
+	    <description translate="no">
+		    <p>Minor update fixing the following issues:</p>
+		    <ul>
+			    <li>Images not being saved with the correct file name.</li>
+			    <li>App failing to initialize when using a language other than English.</li>
+		    </ul>
+	    </description>
+    </release>
 	  <release version="1.4.2" date="2025-06-13">
 			<description translate="no">
 				<p>This minor release includes:</p>
