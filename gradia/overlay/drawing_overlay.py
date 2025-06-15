@@ -16,11 +16,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import cairo
-from gi.repository import Adw, Gdk, Gio, Gtk, cairo
+from gi.repository import Adw, Gdk, Gio, Gtk
 
 from gradia.overlay.drawing_actions import *
 from gradia.overlay.text_entry_popover import TextEntryPopover
-from gradia.ui.ui_parts import ControlsOverlay
 
 SELECTION_BOX_PADDING = 0
 DEFAULT_ARROW_HEAD_SIZE = 25.0
@@ -34,7 +33,7 @@ class DrawingOverlay(Gtk.DrawingArea):
     def __init__(self, **kwargs):
         super().__init__(can_focus=True, **kwargs)
 
-        self.set_draw_func(self._on_draw, None)
+        self.set_draw_func(self._on_draw)
 
         self.picture_widget = None
         self.drawing_mode = DrawingMode.PEN
@@ -72,7 +71,7 @@ class DrawingOverlay(Gtk.DrawingArea):
         self.picture_widget = picture
         picture.connect("notify::paintable", lambda *args: self.queue_draw())
 
-    def set_controls_overlay(self, controls_overlay: ControlsOverlay) -> None:
+    def set_controls_overlay(self, controls_overlay) -> None:
         self.controls_overlay = controls_overlay
 
     @property
@@ -658,4 +657,4 @@ def render_actions_to_pixbuf(actions: list[DrawingAction], width: int, height: i
 
     surface.flush()
 
-    return Gdk.pixbuf_get_from_surface(surface, 0, 0, width, height=)
+    return Gdk.pixbuf_get_from_surface(surface, 0, 0, width, height)
