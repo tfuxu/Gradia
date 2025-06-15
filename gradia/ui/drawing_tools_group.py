@@ -95,7 +95,12 @@ class DrawingToolsGroup(Adw.PreferencesGroup):
         self._setup_font_dropdown()
         self._restore_settings()
 
-        saved_mode = DrawingMode(self.settings.draw_mode)
+        try:
+            saved_mode = DrawingMode(self.settings.draw_mode)
+        except ValueError:
+            saved_mode = DrawingMode.PEN
+
+
         if saved_mode in self.tool_buttons:
             self.tool_buttons[saved_mode].set_active(True)
         else:
