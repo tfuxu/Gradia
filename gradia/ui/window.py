@@ -36,20 +36,27 @@ from gradia.ui.image_sidebar import ImageSidebar
 from gradia.ui.ui_parts import *
 from gradia.ui.welcome_page import WelcomePage
 from gradia.utils.aspect_ratio import *
+from gradia.constants import rootdir  # pyright: ignore
 
 
-class GradientWindow(Adw.ApplicationWindow):
-    __gtype_name__ = 'GradientWindow'
+@Gtk.Template(resource_path=f"{rootdir}/ui/main_window.ui")
+class GradiaMainWindow(Adw.ApplicationWindow):
+    __gtype_name__ = 'GradiaMainWindow'
 
-    DEFAULT_WINDOW_WIDTH: int = 975
-    DEFAULT_WINDOW_HEIGHT: int = 675
-    DEFAULT_PANED_POSITION: int = 650
     SIDEBAR_WIDTH: int = 300
 
     PAGE_IMAGE: str = "image"
     PAGE_LOADING: str = "loading"
 
     TEMP_PROCESSED_FILENAME: str = "processed.png"
+
+    toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
+    toolbar_view: Adw.ToolbarView = Gtk.Template.Child()
+
+    welcome_content: WelcomePage = Gtk.Template.Child()
+
+    main_stack: Gtk.Stack = Gtk.Template.Child()
+    main_box: Gtk.Box = Gtk.Template.Child()
 
     def __init__(
         self,
@@ -64,6 +71,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self.app: Adw.Application = kwargs['application']
         self.temp_dir: str = temp_dir
         self.version: str = version
+        self.file_path: Optional[str] = file_path
         self.image_path: Optional[str] = None
         self.processed_path: Optional[str] = None
         self.processed_pixbuf: Optional[Gdk.Pixbuf] = None
@@ -84,6 +92,28 @@ class GradientWindow(Adw.ApplicationWindow):
             background=self.background_selector.get_current_background()
         )
 
+        if init_screenshot_mode is not None:
+            def screenshot_error_callback(error_message: str) -> None:
+                 self.app.quit()
+
+            def screenshot_success_callback() -> None:
+                self.show()
+
+            self.import_manager.take_screenshot(
+                init_screenshot_mode,
+                screenshot_error_callback,
+                screenshot_success_callback
+            )
+
+        self._setup_actions()
+        self._setup_image_stack()
+        self._setup_sidebar()
+        self._setup()
+
+        if self.file_path:
+            self.import_manager.load_from_file(self.file_path)
+
+    def _setup_actions(self) -> None:
         self.create_action("shortcuts", self._on_shortcuts_activated)
         self.create_action("about", self._on_about_activated)
         self.create_action('quit', lambda *_: self.app.quit(), ['<primary>q'])
@@ -124,20 +154,33 @@ class GradientWindow(Adw.ApplicationWindow):
 
         self.create_action("delete-screenshots", lambda *_: self._create_delete_screenshots_dialog(), enabled=False)
 
-        self.file_path = file_path
+    def _setup_image_stack(self) -> None:
+        stack_info = create_image_stack()
+        self.image_stack: Gtk.Stack = stack_info[0]
+        self.picture: Gtk.Picture = stack_info[1]
+        self.spinner: Gtk.Widget = stack_info[2]
+        self.drawing_overlay = stack_info[3]
+        self.controls_overlay = stack_info[4]
+        self.stack_box = stack_info[5]
 
-        if init_screenshot_mode is not None:
-            def screenshot_error_callback(error_message: str) -> None:
-                 self.app.quit()
+    def _setup_sidebar(self) -> None:
+        self.sidebar = ImageSidebar(
+            background_selector_widget=self.background_selector,
+            on_padding_changed=self.on_padding_changed,
+            on_corner_radius_changed=self.on_corner_radius_changed,
+            on_aspect_ratio_changed=self.on_aspect_ratio_changed,
+            on_shadow_strength_changed=self.on_shadow_strength_changed
+        )
 
-            def screenshot_success_callback() -> None:
-                self.show()
+        self.sidebar.set_size_request(self.SIDEBAR_WIDTH, -1)
+        self.sidebar.set_visible(False)
 
-            self.import_manager.take_screenshot(
-                init_screenshot_mode,
-                screenshot_error_callback,
-                screenshot_success_callback
-            )
+    def _setup(self) -> None:
+        self.main_box.append(self.sidebar)
+        self.main_box.append(self.stack_box)
+
+        self.image_stack.set_hexpand(True)
+        self.sidebar.set_hexpand(False)
 
     def create_action(
         self,
@@ -175,69 +218,6 @@ class GradientWindow(Adw.ApplicationWindow):
 
         return handler
 
-    def build_ui(self) -> None:
-        self._setup_window()
-        self._setup_toolbar()
-        self._setup_image_stack()
-        self._setup_sidebar()
-        self._setup_main_layout()
-
-        if self.file_path:
-            self.import_manager.load_from_file(self.file_path)
-
-    def _setup_window(self) -> None:
-        self.set_title("Gradia")
-        self.set_default_size(self.DEFAULT_WINDOW_WIDTH, self.DEFAULT_WINDOW_HEIGHT)
-        self.toast_overlay: Adw.ToastOverlay = Adw.ToastOverlay()
-        self.set_content(self.toast_overlay)
-
-    def _setup_toolbar(self) -> None:
-        self.toolbar_view: Adw.ToolbarView = Adw.ToolbarView()
-        self.toolbar_view.set_top_bar_style(Adw.ToolbarStyle.FLAT)
-
-    def _setup_image_stack(self) -> None:
-        stack_info = create_image_stack()
-        self.image_stack: Gtk.Stack = stack_info[0]
-        self.picture: Gtk.Picture = stack_info[1]
-        self.spinner: Gtk.Widget = stack_info[2]
-        self.drawing_overlay = stack_info[3]
-        self.controls_overlay = stack_info[4]
-        self.stack_box = stack_info[5]
-
-    def _setup_sidebar(self) -> None:
-        self.sidebar = ImageSidebar(
-            background_selector_widget=self.background_selector,
-            on_padding_changed=self.on_padding_changed,
-            on_corner_radius_changed=self.on_corner_radius_changed,
-            on_aspect_ratio_changed=self.on_aspect_ratio_changed,
-            on_shadow_strength_changed=self.on_shadow_strength_changed
-        )
-
-        self.sidebar.set_size_request(self.SIDEBAR_WIDTH, -1)
-        self.sidebar.set_visible(False)
-
-    def _setup_main_layout(self) -> None:
-        self.top_stack: Gtk.Stack = Gtk.Stack.new()
-        self.top_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.top_stack.set_transition_duration(200)
-
-        welcome_page = WelcomePage()
-        self.top_stack.add_named(welcome_page, "empty")
-
-        self.main_box: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        self.main_box.set_vexpand(True)
-
-        self.main_box.append(self.sidebar)
-        self.main_box.append(self.stack_box)
-
-        self.image_stack.set_hexpand(True)
-        self.sidebar.set_hexpand(False)
-
-        self.top_stack.add_named(self.main_box, "main")
-
-        self.toolbar_view.set_content(self.top_stack)
-        self.toast_overlay.set_child(self.toolbar_view)
-
     def show(self) -> None:
         self.present()
 
@@ -250,7 +230,7 @@ class GradientWindow(Adw.ApplicationWindow):
         self._set_save_and_toggle(True)
 
     def _show_loading_state(self) -> None:
-        self.top_stack.set_visible_child_name("main")
+        self.main_stack.set_visible_child_name("main")
         self.image_stack.set_visible_child_name(self.PAGE_LOADING)
 
     def _hide_loading_state(self) -> None:
